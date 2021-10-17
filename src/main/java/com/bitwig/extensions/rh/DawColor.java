@@ -37,19 +37,15 @@ public enum DawColor {
 
 	private DawColor(final String name, final double red, final double green, final double blue) {
 		this.name = name;
+		lookupIndex = toLookuIndex(red, green, blue);
+	}
+
+	public static int toLookuIndex(final double red, final double green, final double blue) {
 		final int rv = (int) Math.floor(red * 255);
 		final int gv = (int) Math.floor(green * 255);
 		final int bv = (int) Math.floor(blue * 255);
-		lookupIndex = rv << 16 | gv << 8 | bv;
+		return rv << 16 | gv << 8 | bv;
 	}
-
-//	public static DawColor toDawColor(final double red, final double green, final double blue) {
-//		final int rv = (int) Math.floor(red * 255);
-//		final int gv = (int) Math.floor(green * 255);
-//		final int bv = (int) Math.floor(blue * 255);
-//		final int index = rv << 16 | gv << 8 | bv;
-//		return ColorLookup.get(index);
-//	}
 
 	public int getLookupIndex() {
 		return lookupIndex;
