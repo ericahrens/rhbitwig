@@ -4,13 +4,13 @@ import java.util.function.Supplier;
 
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
 import com.bitwig.extension.controller.api.Parameter;
+import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Binding;
 import com.bitwig.extensions.framework.Layer;
 import com.yaeltex.ColorButtonLedState;
 import com.yaeltex.LayerActiveValue;
 import com.yaeltex.RgbButton;
 import com.yaeltex.YaeltexArpControlExtension;
-import com.yaeltex.debug.RemoteConsole;
 
 public class YaeltexLayer extends Layer {
 	private final YaeltexArpControlExtension driver;

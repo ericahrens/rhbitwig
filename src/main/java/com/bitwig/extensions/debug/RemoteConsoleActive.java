@@ -1,4 +1,4 @@
-package com.yaeltex.debug;
+package com.bitwig.extensions.debug;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -8,10 +8,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-public class RemoteConsoleActive implements RemoteConsole {
+import com.bitwig.extension.controller.api.ControllerHost;
+
+public class RemoteConsoleActive extends BasicConsole {
 	private DatagramSocket socket;
 	private InetAddress address;
 	private byte[] buf;
+	private ControllerHost host;
 
 	public RemoteConsoleActive() {
 		try {
@@ -20,6 +23,11 @@ public class RemoteConsoleActive implements RemoteConsole {
 		} catch (final SocketException | UnknownHostException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void registerHost(final ControllerHost host) {
+		this.host = host;
 	}
 
 	@Override
@@ -94,7 +102,16 @@ public class RemoteConsoleActive implements RemoteConsole {
 		return v.substring(0, 2);
 	}
 
-	private void print(final String msg) {
+	@Override
+	protected void print(final String msg) {
+		if (host != null) {
+			host.println(msg);
+		} else {
+			sendToRemote(msg);
+		}
+	}
+
+	private void sendToRemote(final String msg) {
 		final ByteBuffer bb = ByteBuffer.allocate(msg.length() + 10);
 		bb.putInt(msg.length());
 		bb.put(msg.getBytes());
@@ -107,8 +124,13 @@ public class RemoteConsoleActive implements RemoteConsole {
 		}
 	}
 
-	private void println(final String msg) {
-		print(msg + "\n");
+	@Override
+	protected void println(final String msg) {
+		if (host != null) {
+			host.println(msg);
+		} else {
+			print(msg + "\n");
+		}
 	}
 
 }

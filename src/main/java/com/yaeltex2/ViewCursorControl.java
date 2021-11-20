@@ -1,4 +1,4 @@
-package com.novation.launchpadProMk3;
+package com.yaeltex2;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
@@ -38,7 +38,6 @@ public class ViewCursorControl {
 		primaryDevice.hasDrumPads().markInterested();
 		primaryDevice.exists().markInterested();
 		final DeviceMatcher drumMatcher = host.createBitwigDeviceMatcher(SpecialDevices.DRUM.getUuid());
-
 		drumBank = cursorTrack.createDeviceBank(1);
 		drumBank.setDeviceMatcher(drumMatcher);
 		// drumDevice = drumBank.getItemAt(0);

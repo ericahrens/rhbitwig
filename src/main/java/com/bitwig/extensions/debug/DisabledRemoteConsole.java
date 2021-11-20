@@ -1,4 +1,6 @@
-package com.yaeltex.debug;
+package com.bitwig.extensions.debug;
+
+import com.bitwig.extension.controller.api.ControllerHost;
 
 public class DisabledRemoteConsole implements RemoteConsole {
 
@@ -13,6 +15,10 @@ public class DisabledRemoteConsole implements RemoteConsole {
 	@Override
 	public String getStackTrace(final int max) {
 		return "";
+	}
+
+	@Override
+	public void registerHost(final ControllerHost host) {
 	}
 
 }

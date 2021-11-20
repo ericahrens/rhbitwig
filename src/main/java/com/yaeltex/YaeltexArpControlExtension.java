@@ -20,9 +20,9 @@ import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.RelativeHardwareKnob;
 import com.bitwig.extension.controller.api.RelativePosition;
 import com.bitwig.extension.controller.api.TrackBank;
+import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.rh.Midi;
-import com.yaeltex.debug.RemoteConsole;
 import com.yaeltex.device.ArpInstance;
 import com.yaeltex.device.DeviceSlotState;
 import com.yaeltex.device.DeviceSlotStateValueObject;
@@ -269,23 +269,23 @@ public class YaeltexArpControlExtension extends ControllerExtension {
 	public void pinDevice(final int slotIndex) {
 		if (slotIndex == 0) {
 			if (fixedDevice1.isPinned()) {
-				fixedDevice1.getCursorDevice().isPinned().set(false);
+				fixedDevice1.pin(false);
 				applyDeviceToSlot(slot1State, fixedDevice1);
 			} else if (cursorDevice.isArp() && !fixedDevice2.isOnCursorDevice()) {
 				fixedDevice1.set(cursorDevice, true);
 				applyDeviceToSlot(slot1State, fixedDevice1);
 			} else if (fixedDevice1.isArp()) {
-				fixedDevice1.getCursorDevice().isPinned().set(true);
+				fixedDevice1.pin(true);
 			}
 		} else {
 			if (fixedDevice2.isPinned()) {
-				fixedDevice2.getCursorDevice().isPinned().set(false);
+				fixedDevice2.pin(false);
 				applyDeviceToSlot(slot2State, fixedDevice2);
 			} else if (cursorDevice.isArp() && !fixedDevice1.isOnCursorDevice()) {
 				fixedDevice2.set(cursorDevice, true);
 				applyDeviceToSlot(slot2State, fixedDevice2);
 			} else if (fixedDevice2.isArp()) {
-				fixedDevice2.getCursorDevice().isPinned().set(true);
+				fixedDevice2.pin(true);
 			}
 		}
 	}

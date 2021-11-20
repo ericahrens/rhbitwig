@@ -22,8 +22,8 @@ import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.SettableEnumValue;
 import com.bitwig.extension.controller.api.SpecificBitwigDevice;
 import com.bitwig.extension.controller.api.TrackBank;
+import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layers;
-import com.yaeltex.debug.RemoteConsole;
 
 public class LpcArpControlExtension extends ControllerExtension implements ArpParameterContainer {
 

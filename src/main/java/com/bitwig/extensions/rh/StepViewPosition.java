@@ -1,7 +1,6 @@
-package com.novation.launchpadProMk3;
+package com.bitwig.extensions.rh;
 
 import com.bitwig.extension.controller.api.Clip;
-import com.bitwig.extensions.rh.BooleanValueObject;
 
 public class StepViewPosition {
 

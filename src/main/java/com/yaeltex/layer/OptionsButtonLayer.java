@@ -62,6 +62,10 @@ public class OptionsButtonLayer extends BasicButtonLayer {
 		for (int i = 0; i < 16; i++) {
 			bindModeButton(bottomButton[i], i + 1);
 		}
+		for (int i = 0; i < 4; i++) {
+			bindOctaveButton(topButton[i], i);
+		}
+
 		currentSublayer = basicLayer;
 	}
 
@@ -101,6 +105,26 @@ public class OptionsButtonLayer extends BasicButtonLayer {
 			}
 			final Parameter rate = getDriver().getFocussedDevice().getRateModeParam();
 			return rate.get() == matchValue ? activeColor : nonActiveColor;
+		}, button);
+	}
+
+	private void bindOctaveButton(final RgbButton button, final int matchValue) {
+		final ColorButtonLedState activeColor = new ColorButtonLedState(YaelTexColors.ELECTRIC_PURPLE, 0);
+		final ColorButtonLedState nonActiveColor = ColorButtonLedState.colorFor(0);
+		bottomSecondLayer.bindPressed(button, () -> {
+			if (!getDriver().getFocussedDevice().isArp()) {
+				return;
+			}
+			final Parameter mode = getDriver().getFocussedDevice().getOctaveParam();
+			mode.set(matchValue / 3.0);
+		});
+		bottomSecondLayer.bindLightState(() -> {
+			if (!getDriver().getFocussedDevice().isArp()) {
+				return ColorButtonLedState.OFF;
+			}
+			final Parameter mode = getDriver().getFocussedDevice().getOctaveParam();
+			final int value = (int) (mode.get() * 3);
+			return value == matchValue ? activeColor : nonActiveColor;
 		}, button);
 	}
 
@@ -180,6 +204,10 @@ public class OptionsButtonLayer extends BasicButtonLayer {
 		currentSublayer.activate();
 		final YaeltexArpControlExtension driver = getDriver();
 		final RgbButton[] topButton = driver.getTopRowButtons();
+		updateModeButtons(topButton);
+	}
+
+	private void updateModeButtons(final RgbButton[] topButton) {
 		topButton[3].setColor(modeToLedState(ArpDisplayModeType.MODE_1X8));
 		topButton[4].setColor(modeToLedState(ArpDisplayModeType.MODE_2X8));
 		topButton[5].setColor(modeToLedState(ArpDisplayModeType.MODE_1X16));
@@ -201,6 +229,7 @@ public class OptionsButtonLayer extends BasicButtonLayer {
 			currentSublayer.deactivate();
 			currentSublayer = basicLayer;
 			currentSublayer.activate();
+			updateModeButtons(getDriver().getTopRowButtons());
 		}
 	}
 

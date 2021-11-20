@@ -1,4 +1,4 @@
-package com.novation.launchpadProMk3;
+package com.akai.fire;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
@@ -19,17 +19,14 @@ public class ViewCursorControl {
 	private final TrackBank trackBank;
 	// private final Device drumDevice;
 
-	public ViewCursorControl(final ControllerHost host) {
+	public ViewCursorControl(final ControllerHost host, final int sends) {
 		super();
 
-		this.trackBank = host.createTrackBank(8, 8, 8);
-		this.cursorTrack = host.createCursorTrack(8, 8);
+		this.trackBank = host.createTrackBank(8, 8, sends);
+		this.cursorTrack = host.createCursorTrack(8, sends);
 
 		cursorTrack.clipLauncherSlotBank().cursorIndex().addValueObserver(index -> {
 			// RemoteConsole.out.println(" => {}", index);
-		});
-
-		this.cursorTrack.color().addValueObserver((r, g, b) -> {
 		});
 
 		deviceBank = cursorTrack.createDeviceBank(8);
@@ -38,7 +35,6 @@ public class ViewCursorControl {
 		primaryDevice.hasDrumPads().markInterested();
 		primaryDevice.exists().markInterested();
 		final DeviceMatcher drumMatcher = host.createBitwigDeviceMatcher(SpecialDevices.DRUM.getUuid());
-
 		drumBank = cursorTrack.createDeviceBank(1);
 		drumBank.setDeviceMatcher(drumMatcher);
 		// drumDevice = drumBank.getItemAt(0);

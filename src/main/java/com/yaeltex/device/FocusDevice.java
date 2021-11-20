@@ -8,6 +8,7 @@ import com.bitwig.extension.controller.api.IntegerValue;
 import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.SpecificBitwigDevice;
+import com.bitwig.extensions.debug.RemoteConsole;
 import com.yaeltex.YaeltexArpControlExtension;
 import com.yaeltex.encoders.EncoderLayout;
 import com.yaeltex.layer.MuteState;
@@ -89,10 +90,10 @@ public class FocusDevice {
 			}
 		});
 
-		arpNoteParams = new ArrayList<Parameter>();
-		arpGateParams = new ArrayList<Parameter>();
-		arpVelParams = new ArrayList<Parameter>();
-		arpSkipParams = new ArrayList<Parameter>();
+		arpNoteParams = new ArrayList<>();
+		arpGateParams = new ArrayList<>();
+		arpVelParams = new ArrayList<>();
+		arpSkipParams = new ArrayList<>();
 		for (int i = 0; i < 16; i++) {
 			final int index = i;
 			final Parameter gate = arpdevice.createParameter("GATE_" + (i + 1));
@@ -404,7 +405,13 @@ public class FocusDevice {
 		return which;
 	}
 
+	public void pin(final boolean pinned) {
+		cursorTrack.isPinned().set(pinned);
+		cursorDevice.isPinned().set(pinned);
+	}
+
 	public void set(final FocusDevice other, final boolean pinned) {
+		RemoteConsole.out.println("PIN {}", pinned);
 		cursorTrack.selectChannel(other.getCursorTrack());
 		cursorDevice.selectDevice(other.getCursorDevice());
 		cursorTrack.isPinned().set(pinned);

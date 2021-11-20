@@ -103,16 +103,25 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 //		final LabeledButton overdubButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.REC);
 //		overdubButton.bindToggle(mainLayer, transport.isClipLauncherOverdubEnabled(), LpColor.RED, LpColor.BLACK);
 		transport.isPlaying().markInterested();
+		transport.tempo().markInterested();
+		transport.playPosition().markInterested();
 		final LabeledButton playButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.PLAY);
-		playButton.bind(mainLayer, () -> {
-			if (transport.isPlaying().get()) {
-				transport.isPlaying().set(false);
-			} else {
-				drumseqenceMode.retrigger();
-				// transport.isPlaying().set(true);
-				transport.restart();
-			}
-		}, () -> transport.isPlaying().get() ? RgbState.of(LpColor.GREEN_HI) : RgbState.of(LpColor.GREEN_LO));
+		playButton.bind(mainLayer, this::togglePlay,
+				() -> transport.isPlaying().get() ? RgbState.of(LpColor.GREEN_HI) : RgbState.of(LpColor.GREEN_LO));
+
+		final LabeledButton clipAutoButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.SESSION);
+		clipAutoButton.bindToggle(mainLayer, transport.isClipLauncherAutomationWriteEnabled(), LpColor.RED_HI,
+				LpColor.RED_LO);
+	}
+
+	private void togglePlay() {
+		if (transport.isPlaying().get()) {
+			transport.isPlaying().set(false);
+		} else {
+			drumseqenceMode.retrigger();
+			// transport.isPlaying().set(true);
+			transport.restart();
+		}
 	}
 
 	private void initModeButtton() {
@@ -235,6 +244,16 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 					LabelCcAssignments.TRACK_SEL_1.getCcValue() + i);
 			trackSelectButtons.add(trackButton);
 		}
+	}
+
+	public int beatToMs(final double beats) {
+		final double tempo = transport.tempo().getRaw();
+		final double hz = tempo / 60.0;
+		return (int) (beats / hz * 1000);
+	}
+
+	public double transportPos() {
+		return transport.playPosition().get();
 	}
 
 	private void setUpMidiSysExCommands() {

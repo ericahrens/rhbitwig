@@ -1,7 +1,9 @@
 package com.novation.launchpadProMk3;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import com.bitwig.extension.controller.api.Application;
@@ -18,9 +20,11 @@ import com.bitwig.extension.controller.api.PinnableCursorClip;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.PlayingNote;
 import com.bitwig.extension.controller.api.Send;
+import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.rh.BooleanValueObject;
+import com.bitwig.extensions.rh.StepViewPosition;
 
 public class DrumSeqenceMode extends Layer {
 	private final NoteInput noteInput;
@@ -31,6 +35,7 @@ public class DrumSeqenceMode extends Layer {
 	private int drumScrollOffset = 0;
 	private final List<PadContainer> pads = new ArrayList<>();
 	double gatePercent = 0.98;
+	private final Set<Integer> holdNotes = new HashSet<>();
 
 	private static final int[] PAD_NOTES = new int[] { 11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34, 41, 42, 43, 44 };
 	private static final double[] ARP_RATES = new double[] { 0.125, 0.25, 0.5, 1.0, 1.0 / 12, 1.0 / 6, 1.0 / 3,
@@ -134,6 +139,7 @@ public class DrumSeqenceMode extends Layer {
 			}
 			pad.mute().markInterested();
 			pad.solo().markInterested();
+			pad.name().markInterested();
 			pad.addIsSelectedInEditorObserver(selected -> {
 				this.selected = selected;
 				if (this.selected) {
@@ -323,10 +329,14 @@ public class DrumSeqenceMode extends Layer {
 		final PinnableCursorDevice device = control.getPrimaryDevice();
 
 		device.isPinned().markInterested();
+		device.deviceType().markInterested();
 		cursorTrack.isPinned().markInterested();
 		cursorClip.isPinned().markInterested();
 
 		deviceButton.bind(mainLayer, () -> {
+			if (!device.hasDrumPads().get()) {
+				return;
+			}
 			if (device.isPinned().get()) {
 				device.isPinned().set(false);
 				cursorTrack.isPinned().set(false);
@@ -529,16 +539,18 @@ public class DrumSeqenceMode extends Layer {
 		for (int i = 0; i < noteRepeateValueButtons.size(); i++) {
 			final int index = i;
 			final LabeledButton button = noteRepeateValueButtons.get(i);
-			button.bind(this, () -> {
-				this.selectedArpIndex = index;
-				this.currentArpRate = ARP_RATES[index];
-				arp.rate().set(currentArpRate);
-			}, () -> getTrackState(index));
+			button.bind(this, () -> triggerNrRateButton(index), () -> getTrackState(index));
 		}
 	}
 
+	private void triggerNrRateButton(final int index) {
+		this.selectedArpIndex = index;
+		this.currentArpRate = ARP_RATES[index];
+		arp.rate().set(currentArpRate);
+	}
+
 	private void assignGridResolution(final List<LabeledButton> sceneButtons) {
-		for (int i = 0; i < sceneButtons.size(); i++) {
+		for (int i = 0; i < 8; i++) {
 			final int index = i;
 			final LabeledButton button = sceneButtons.get(i);
 			button.bind(this, () -> {
@@ -695,26 +707,11 @@ public class DrumSeqenceMode extends Layer {
 		if (!pressed) {
 			return;
 		}
-		if (fixedLengthHeld.get()) {
-			final double newLen = positionHandler.lengthWithLastStep(index);
-			adjustMode(newLen);
-			cursorClip.getLoopLength().set(newLen);
-		}
 		final NoteStep note = assignments[index];
-		if (randomModeActive.get()) {
-			final double setProb = RND_VALUES[selectedRndIndex].prob;
-			if (note != null && note.state() == State.NoteOn) {
-				final double prob = note.chance();
-				if (prob == setProb) {
-					note.setChance(1);
-				} else {
-					note.setChance(RND_VALUES[selectedRndIndex].prob);
-				}
-			} else if (note == null || note.state() == State.Empty) {
-				cursorClip.setStep(index, 0, velTable[selectedRefVel],
-						positionHandler.getGridResolution() * gatePercent);
-				probValues[index] = RND_VALUES[selectedRndIndex].prob;
-			}
+		if (fixedLengthHeld.get()) {
+			stepActionFixedLength(index);
+		} else if (randomModeActive.get()) {
+			stepActionRandomMode(index, note);
 		} else {
 			if (note == null || note.state() == State.Empty) {
 				cursorClip.setStep(index, 0, velTable[selectedRefVel],
@@ -725,14 +722,41 @@ public class DrumSeqenceMode extends Layer {
 		}
 	}
 
+	private void stepActionRandomMode(final int index, final NoteStep note) {
+		final double setProb = RND_VALUES[selectedRndIndex].prob;
+		if (note != null && note.state() == State.NoteOn) {
+			final double prob = note.chance();
+			if (prob == setProb) {
+				note.setChance(1);
+			} else {
+				note.setChance(RND_VALUES[selectedRndIndex].prob);
+			}
+		} else if (note == null || note.state() == State.Empty) {
+			cursorClip.setStep(index, 0, velTable[selectedRefVel], positionHandler.getGridResolution() * gatePercent);
+			probValues[index] = RND_VALUES[selectedRndIndex].prob;
+		}
+	}
+
+	private void stepActionFixedLength(final int index) {
+		final double newLen = positionHandler.lengthWithLastStep(index);
+		adjustMode(newLen);
+		cursorClip.getLoopLength().set(newLen);
+	}
+
 	private void handlePadSelection(final PadContainer pad, final boolean pressed) {
 		if (!pressed) {
 			return;
 		}
+		RemoteConsole.out.println("Press Pad>{} {}", pad.index + " pad " + pad.pad.name().get());
+
 		if (states.getClearButtonPressed().get()) {
 			cursorClip.scrollToKey(drumScrollOffset + pad.index);
-			cursorClip.clearStepsAtY(0, 0);
-			pad.pad.selectInEditor();
+			if (randomModeActive.get()) {
+				resetRandomization();
+			} else {
+				cursorClip.clearStepsAtY(0, 0);
+				pad.pad.selectInEditor();
+			}
 		} else if (states.getDuplicateButtonPressed().get()) {
 			if (pad.index != selectedPadIndex) {
 				final NoteStep[] copy = new NoteStep[32];
@@ -749,6 +773,15 @@ public class DrumSeqenceMode extends Layer {
 			}
 		} else {
 			pad.pad.selectInEditor();
+		}
+	}
+
+	private void resetRandomization() {
+		for (int i = 0; i < assignments.length; i++) {
+			final NoteStep step = assignments[i];
+			if (step != null && step.state() == State.NoteOn) {
+				step.setChance(1.0);
+			}
 		}
 	}
 
@@ -859,15 +892,24 @@ public class DrumSeqenceMode extends Layer {
 	}
 
 	private void handleClear(final boolean pressed) {
-		if (!isActive() || !pressed) {
+		if (!isActive()) {
 			return;
 		}
-		if (states.getShiftModeActive().get()) {
-			cursorClip.clearSteps();
-			states.notifyShiftFunctionInvoked();
-		} else if (sendHeld.get()) {
-			for (final PadContainer pad : pads) {
-				pad.resetSend();
+		if (pressed) {
+			if (notePlayingEnabled()) {
+				disableNotePlaying();
+			}
+			if (states.getShiftModeActive().get()) {
+				cursorClip.clearSteps();
+				states.notifyShiftFunctionInvoked();
+			} else if (sendHeld.get()) {
+				for (final PadContainer pad : pads) {
+					pad.resetSend();
+				}
+			}
+		} else {
+			if (notePlayingEnabled()) {
+				applyScale();
 			}
 		}
 	}
@@ -928,7 +970,12 @@ public class DrumSeqenceMode extends Layer {
 		}
 		final int row = note / 10;
 		final int col = note % 10;
-		// RemoteConsole.out.println("PAD => {}=>{}", row, col, value);
+		if (value > 0) {
+			holdNotes.add(notesToDrumTable[note]);
+		} else {
+			holdNotes.remove(notesToDrumTable[note]);
+		}
+
 		if (row > 0 && row < 5 && col > 0 && col < 5) {
 			final int index = (row - 1) * 4 + col - 1;
 			pads.get(index).select();
@@ -984,6 +1031,7 @@ public class DrumSeqenceMode extends Layer {
 		if (!isActive()) {
 			return;
 		}
+		holdNotes.clear();
 		for (int i = 0; i < 128; i++) {
 			notesToDrumTable[i] = -1;
 		}
