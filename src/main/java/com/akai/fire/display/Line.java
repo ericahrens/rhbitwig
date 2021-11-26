@@ -53,11 +53,11 @@ public class Line implements Comparable<Line> {
 		case 0:
 			return 1;
 		case 1:
-			return 1;
+			return 2;
 		case 2:
 			return 2;
 		case 3:
-			return 3;
+			return 4;
 		}
 		return 0;
 	}

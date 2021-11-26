@@ -22,6 +22,7 @@ public class OledDisplay {
 	private final MidiOut midiOut;
 	private boolean inGraphicsMode = false;
 	private long clearTask = -1;
+	private long logoBlock;
 
 	public enum Fill {
 		Empty, Solid, Fifty, Hatch;
@@ -48,6 +49,7 @@ public class OledDisplay {
 
 	public void showLogo() {
 		sendImage(SysExUtil.PLASTIKMAN_LOGO);
+		this.logoBlock = System.currentTimeMillis();
 	}
 
 	public void clearScreenDelayed() {
@@ -124,6 +126,9 @@ public class OledDisplay {
 	}
 
 	public void showInfo(final DisplayInfo info, final Object... values) {
+		if (logoBlock != -1 && System.currentTimeMillis() - logoBlock < 3000) {
+			return;
+		}
 		final List<Line> lines = info.getLines();
 		for (final Line line : lines) {
 			showLine(line);
@@ -151,6 +156,19 @@ public class OledDisplay {
 
 	public void paramInfo(final String paramName, final int value, final String details, final int min, final int max) {
 		paramInfo(paramName, value, details, min, max, null);
+	}
+
+	public void parameterInfo(final String element, final String parameterName, final double value,
+			final String displayValue, final boolean biPolar) {
+		sendString(0, TextJustification.CENTER, 0, element);
+		sendString(2, TextJustification.CENTER, 1, parameterName);
+		sendString(2, TextJustification.CENTER, 3, displayValue);
+		sendString(0, TextJustification.CENTER, 5, "");
+		if (biPolar) {
+			barValue(value - 0.5, -0.5, 0.5);
+		} else {
+			barValue(value, 0, 1);
+		}
 	}
 
 	public void paramInfo(final String paramName, final int value, final String details, final int min, final int max,
@@ -255,6 +273,9 @@ public class OledDisplay {
 		if (clearTask > 0 && System.currentTimeMillis() - clearTask > 1500) {
 			clearScreen();
 			clearTask = -1;
+		}
+		if (logoBlock > 0 && System.currentTimeMillis() - logoBlock > 3000) {
+			logoBlock = -1;
 		}
 	}
 

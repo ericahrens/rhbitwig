@@ -12,10 +12,11 @@ import com.akai.fire.display.OledDisplay;
 import com.akai.fire.lights.BiColorLightState;
 import com.bitwig.extension.controller.api.NoteOccurrence;
 import com.bitwig.extension.controller.api.NoteStep;
-import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layer;
 
 public class SequencEncoderHandler extends Layer {
+
+	private final static String[] paramNames = { "Volume", "Panning", "Send 1", "Send 2" };
 
 	private final DrumSequenceMode parent;
 
@@ -29,6 +30,8 @@ public class SequencEncoderHandler extends Layer {
 	private final OledDisplay oled;
 	private final Map<EncoderMode, Layer> modeMapping = new HashMap<>();
 	private final TouchEncoder[] encoders;
+
+	private final PadHandler padHandler;
 
 	@FunctionalInterface
 	interface NoteDoubleGetter {
@@ -50,10 +53,12 @@ public class SequencEncoderHandler extends Layer {
 		void set(NoteStep step, int value);
 	}
 
-	public SequencEncoderHandler(final DrumSequenceMode drumMode, final AkaiFireDrumSeqExtension driver) {
+	public SequencEncoderHandler(final DrumSequenceMode drumMode, final AkaiFireDrumSeqExtension driver,
+			final PadHandler padHandler) {
 		super(driver.getLayers(), "Encoder_layer");
 		this.parent = drumMode;
 		this.oled = driver.getOled();
+		this.padHandler = padHandler;
 		channelLayer = new Layer(driver.getLayers(), "ENC_CHANNEL_LAYER");
 		mixerLayer = new Layer(driver.getLayers(), "ENC_MIXER_LAYER");
 		mixerShiftLayer = new Layer(driver.getLayers(), "ENC_SHIFT_MIXER_LAYER");
@@ -95,7 +100,7 @@ public class SequencEncoderHandler extends Layer {
 	private void assignParams(final EncoderMode mode, final Layer layer, final TouchEncoder[] encoders) {
 		modeMapping.put(mode, layer);
 		for (int i = 0; i < encoders.length; i++) {
-			bindEncoder(layer, encoders[i]);
+			bindPadEncoder(i, layer, encoders[i], paramNames[i]);
 		}
 	}
 
@@ -116,16 +121,24 @@ public class SequencEncoderHandler extends Layer {
 		encoder.bindTouched(layer, touched -> handleTouch(touched, access));
 	}
 
-	private void bindEncoder(final Layer layer, final TouchEncoder encoder) {
-		encoder.bindEncoder(layer, inc -> handleParam(inc));
-		encoder.bindTouched(layer, touched -> handleTouchParam(touched));
+	private void bindPadEncoder(final int index, final Layer layer, final TouchEncoder encoder,
+			final String parameterName) {
+		encoder.bindEncoder(layer, inc -> handleParam(index, inc));
+		encoder.bindTouched(layer, touched -> handleTouchParam(index, touched, parameterName));
+		padHandler.bindPadParameters(layer);
 	}
 
-	private void handleTouchParam(final Boolean touched) {
+	private void handleTouchParam(final int index, final Boolean touched, final String parameterName) {
+		if (touched) {
+			padHandler.activateView(index, parameterName);
+			padHandler.updateDisplay(index);
+		} else {
+			padHandler.deactivateView();
+		}
 	}
 
-	private void handleParam(final int inc) {
-		RemoteConsole.out.println("=> {}", inc);
+	private void handleParam(final int index, final int inc) {
+		padHandler.modifyValue(index, inc);
 	}
 
 	private void handleModeAdvance(final boolean pressed) {
@@ -155,6 +168,11 @@ public class SequencEncoderHandler extends Layer {
 		final EncoderAccess[] assignments = mode.getAssignments();
 		for (int i = 0; i < assignments.length; i++) {
 			encoders[i].setStepSize(assignments[i].getResolution());
+		}
+		if (assignments.length == 0) {
+			for (int i = 0; i < encoders.length; i++) {
+				encoders[i].setStepSize(0.25);
+			}
 		}
 	}
 
@@ -283,6 +301,8 @@ public class SequencEncoderHandler extends Layer {
 			oled.clearScreenDelayed();
 			if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
 				parent.exitRecurrenceEdit();
+			} else if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+				parent.getLengthDisplay().set(false);
 			}
 			return;
 		}
@@ -295,6 +315,10 @@ public class SequencEncoderHandler extends Layer {
 		} else {
 			final NoteStep note = heldNotes.get(0);
 			final String details = parent.getDetails(heldNotes);
+			if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+				parent.getLengthDisplay().set(true);
+			}
+
 			if (accessor.getUnit() == NoteValueUnit.MIDI || accessor.getUnit() == NoteValueUnit.NONE) {
 				final int value = accessor.getInt(note);
 				oled.paramInfo(accessor.getName(), value, details, accessor.getMinInt(), accessor.getMaxInt());

@@ -92,7 +92,7 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
 		drumSeqenceLayer = new DrumSequenceMode(this);
 		midiOut.sendSysex(DEV_INQ);
 
-		oled.sendImage(SysExUtil.PLASTIKMAN_LOGO);
+		oled.showLogo();
 		mainLayer.activate();
 		drumSeqenceLayer.activate();
 		host.scheduleTask(this::handlePing, 100);

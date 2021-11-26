@@ -7,7 +7,7 @@ import com.bitwig.extension.controller.api.InternalHardwareLightState;
 
 public class RgbLigthState extends InternalHardwareLightState {
 
-	private static final int ULTRA_DIM_FACTOR = 8;
+	private static final int ULTRA_DIM_FACTOR = 15;
 	private static final int DIM_FACTOR = 4;
 	private static final int BRIGHT_FACTOR = 20;
 	private static final int MAX_BRIGHT_FACTOR = 50;
