@@ -4,3 +4,4 @@
 * Yaeltex SEQ ARP 168 controls Bitwigs Arpeggiator Device
 * Launchpad Pro Mk3 Drum Sequencer/Editor
 * Allen & Heath Xone:K2 specialized DJ Setup
+* Akai Fire Drum Sequencer/Editor
