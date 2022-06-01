@@ -67,7 +67,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         midiIn = host.getMidiInPort(0);
         midiIn.setMidiCallback((ShortMidiMessageReceivedCallback) this::onMidi0);
         midiOut = host.getMidiOutPort(0);
-
+        
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
 

@@ -81,7 +81,7 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
 
         setUpHardware();
         setUpTransportControl();
-        setUpPreferences();
+        //setUpPreferences();
 
         drumSequenceMode = new DrumSequenceMode(this);
         midiOut.sendSysex(DEV_INQ);
@@ -113,12 +113,12 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
         midiOut.sendSysex(singleRgb);
     }
 
-    private void setUpPreferences() {
-        final Preferences preferences = getHost().getPreferences(); // THIS
-        final SettableEnumValue padStyle = preferences.getEnumSetting("Pad Coloring", //
-                "Visuals", new String[]{"TR-Style", "Bitwig-Colors"}, "TR-Style");
-        padStyle.markInterested();
-    }
+//    private void setUpPreferences() {
+//        final Preferences preferences = getHost().getPreferences(); // THIS
+//        final SettableEnumValue padStyle = preferences.getEnumSetting("Pad Coloring", //
+//                "Visuals", new String[]{"TR-Style", "Bitwig-Colors"}, "TR-Style");
+//        padStyle.markInterested();
+//    }
 
     private void setUpTransportControl() {
         transport.isPlaying().markInterested();
@@ -239,10 +239,6 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
 
     public MidiIn getMidiIn() {
         return midiIn;
-    }
-
-    public MidiOut getMidiOut() {
-        return midiOut;
     }
 
     public Layers getLayers() {
