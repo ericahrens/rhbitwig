@@ -4,20 +4,20 @@ import com.bitwig.extension.api.opensoundcontrol.OscMessage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class T1DataPack {
     private static final String[] notes = {"C", "C#", "D", "D#", "E", "F", "G", "G#", "A", "A#", "B"};
-    private static final String[] scales = {"Chromatic", "Major", "Minor", "Hiro", "Iwatoo", "Tetra", "User"};
-    private static final String[] divisions = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/3", "1/6", "1/12", "1/24", "1/48", "1/2D", "1/4D", "1/8D", "1/16D"};
+    private static final String[] divisions = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/64", "1/3", "1/6", "1/12", "1/24", "1/48"};
     private int steps;
     private int numNotes;
     private int pulses;
-    private int scale;
     private int rootNote;
     private int channel;
     private int division;
-    private final List<Integer> offsets = new ArrayList<>();
-    private final List<Integer> pulseLoc = new ArrayList<>();
+    private List<Integer> offsets = new ArrayList<>();
+    private List<Integer> pulseLoc = new ArrayList<>();
+    private final List<Integer> inKeyNotes = new ArrayList<>();
     private int sustain;
 
     public void applyData(final String command, final OscMessage message) {
@@ -28,8 +28,23 @@ public class T1DataPack {
             case "numNotes":
                 numNotes = message.getInt(0);
                 break;
+            case "notes":
+                offsets = message.getArguments()
+                        .stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .map(v -> v - 60) //
+                        .collect(Collectors.toList());
+                break;
             case "pulses":
                 pulses = message.getInt(0);
+                break;
+            case "pulseLoc":
+                pulseLoc = message.getArguments()
+                        .stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
                 break;
             case "division":
                 division = toIndex(message.getString(0), divisions);
@@ -41,8 +56,10 @@ public class T1DataPack {
                 rootNote = toIndex(message.getString(0), notes);
                 break;
             case "scale":
-                scale = toIndex(message.getString(0), scales);
-                break;
+                final int size = message.getArguments().size();
+                for (int i = 0; i < size; i++) {
+                    inKeyNotes.add(message.getInt(i));
+                }
             case "sustain":
                 sustain = message.getInt(0);
                 break;
@@ -51,10 +68,13 @@ public class T1DataPack {
 
     public void applyToDevice(final DeviceTrack deviceTrack) {
         deviceTrack.getMapTransposeDevice().setRootNote(rootNote);
-        deviceTrack.getMapTransposeDevice().setScale(scale);
+        deviceTrack.getMapTransposeDevice().setScale(inKeyNotes);
         final ArpDevice arp = deviceTrack.getArpDevice();
         arp.setStepLength(steps);
         arp.setGateLength(sustain);
+        arp.setRate(division);
+        arp.setOffsets(offsets, numNotes, steps);
+        arp.setPulseLocations(pulseLoc);
     }
 
     public int getChannel() {

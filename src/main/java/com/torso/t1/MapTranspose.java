@@ -4,6 +4,7 @@ import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.Track;
 
+import java.util.List;
 import java.util.UUID;
 
 public class MapTranspose extends FollowDevice {
@@ -25,13 +26,13 @@ public class MapTranspose extends FollowDevice {
         rootNote = createParameter("ROOT");
     }
 
-    public void setScale(final Integer anInt) {
-        if (anInt < scalesSettings.length) {
-            final int[] scales = scalesSettings[anInt];
-            for (int i = 0; i < 12; i++) {
-                pitchClasses[i].value().set(scales[i], 12);
-            }
-        }
+    public void setScale(final List<Integer> inKeyNotes) {
+//        if (anInt < scalesSettings.length) {
+//            final int[] scales = scalesSettings[anInt];
+//            for (int i = 0; i < 12; i++) {
+//                pitchClasses[i].value().set(scales[i], 12);
+//            }
+//        }
     }
 
     public void setRootNote(final int noteIndex) {

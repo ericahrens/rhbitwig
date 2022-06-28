@@ -6,10 +6,7 @@ import com.bitwig.extension.api.opensoundcontrol.OscMessage;
 import com.bitwig.extension.api.opensoundcontrol.OscModule;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
-import com.bitwig.extension.controller.api.ControllerHost;
-import com.bitwig.extension.controller.api.HardwareSurface;
-import com.bitwig.extension.controller.api.Track;
-import com.bitwig.extension.controller.api.TrackBank;
+import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 
@@ -41,14 +38,26 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
         surface = host.createHardwareSurface();
         mainLayer = new Layer(layers, "MainLayer");
         oscModule = host.getOscModule();
+        final int port = setUpPreferences();
         final OscAddressSpace address = oscModule.createAddressSpace();
         address.registerDefaultMethod(this::handleMessage);
-        oscModule.createUdpServer(8500, address);
+        oscModule.createUdpServer(port, address);
         setupDevices();
 
         host.showPopupNotification("Intialize Torso T1 - OSC");
         mainLayer.activate();
     }
+
+    private int setUpPreferences() {
+        final Preferences preferences = getHost().getPreferences(); // THIS
+        final SettableRangedValue portSetting = preferences.getNumberSetting("Port", "Server", 4000, 10000, 1, "",
+                8500);
+        portSetting.markInterested();
+        final int port = (int) (portSetting.get() * 6000) + 4000;
+        host.println("Initial Port " + port);
+        return port;
+    }
+
 
     private void setupDevices() {
         trackBank = host.createTrackBank(TRACKS, 1, 1);
@@ -99,11 +108,11 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
         final String[] split = message.getAddressPattern().split("/");
         if (split.length == 3 && split[1].equals("t1")) {
             final String command = split[2];
-            if (command.equals("steps")) {
+            if (command.equals("channel")) {
                 dataPack = new T1DataPack();
             }
             dataPack.applyData(command, message);
-            if (command.equals("channel")) {
+            if (command.equals("sustain")) {
                 final DeviceTrack devTrack = deviceTrackMap.get(dataPack.getChannel());
                 if (devTrack != null) {
                     dataPack.applyToDevice(devTrack);
@@ -123,17 +132,11 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
                 if (devTrack != null) {
                     getHost().println(String.format("[%d] command=%s %s", track, command, message.getArguments()));
                     switch (command) {
-                        case "scale":
-                            devTrack.getMapTransposeDevice().setScale(message.getInt(0));
-                            break;
                         case "root":
                             devTrack.getMapTransposeDevice().setRootNote(message.getInt(0));
                             break;
                         case "steps":
                             devTrack.getArpDevice().setStepLength(message.getInt(0));
-                            break;
-                        case "notes":
-                            devTrack.getArpDevice().setNotes(message.getArguments());
                             break;
                     }
                 }
