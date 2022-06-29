@@ -62,7 +62,6 @@ public class ArpDevice extends FollowDevice {
     }
 
     public void setRate(final int rate) {
-        host.println(" RATE " + rate);
         if (rate < 7) {
             this.rate.set(rate, 7);
             rateMode.set(0, 3);

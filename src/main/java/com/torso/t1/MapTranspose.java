@@ -27,12 +27,30 @@ public class MapTranspose extends FollowDevice {
     }
 
     public void setScale(final List<Integer> inKeyNotes) {
-//        if (anInt < scalesSettings.length) {
-//            final int[] scales = scalesSettings[anInt];
-//            for (int i = 0; i < 12; i++) {
-//                pitchClasses[i].value().set(scales[i], 12);
-//            }
-//        }
+        host.println(String.format("SCALE %s",inKeyNotes));
+        final int[] mapping = new int[12];
+        for (int i=0;i<inKeyNotes.size();i++)
+        {
+            int inKey = inKeyNotes.get(i);
+            int next = i+1<inKeyNotes.size() ? inKeyNotes.get(i+1) : -1;
+            mapping[inKey] = inKey;
+            int diff = next - inKey;
+            host.println(String.format("in=%d nx=%d diff=%d",inKey, next, diff));
+            if(next == -1) {
+                for(int j=inKey+1;j<12;j++) {
+                    host.println(" " + j + " > " + inKey);
+                    mapping[j] = inKey;
+                }
+            } else if( diff == 2) {
+                mapping[inKey+1] = inKey;
+            } else if(diff == 3) {
+                mapping[inKey+1] = inKey;
+                mapping[inKey+2] = next;
+            }
+        }
+        for(int i=0;i<mapping.length;i++) {
+            pitchClasses[i].set(mapping[i],12);
+        }
     }
 
     public void setRootNote(final int noteIndex) {
