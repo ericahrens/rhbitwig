@@ -73,8 +73,8 @@ public class T1DataPack {
         arp.setStepLength(steps);
         arp.setGateLength(sustain);
         arp.setRate(division);
-        arp.setOffsets(offsets, numNotes, steps);
-        arp.setPulseLocations(pulseLoc);
+        arp.setOffsets(offsets, steps);
+        arp.setPulseLocations(pulseLoc, steps);
     }
 
     public int getChannel() {

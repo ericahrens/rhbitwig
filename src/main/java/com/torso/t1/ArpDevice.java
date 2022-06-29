@@ -39,7 +39,7 @@ public class ArpDevice extends FollowDevice {
         }
     }
 
-    public void setOffsets(final List<Integer> offsets, final int numberOfNotes, final int steps) {
+    public void setOffsets(final List<Integer> offsets, final int steps) {
         if (offsets.size() > 0) {
             for (int i = 0; i < steps; i++) {
                 final int offIndex = i % offsets.size();
@@ -49,17 +49,20 @@ public class ArpDevice extends FollowDevice {
         }
     }
 
-    public void setPulseLocations(final List<Integer> arguments) {
+    public void setPulseLocations(final List<Integer> pulseLocations, final int steps) {
         final boolean[] slots = new boolean[16];
-        for (final Integer loc : arguments) {
+        for (final Integer loc : pulseLocations) {
             if (loc >= 1 && loc < 17) {
                 slots[loc - 1] = true;
             }
         }
-        for (int i = 0; i < slots.length; i++) {
-            gates[i].set(slots[i] ? 1.0 : 0);
-        }
-    }
+        if(pulseLocations.size() > 0) {
+            for (int i = 0; i < steps; i++) {
+                final int offIndex = i % pulseLocations.size();
+                gates[i].set(slots[offIndex] ? 1.0 : 0);
+            }
+         }
+     }
 
     public void setRate(final int rate) {
         if (rate < 7) {
