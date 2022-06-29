@@ -59,6 +59,11 @@ public class TorsoT1OscExtensionDefinition extends ControllerExtensionDefinition
     }
 
     @Override
+    public String getSupportFolderPath() {
+        return "Controllers/Torso/";
+    }
+
+    @Override
     public void listAutoDetectionMidiPortNames(final AutoDetectionMidiPortNamesList list,
                                                final PlatformType platformType) {
    }
