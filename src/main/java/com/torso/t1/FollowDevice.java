@@ -27,6 +27,11 @@ public class FollowDevice {
         });
     }
 
+    public void info() {
+        host.println(String.format("FD %d class=%s exist=%s", index, getClass().getSimpleName(),
+                followDevice.exists().get()));
+    }
+
     protected Parameter createParameter(final String id) {
         final Parameter parameter = specificDevice.createParameter(id);
         parameter.markInterested();

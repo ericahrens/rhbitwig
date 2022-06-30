@@ -33,7 +33,7 @@ public class T1DataPack {
                         .stream()
                         .filter(Integer.class::isInstance)
                         .map(Integer.class::cast)
-                        .map(v -> v - 60) //
+                        .map(this::notValueToArpOffset) //
                         .collect(Collectors.toList());
                 break;
             case "pulses":
@@ -66,6 +66,10 @@ public class T1DataPack {
         }
     }
 
+    private int notValueToArpOffset(final int noteval) {
+        return Math.max(-24, Math.min(noteval - 60, 24));
+    }
+
     public void applyToDevice(final DeviceTrack deviceTrack) {
         deviceTrack.getMapTransposeDevice().setRootNote(rootNote);
         deviceTrack.getMapTransposeDevice().setScale(inKeyNotes);
@@ -74,7 +78,7 @@ public class T1DataPack {
         arp.setGateLength(sustain);
         arp.setRate(division);
         arp.setOffsets(offsets, steps);
-        arp.setPulseLocations(pulseLoc, steps);
+        arp.setPulseLocations(pulseLoc, pulses, steps);
     }
 
     public int getChannel() {

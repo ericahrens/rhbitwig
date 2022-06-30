@@ -62,24 +62,23 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
     private void setupDevices() {
         trackBank = host.createTrackBank(TRACKS, 1, 1);
         for (int index = 0; index < TRACKS; index++) {
+            final int trackIndex = index;
             final Track track = trackBank.getItemAt(index);
             final DeviceTrack deviceTrack = new DeviceTrack(index, track, host);
             deviceTracks.add(deviceTrack);
-            track.name().addValueObserver(newName -> handleTrackNameChanged(deviceTrack, newName));
+            track.name().addValueObserver(newName -> handleTrackNameChanged(deviceTrack, newName, trackIndex));
         }
     }
 
-    private void handleTrackNameChanged(final DeviceTrack deviceTrack, final String newName) {
+    private void handleTrackNameChanged(final DeviceTrack deviceTrack, final String newName, final int trackIndex) {
         final String oldName = deviceTrack.getName();
         final int oldTrackIndex = extractTrackNumber(oldName);
         final int trackNumber = extractTrackNumber(newName);
         if (oldTrackIndex > 0 && oldTrackIndex < TRACKS && oldTrackIndex != trackNumber) {
             deviceTrackMap.remove(oldTrackIndex);
-            //host.println(String.format("Remove %d %s", oldTrackIndex, oldName));
         }
         if (trackNumber > 0 && trackNumber < TRACKS) {
-            deviceTrackMap.put(trackNumber, deviceTracks.get(trackNumber - 1));
-            //host.println(String.format("STORE %d %s", trackNumber, newName));
+            deviceTrackMap.put(trackNumber, deviceTracks.get(trackIndex));
         }
         deviceTrack.setName(newName);
     }
@@ -113,9 +112,16 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
             }
             dataPack.applyData(command, message);
             if (command.equals("sustain")) {
-                final DeviceTrack devTrack = deviceTrackMap.get(dataPack.getChannel());
-                if (devTrack != null) {
-                    dataPack.applyToDevice(devTrack);
+                final int channel = dataPack.getChannel();
+                if (channel == 0) {
+                    deviceTrackMap.values().forEach(deviceTrack -> dataPack.applyToDevice(deviceTrack));
+                } else {
+                    final DeviceTrack devTrack = deviceTrackMap.get(channel);
+                    if (devTrack != null) {
+                        devTrack.getMapTransposeDevice().info();
+                        devTrack.getArpDevice().info();
+                        dataPack.applyToDevice(devTrack);
+                    }
                 }
             }
         }

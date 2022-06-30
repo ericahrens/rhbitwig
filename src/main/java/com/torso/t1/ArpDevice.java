@@ -12,8 +12,7 @@ public class ArpDevice extends FollowDevice {
 
     private final Parameter[] notes = new Parameter[16];
     private final Parameter[] gates = new Parameter[16];
-    private final Parameter[] skips = new Parameter[16];
-    private final Parameter[] velocities = new Parameter[16];
+    //private final Parameter[] skips = new Parameter[16];
     private final Parameter stepLength;
     private final Parameter gateLength;
     private final Parameter rate;
@@ -23,9 +22,8 @@ public class ArpDevice extends FollowDevice {
         super(trackIndex, host, track, BITWIG_ARP_DEVICE);
         for (int i = 0; i < 16; i++) {
             gates[i] = createParameter("GATE_" + (i + 1));
-            velocities[i] = createParameter("STEP_" + (i + 1));
             notes[i] = createParameter("STEP_" + (i + 1) + "_TRANSPOSE");
-            skips[i] = createParameter("SKIP_" + (i + 1));
+            //skips[i] = createParameter("SKIP_" + (i + 1));
         }
         stepLength = createParameter("STEPS");
         gateLength = createParameter("GLOBAL_GATE");
@@ -43,26 +41,25 @@ public class ArpDevice extends FollowDevice {
         if (offsets.size() > 0) {
             for (int i = 0; i < steps; i++) {
                 final int offIndex = i % offsets.size();
-                host.println(String.format("i=%d ni=%d no=%d", i, offIndex, offsets.get(offIndex)));
                 notes[i].set(24 + offsets.get(offIndex), 49);
             }
         }
     }
 
-    public void setPulseLocations(final List<Integer> pulseLocations, final int steps) {
+    public void setPulseLocations(final List<Integer> pulseLocations, final int pulses, final int steps) {
         final boolean[] slots = new boolean[16];
         for (final Integer loc : pulseLocations) {
             if (loc >= 1 && loc < 17) {
                 slots[loc - 1] = true;
             }
         }
-        if(pulseLocations.size() > 0) {
+        if (pulses > 0) {
             for (int i = 0; i < steps; i++) {
-                final int offIndex = i % pulseLocations.size();
+                final int offIndex = i % pulses;
                 gates[i].set(slots[offIndex] ? 1.0 : 0);
             }
-         }
-     }
+        }
+    }
 
     public void setRate(final int rate) {
         if (rate < 7) {
