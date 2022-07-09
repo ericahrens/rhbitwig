@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.bitwig.extension.api.opensoundcontrol.OscConnection;
 import com.bitwig.extension.controller.api.BooleanValue;
 import com.bitwig.extension.controller.api.HardwareButton;
 import com.bitwig.extension.controller.api.HardwareSurface;
@@ -19,10 +20,12 @@ public abstract class LpButton {
 	protected HardwareButton hwButton;
 	protected MultiStateHardwareLight light;
 	protected final MidiOut midiOut;
+	protected final OscConnection connection;
 
-	protected LpButton(final String id, final HardwareSurface surface, final MidiOut midiOut) {
+	protected LpButton(final String id, final HardwareSurface surface, final MidiOut midiOut, final OscConnection connection) {
 		super();
 		this.midiOut = midiOut;
+		this.connection = connection;
 		hwButton = surface.createHardwareButton(id);
 		light = surface.createMultiStateHardwareLight(id + "-light");
 		light.state().setValue(RgbState.of(0));
