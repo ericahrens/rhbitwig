@@ -35,7 +35,7 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public String getHardwareVendor() {
-        return "Allen&Heath";
+        return "Allen & Heath";
     }
 
     @Override
@@ -45,7 +45,7 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public int getRequiredAPIVersion() {
-        return 14;
+        return 16;
     }
 
     @Override
