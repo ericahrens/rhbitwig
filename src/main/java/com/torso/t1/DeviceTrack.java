@@ -21,7 +21,7 @@ public class DeviceTrack {
     public String getName() {
         return name;
     }
-
+  
     public ArpDevice getArpDevice() {
         return arpDevice;
     }
