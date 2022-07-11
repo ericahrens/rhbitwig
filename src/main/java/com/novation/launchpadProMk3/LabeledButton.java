@@ -11,7 +11,7 @@ public class LabeledButton extends LpButton {
 
 	public LabeledButton(final String name, final HardwareSurface surface, final MidiIn midiIn, final MidiOut midiOut,
 			final int ccValue) {
-		super(name.toLowerCase() + "_" + ccValue, surface, midiOut);
+		super(name.toLowerCase() + "_" + ccValue, surface, midiOut, null);
 		this.ccValue = ccValue;
 		initButtonCc(midiIn, ccValue);
 		light.state().onUpdateHardware(this::updatePadLed);
@@ -20,7 +20,7 @@ public class LabeledButton extends LpButton {
 
 	public LabeledButton(final HardwareSurface surface, final MidiIn midiIn, final MidiOut midiOut,
 			final LabelCcAssignments ccAssignment) {
-		super(ccAssignment.toString().toLowerCase(), surface, midiOut);
+		super(ccAssignment.toString().toLowerCase(), surface, midiOut, null);
 		this.ccValue = ccAssignment.getCcValue();
 		initButtonCc(midiIn, ccAssignment);
 		light.state().onUpdateHardware(this::updatePadLed);

@@ -1,5 +1,6 @@
 package com.novation.launchpadProMk3;
 
+import com.bitwig.extension.api.opensoundcontrol.OscConnection;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
@@ -27,6 +28,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     private Layers layers;
     private LpLayer mainLayer;
     private LpLayer shiftLayer;
+    private OscConnection gridOSCconnection;
     // Main Grid Buttons counting from top to bottom
     private final GridButton[][] gridButtons = new GridButton[8][8];
     private final List<LabeledButton> sceneLaunchButtons = new ArrayList<>();
@@ -67,6 +69,8 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         midiIn = host.getMidiInPort(0);
         midiIn.setMidiCallback((ShortMidiMessageReceivedCallback) this::onMidi0);
         midiOut = host.getMidiOutPort(0);
+        gridOSCconnection = host.getOscModule().connectToUdpServer("255.255.255.255", 12345,
+                host.getOscModule().createAddressSpace());
         
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
@@ -219,7 +223,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     private void initGridButtons() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
-                final GridButton b = new GridButton(surface, midiIn, midiOut, row, col);
+                final GridButton b = new GridButton(surface, midiIn, midiOut, row, col, gridOSCconnection);
                 gridButtons[row][col] = b;
                 b.bindPressed(mainLayer, p -> {
                 }, LpColor.BLUE_HI);
