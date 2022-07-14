@@ -27,7 +27,6 @@ public class GridButton extends LpButton {
 		initButtonNote(midiIn, notevalue);
 		light.state().setValue(RgbState.of(0));
 		light.state().onUpdateHardware(this::updatePadLed);
-		light.state().onUpdateHardware(this::sendOSCPadLed);
 		hwButton.setBackgroundLight(light);
 	}
 
@@ -45,6 +44,9 @@ public class GridButton extends LpButton {
 			midiOut.sendMidi(Midi.NOTE_ON + rgbState.getState().getChannel(), notevalue, rgbState.getColorIndex());
 		} else {
 			midiOut.sendMidi(Midi.NOTE_ON, notevalue, 0);
+		}
+		if (connection != null) {
+			sendOSCPadLed(state);
 		}
 	}
 
