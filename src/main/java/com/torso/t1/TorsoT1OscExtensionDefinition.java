@@ -25,7 +25,7 @@ public class TorsoT1OscExtensionDefinition extends ControllerExtensionDefinition
 
     @Override
     public String getVersion() {
-        return "0.1b";
+        return "0.2a";
     }
 
     @Override

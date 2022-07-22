@@ -111,7 +111,7 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
                 dataPack = new T1DataPack();
             }
             dataPack.applyData(command, message);
-            if (command.equals("sustain")) {
+            if (command.equals("division")) {
                 final int channel = dataPack.getChannel();
                 if (channel == 0) {
                     deviceTrackMap.values().forEach(deviceTrack -> dataPack.applyToDevice(deviceTrack));

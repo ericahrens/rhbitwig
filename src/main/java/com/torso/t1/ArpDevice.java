@@ -46,17 +46,17 @@ public class ArpDevice extends FollowDevice {
         }
     }
 
-    public void setPulseLocations(final List<Integer> pulseLocations, final int pulses, final int steps) {
+    public void setPulseLocations(final List<Integer> pulseLocations,  final int steps) {
         final boolean[] slots = new boolean[16];
         for (final Integer loc : pulseLocations) {
             if (loc >= 1 && loc < 17) {
                 slots[loc - 1] = true;
             }
         }
-        if (pulses > 0) {
+        if (!pulseLocations.isEmpty()) {
             for (int i = 0; i < steps; i++) {
-                final int offIndex = i % pulses;
-                gates[i].set(slots[offIndex] ? 1.0 : 0);
+                //final int offIndex = i % pulses;
+                gates[i].set(slots[i] ? 1.0 : 0);
             }
         }
     }
