@@ -34,6 +34,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     @Override
     public void init() {
         final ControllerHost host = getHost();
+        
         layers = new Layers(this);
         surface = host.createHardwareSurface();
         midiIn = host.getMidiInPort(0);

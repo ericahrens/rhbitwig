@@ -5,12 +5,12 @@ import com.bitwig.extension.controller.api.*;
 import java.util.UUID;
 
 public class FollowDevice {
-
     protected final int index;
     protected final SpecificBitwigDevice specificDevice;
     protected final Device followDevice;
     protected final ControllerHost host;
 
+    /// 264d6f4e-5067-46c9-a4fa-a75a295d9e01 Note Grid
 
     public FollowDevice(final int index, final ControllerHost host, final Track track, final UUID bitwigDeviceId) {
         this.index = index;
