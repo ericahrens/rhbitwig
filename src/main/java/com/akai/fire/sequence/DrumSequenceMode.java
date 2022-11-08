@@ -189,7 +189,7 @@ public class DrumSequenceMode extends Layer {
         final NoteStep note = assignments[index];
         if (!pressed) {
             heldSteps.remove(index);
-            if (copyHeld.get()) {
+            if (copyHeld.get() || fixedLengthHeld.get()) {
                 // do nothing
             } else if (note != null && note.state() == State.NoteOn && !addedSteps.contains(index)) {
                 if (!modifiedSteps.contains(index)) {
