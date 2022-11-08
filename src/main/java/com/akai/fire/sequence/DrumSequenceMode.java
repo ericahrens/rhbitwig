@@ -455,6 +455,10 @@ public class DrumSequenceMode extends Layer {
         return pendingAction;
     }
 
+    public void clearPendingAction() {
+        pendingAction = null;
+    }
+
     private void stepActionFixedLength(final int index) {
         final double newLen = positionHandler.lengthWithLastStep(index);
         adjustMode(newLen);
@@ -584,4 +588,6 @@ public class DrumSequenceMode extends Layer {
     public void notifySoloAction() {
         soloActionsTaken.set(true);
     }
+
+
 }
