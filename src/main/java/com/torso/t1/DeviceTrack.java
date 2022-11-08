@@ -12,6 +12,7 @@ public class DeviceTrack {
     public DeviceTrack(final int index, final Track track, final ControllerHost host) {
         arpDevice = new ArpDevice(index, host, track);
         mapTransposeDevice = new MapTranspose(index, host, track);
+        //final NoteGridDevice noteGridDevice = new NoteGridDevice(index, host, track);
     }
 
     public void setName(final String newName) {
@@ -21,7 +22,7 @@ public class DeviceTrack {
     public String getName() {
         return name;
     }
-  
+
     public ArpDevice getArpDevice() {
         return arpDevice;
     }

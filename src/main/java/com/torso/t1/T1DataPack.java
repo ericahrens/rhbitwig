@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class T1DataPack {
-    private static final String[] notes = {"C", "C#", "D", "D#", "E", "F", "G", "G#", "A", "A#", "B"};
+    private static final String[] notes = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
     private static final String[] divisions = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/64", "1/3", "1/6", "1/12", "1/24", "1/48"};
     private int steps;
     private int numNotes;
@@ -24,6 +24,7 @@ public class T1DataPack {
         switch (command) {
             case "steps":
                 steps = message.getInt(0);
+                pulses = steps;
                 break;
             case "numNotes":
                 numNotes = message.getInt(0);
@@ -37,7 +38,7 @@ public class T1DataPack {
                         .collect(Collectors.toList());
                 break;
             case "pulses":
-                pulses = message.getInt(0);
+                //pulses = message.getInt(0);
                 break;
             case "pulseLoc":
                 pulseLoc = message.getArguments()
@@ -58,8 +59,9 @@ public class T1DataPack {
             case "scale":
                 final int size = message.getArguments().size();
                 for (int i = 0; i < size; i++) {
-                    inKeyNotes.add(message.getInt(i));
+                    inKeyNotes.add(toIndex(message.getString(i),notes));
                 }
+                break;
             case "sustain":
                 sustain = message.getInt(0);
                 break;
@@ -78,7 +80,7 @@ public class T1DataPack {
         arp.setGateLength(sustain);
         arp.setRate(division);
         arp.setOffsets(offsets, steps);
-        arp.setPulseLocations(pulseLoc, pulses, steps);
+        arp.setPulseLocations(pulseLoc, steps);
     }
 
     public int getChannel() {

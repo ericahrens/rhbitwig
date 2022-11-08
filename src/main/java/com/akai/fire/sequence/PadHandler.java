@@ -183,14 +183,14 @@ public class PadHandler {
         parent.getOled().showInfo(padDisplayInfo);
 
         selectedPad.updateDisplay(displayTarget.getTypeIndex());
-        NoteAction pendingAction = parent.getPendingAction();
+        final NoteAction pendingAction = parent.getPendingAction();
         if (pendingAction != null && pendingAction.getDestPadIndex() == selectedPadIndex) {
             if (pendingAction.getType() == Type.CLEAR) {
                 executeClear(pendingAction.getSrcPadIndex());
             } else if (pendingAction.getType() == Type.COPY_PAD) {
                 executeCopy(pendingAction.getCopyNotes(), !parent.isShiftHeld());
             }
-            pendingAction = null;
+            parent.clearPendingAction();
         }
     }
 
