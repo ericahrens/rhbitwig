@@ -82,18 +82,19 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
             gridOSCconnection = host.getOscModule().connectToUdpServer(OscAddressSetting.get(), 
                     (int) OscPortSetting.getRaw(),
                     host.getOscModule().createAddressSpace());
+
+            Object testArg = "sending!";
+            // connection.startBundle();
+            try {
+                gridOSCconnection.sendMessage("/RHBitwig", testArg);
+            } catch (IOException e) {
+                // throw new RuntimeException(e);
+                host.println("No Connection!!");
+            }
         } else {
             gridOSCconnection = null;
         }
 
-        Object testArg = "sending!";
-        // connection.startBundle();
-        try {
-            gridOSCconnection.sendMessage("/RHBitwig", testArg);
-        } catch (IOException e) {
-            // throw new RuntimeException(e);
-            host.println("No Connection!!");
-        }
 
         SignalTest.addSignalObserver(() -> {
             Object o = "1";
