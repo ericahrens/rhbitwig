@@ -1,6 +1,7 @@
 package com.novation.launchpadProMk3;
 
 import com.bitwig.extension.api.opensoundcontrol.OscConnection;
+import com.bitwig.extension.api.opensoundcontrol.OscInvalidArgumentTypeException;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
@@ -9,6 +10,7 @@ import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -70,13 +72,40 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         midiIn.setMidiCallback((ShortMidiMessageReceivedCallback) this::onMidi0);
         midiOut = host.getMidiOutPort(0);
 
-        SettableBooleanValue SendOSC = host.getPreferences().getBooleanSetting("Send OSC", "OSC", false);
+        Preferences prefs = host.getPreferences();
+        SettableRangedValue OscPortSetting = prefs.getNumberSetting("Port", "OSC", 8000, 100000, 1, "", 12345);
+        SettableStringValue OscAddressSetting = prefs.getStringSetting("Address", "OSC", 15, "10.0.0.255");
+        Signal SignalTest = prefs.getSignalSetting("Send Message", "OSC", "Test");
+        SettableBooleanValue SendOSC = prefs.getBooleanSetting("Send OSC", "OSC", false);
+
         if (SendOSC.get() == true) {
-            gridOSCconnection = host.getOscModule().connectToUdpServer("255.255.255.255", 12345,
+            gridOSCconnection = host.getOscModule().connectToUdpServer(OscAddressSetting.get(), 
+                    (int) OscPortSetting.getRaw(),
                     host.getOscModule().createAddressSpace());
         } else {
             gridOSCconnection = null;
         }
+
+        Object testArg = "sending!";
+        // connection.startBundle();
+        try {
+            gridOSCconnection.sendMessage("/RHBitwig", testArg);
+        } catch (IOException e) {
+            // throw new RuntimeException(e);
+            host.println("No Connection!!");
+        }
+
+        SignalTest.addSignalObserver(() -> {
+            Object o = "1";
+            try {
+                gridOSCconnection.sendMessage("Bitwig Test Message", o);
+            } catch (IOException e) {
+                // throw new RuntimeException(e);
+                host.println("No Connection!!");
+            }
+        });
+
+        
         
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
