@@ -485,19 +485,12 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void adjustMode(final int notes) {
-//        if (notes % 8 == 0) {
-//            cursorClip.launchMode().set("play_with_quantization");
-//        } else if (clipLaunchModeQuantize.get()) {
-//            cursorClip.launchMode().set("continue_with_quantization");
-//        } else {
-//            cursorClip.launchMode().set("continue_immediately");
-//        }
         if (notes % 8 == 0) {
-            cursorClip.launchMode().set("synced");
+            cursorClip.launchMode().set("play_with_quantization");
         } else if (clipLaunchModeQuantize.get()) {
-            cursorClip.launchMode().set("from_start");
+            cursorClip.launchMode().set("continue_with_quantization");
         } else {
-            cursorClip.launchMode().set("default");
+            cursorClip.launchMode().set("continue_immediately");
         }
     }
 

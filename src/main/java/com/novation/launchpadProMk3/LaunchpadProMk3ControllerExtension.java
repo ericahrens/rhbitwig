@@ -65,7 +65,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
         setUpMidiSysExCommands();
         host.showPopupNotification(" Intialize Launchpad");
-        initGridButtons();
         initModifierButtons();
         initTransportSection();
         initDrumSequenceLayer();
@@ -206,18 +205,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
             }
             return RgbState.of(LpColor.BLUE_HI);
         });
-    }
-
-    private void initGridButtons() {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                GridButton button = hwElements.getGridButton(row, col);
-                button.bindPressed(mainLayer, p -> {
-                }, LpColor.BLUE_HI);
-                button.bindPressed(shiftLayer, p -> {
-                }, LpColor.ORANGE);
-            }
-        }
     }
 
     public int beatToMs(final double beats) {
