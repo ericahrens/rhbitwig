@@ -252,7 +252,6 @@ public class DrumSequenceMode extends Layer {
                 originalClipLength = clipLength;
             }
         });
-
         positionHandler = new StepViewPosition(cursorClip);
 
         initDrumPadButtons(driver);
@@ -485,19 +484,12 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void adjustMode(final int notes) {
-//        if (notes % 8 == 0) {
-//            cursorClip.launchMode().set("play_with_quantization");
-//        } else if (clipLaunchModeQuantize.get()) {
-//            cursorClip.launchMode().set("continue_with_quantization");
-//        } else {
-//            cursorClip.launchMode().set("continue_immediately");
-//        }
         if (notes % 8 == 0) {
             cursorClip.launchMode().set("default");
         } else if (clipLaunchModeQuantize.get()) {
-            cursorClip.launchMode().set("from_start");
-        } else {
             cursorClip.launchMode().set("synced");
+        } else {
+            cursorClip.launchMode().set("from_start");
         }
     }
 
@@ -593,12 +585,19 @@ public class DrumSequenceMode extends Layer {
 
     private void handleClip(final int index, final ClipLauncherSlot slot, final boolean pressed) {
         if (!pressed) {
+            if (states.isOnlyShiftActive()) {
+                slot.launchReleaseAlt();
+            } else if (states.isNoModifiersActive()) {
+                slot.launchRelease();
+            }
             return;
         }
+
         final boolean hasContent = slot.hasContent().get();
         if (hasContent) {
             if (states.getShiftModeActive().get()) {
                 slot.select();
+                slot.launchAlt();
                 states.notifyShiftFunctionInvoked();
             } else if (states.getClearButtonPressed().get()) {
                 final int previous = selectedSlotIndex;
