@@ -73,7 +73,6 @@ public class DrumSequenceMode extends Layer {
     public DrumSequenceMode(final AkaiFireDrumSeqExtension driver) {
         super(driver.getLayers(), "DRUM_SEQUENCE_LAYER");
         oled = driver.getOled();
-
         mainLayer = new Layer(getLayers(), getName() + "_MAIN");
         shiftLayer = new Layer(getLayers(), getName() + "_SHIFT");
         muteLayer = new Layer(getLayers(), getName() + "_MUTE");
@@ -482,6 +481,7 @@ public class DrumSequenceMode extends Layer {
 
     private void handleNoteStep(final NoteStep noteStep) {
         final int newStep = noteStep.x();
+
         assignments[newStep] = noteStep;
         if (expectedNoteChanges.containsKey(newStep)) {
             final NoteStep previousStep = expectedNoteChanges.get(newStep);

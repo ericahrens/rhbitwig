@@ -1,7 +1,6 @@
 package com.novation.launchpadProMk3;
 
 import com.bitwig.extension.api.opensoundcontrol.OscConnection;
-import com.bitwig.extension.api.opensoundcontrol.OscInvalidArgumentTypeException;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
@@ -11,8 +10,6 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -20,7 +17,7 @@ import java.util.concurrent.Executors;
 public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 
     private static final String HEADER = "F0 00 20 29 02 0E ";
-    // private static final String INQ = "F0 7E 7F 06 01 F7";
+
     private static final String DAW_MODE = "0E 01";
     private static final String STAND_ALONE_MODE = "0E 00";
 
@@ -31,18 +28,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     private LpLayer mainLayer;
     private LpLayer shiftLayer;
     private OscConnection gridOSCconnection;
-    // Main Grid Buttons counting from top to bottom
-    private final GridButton[][] gridButtons = new GridButton[8][8];
-    private final List<LabeledButton> sceneLaunchButtons = new ArrayList<>();
-    private final List<LabeledButton> trackSelectButtons = new ArrayList<>();
-    private LabeledButton fixedLengthButton;
-    private LabeledButton deviceButton;
-    private LabeledButton quantizeButton;
-    private LabeledButton upButton;
-    private LabeledButton downButton;
-    private LabeledButton leftButton;
-    private LabeledButton rightButton;
-    private LabeledButton noteButton;
 
     private ViewCursorControl viewControl;
     private NoteInput noteInput;
@@ -51,10 +36,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     private Application application;
 
     private final LpStateValues states = new LpStateValues();
-    private LabeledButton sendsButton;
-    private LabeledButton stopButton;
-    private LabeledButton panButton;
-    private LabeledButton customButton;
+    private HardwareElements hwElements;
 
     protected LaunchpadProMk3ControllerExtension(final ControllerExtensionDefinition definition,
                                                  final ControllerHost host) {
@@ -72,6 +54,27 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         midiIn.setMidiCallback((ShortMidiMessageReceivedCallback) this::onMidi0);
         midiOut = host.getMidiOutPort(0);
 
+        initOscConnection(host);
+
+        noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
+        noteInput.setShouldConsumeEvents(false);
+
+        hwElements = new HardwareElements(surface, gridOSCconnection, midiIn, midiOut);
+        viewControl = new ViewCursorControl(host);
+        mainLayer = new LpLayer(layers, "MainLayer");
+        shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
+        setUpMidiSysExCommands();
+        host.showPopupNotification(" Intialize Launchpad");
+        initGridButtons();
+        initModifierButtons();
+        initTransportSection();
+        initDrumSequenceLayer();
+        mainLayer.activate();
+        drumseqenceMode.activate();
+        sendSysExCommand(DAW_MODE);
+    }
+
+    private void initOscConnection(ControllerHost host) {
         Preferences prefs = host.getPreferences();
         SettableRangedValue OscPortSetting = prefs.getNumberSetting("Port", "OSC", 8000, 100000, 1, "", 12345);
         SettableStringValue OscAddressSetting = prefs.getStringSetting("Address", "OSC", 15, "10.0.0.255");
@@ -79,9 +82,9 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         SettableBooleanValue SendOSC = prefs.getBooleanSetting("Send OSC", "OSC", false);
 
         if (SendOSC.get() == true) {
-            gridOSCconnection = host.getOscModule().connectToUdpServer(OscAddressSetting.get(), 
-                    (int) OscPortSetting.getRaw(),
-                    host.getOscModule().createAddressSpace());
+            gridOSCconnection = host.getOscModule()
+                    .connectToUdpServer(OscAddressSetting.get(), (int) OscPortSetting.getRaw(),
+                            host.getOscModule().createAddressSpace());
 
             Object testArg = "sending!";
             // connection.startBundle();
@@ -93,8 +96,8 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
             }
         } else {
             gridOSCconnection = null;
+            return;
         }
-
 
         SignalTest.addSignalObserver(() -> {
             Object o = "1";
@@ -105,25 +108,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
                 host.println("No Connection!!");
             }
         });
-
-        
-        
-        noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
-        noteInput.setShouldConsumeEvents(false);
-
-        viewControl = new ViewCursorControl(host);
-        mainLayer = new LpLayer(layers, "MainLayer");
-        shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
-        setUpMidiSysExCommands();
-        host.showPopupNotification(" Intialize Launchpad");
-        initGridButtons();
-        initModifierButtons();
-        initModeButtton();
-        initTransportSection();
-        initDrumSequenceLayer();
-        mainLayer.activate();
-        drumseqenceMode.activate();
-        sendSysExCommand(DAW_MODE);
     }
 
     private void initDrumSequenceLayer() {
@@ -132,18 +116,17 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     }
 
     private void initTransportSection() {
-//		final LabeledButton overdubButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.REC);
-//		overdubButton.bindToggle(mainLayer, transport.isClipLauncherOverdubEnabled(), LpColor.RED, LpColor.BLACK);
         transport.isPlaying().markInterested();
         transport.tempo().markInterested();
         transport.playPosition().markInterested();
-        final LabeledButton playButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.PLAY);
-        playButton.bind(mainLayer, this::togglePlay,
-                () -> transport.isPlaying().get() ? RgbState.of(LpColor.GREEN_HI) : RgbState.of(LpColor.GREEN_LO));
+        hwElements.getButton(LabelCcAssignments.PLAY)
+                .bind(mainLayer, this::togglePlay,
+                        () -> transport.isPlaying().get() ? RgbState.of(LpColor.GREEN_HI) : RgbState.of(
+                                LpColor.GREEN_LO));
 
-        final LabeledButton clipAutoButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.SESSION);
-        clipAutoButton.bindToggle(mainLayer, transport.isClipLauncherAutomationWriteEnabled(), LpColor.RED_HI,
-                LpColor.RED_LO);
+        hwElements.getButton(LabelCcAssignments.SESSION)
+                .bindToggle(mainLayer, transport.isClipLauncherAutomationWriteEnabled(), LpColor.RED_HI,
+                        LpColor.RED_LO);
     }
 
     private void togglePlay() {
@@ -156,28 +139,14 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         }
     }
 
-    private void initModeButtton() {
-        final LabeledButton sequenceModeButton = new LabeledButton(surface, midiIn, midiOut,
-                LabelCcAssignments.SEQUENCER);
-        sequenceModeButton.bind(mainLayer, () -> {
-        }, () -> RgbState.of(LpColor.BLUE_HI));
-    }
-
     private void initModifierButtons() {
-        leftButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.LEFT);
-        rightButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.RIGHT);
-        upButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.UP);
-        downButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.DOWN);
-        noteButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.NOTE);
-        sendsButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.SENDS_TAP);
-        stopButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.STOP_CLIP_SWING);
-        quantizeButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.QUANTIZE);
-        customButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.CUSTOM);
+        hwElements.getButton(LabelCcAssignments.SEQUENCER).bind(mainLayer, () -> {
+        }, () -> RgbState.of(LpColor.BLUE_HI));
 
-        final LabeledButton shiftButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.SHIFT);
-        shiftButton.bindPressed(mainLayer, states::handleShiftPressed,
-                () -> states.getShiftModeActive().get() ? RgbState.of(LpColor.OCEAN_HI) : RgbState.of(
-                        LpColor.OCEAN_LO));
+        hwElements.getButton(LabelCcAssignments.SHIFT)
+                .bindPressed(mainLayer, states::handleShiftPressed,
+                        () -> states.getShiftModeActive().get() ? RgbState.of(LpColor.OCEAN_HI) : RgbState.of(
+                                LpColor.OCEAN_LO));
 
         states.getShiftModeActive().addValueObserver(shiftMode -> {
             if (shiftMode) {
@@ -192,50 +161,33 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         arp.usePressureToVelocity().markInterested();
         arp.octaves().markInterested();
         arp.rate().markInterested();
-        final LabeledButton armButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.REC);
-        armButton.bindToggle(mainLayer, transport.isClipLauncherOverdubEnabled(), LpColor.RED, LpColor.BLACK);
+        hwElements.getButton(LabelCcAssignments.REC)
+                .bindToggle(mainLayer, transport.isClipLauncherOverdubEnabled(), LpColor.RED, LpColor.BLACK);
 
-        final LabeledButton recArmUndoButton = new LabeledButton(surface, midiIn, midiOut,
-                LabelCcAssignments.RECORD_ARM_UNDO);
-        recArmUndoButton.bindToggle(mainLayer, states.getNoteRepeatActive(),
-                RgbState.of(LpColor.RED_HI.getIndex(), LightState.PULSING), RgbState.of(LpColor.BLACK));
+        hwElements.getButton(LabelCcAssignments.RECORD_ARM_UNDO)
+                .bindToggle(mainLayer, states.getNoteRepeatActive(),
+                        RgbState.of(LpColor.RED_HI.getIndex(), LightState.PULSING), RgbState.of(LpColor.BLACK));
 
-        leftButton.bind(mainLayer, () -> application.undo(), LpColor.BLUE);
+        hwElements.getButton(LabelCcAssignments.LEFT).bind(mainLayer, () -> application.undo(), LpColor.BLUE);
 
-//		recArmUndoButton.bindPressed(shiftLayer, pressed -> {
-//			if (pressed) {
-//				application.undo();
-//				states.notifyShiftFunctionInvoked();
-//			}
-//		}, LpColor.GREEN);
+        hwElements.getButton(LabelCcAssignments.CLEAR)
+                .bindPressed(mainLayer, states.getClearButtonPressed(), LpColor.WHITE);
 
-        final LabeledButton clearButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.CLEAR);
-        clearButton.bindPressed(mainLayer, states.getClearButtonPressed(), LpColor.WHITE);
+        hwElements.getButton(LabelCcAssignments.DUPLICATE)
+                .bindPressed(mainLayer, states.getDuplicateButtonPressed(), LpColor.WHITE);
 
-        final LabeledButton duplicateButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.DUPLICATE);
-        duplicateButton.bindPressed(mainLayer, states.getDuplicateButtonPressed(), LpColor.WHITE);
+        hwElements.getButton(LabelCcAssignments.MUTE_REDO)
+                .bindPressed(mainLayer, states.getMuteButtonPressed(), LpColor.ORANGE);
 
-        final LabeledButton muteButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.MUTE_REDO);
-        muteButton.bindPressed(mainLayer, states.getMuteButtonPressed(), LpColor.ORANGE);
-//		muteButton.bindPressed(shiftLayer, pressed -> {
-//			if (pressed) {
-//				application.redo();
-//				states.notifyShiftFunctionInvoked();
-//			}
-//		}, LpColor.LIME);
+        hwElements.getButton(LabelCcAssignments.RIGHT).bind(mainLayer, () -> application.redo(), LpColor.BLUE);
 
-        rightButton.bind(mainLayer, () -> application.redo(), LpColor.BLUE);
-
-        final LabeledButton soloButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.SOLO_CLICK);
-        soloButton.bindPressed(mainLayer, states.getSoloButtonPressed(), LpColor.YELLOW);
+        hwElements.getButton(LabelCcAssignments.SOLO_CLICK)
+                .bindPressed(mainLayer, states.getSoloButtonPressed(), LpColor.YELLOW);
         // soloButton.bindToggle(shiftLayer, transport.isMetronomeEnabled(),
         // LpColor.SKY_HI, LpColor.SKY_LO);
-        fixedLengthButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.FIXED_LENGTH);
-        deviceButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.DEVICE_TEMPO);
 
-        final LabeledButton volumeButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.VOLUME);
-        volumeButton.bindPressed(mainLayer, states.getVolumeButtonPressed(), LpColor.CYAN);
-        panButton = new LabeledButton(surface, midiIn, midiOut, LabelCcAssignments.PAN);
+        hwElements.getButton(LabelCcAssignments.VOLUME)
+                .bindPressed(mainLayer, states.getVolumeButtonPressed(), LpColor.CYAN);
     }
 
     void bindRecQuantize(final Layer layer, final LabeledButton button) {
@@ -259,22 +211,12 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     private void initGridButtons() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
-                final GridButton b = new GridButton(surface, midiIn, midiOut, row, col, gridOSCconnection);
-                gridButtons[row][col] = b;
-                b.bindPressed(mainLayer, p -> {
+                GridButton button = hwElements.getGridButton(row, col);
+                button.bindPressed(mainLayer, p -> {
                 }, LpColor.BLUE_HI);
-                b.bindPressed(shiftLayer, p -> {
+                button.bindPressed(shiftLayer, p -> {
                 }, LpColor.ORANGE);
             }
-        }
-        for (int i = 0; i < 8; i++) {
-            final LabeledButton sceneButton = new LabeledButton("SCENE_LAUNCH_" + (i + 1), surface, midiIn, midiOut,
-                    LabelCcAssignments.R8_PRINT_TO_CLIP.getCcValue() + (7 - i) * 10);
-            sceneLaunchButtons.add(sceneButton);
-
-            final LabeledButton trackButton = new LabeledButton("TRACK_" + (i + 1), surface, midiIn, midiOut,
-                    LabelCcAssignments.TRACK_SEL_1.getCcValue() + i);
-            trackSelectButtons.add(trackButton);
         }
     }
 
@@ -340,9 +282,10 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         surface.updateHardware();
     }
 
-    public GridButton getGetGridButton(final int row, final int col) {
-        return gridButtons[row][col];
+    public HardwareElements getHwElements() {
+        return hwElements;
     }
+
 
     public LpStateValues getStates() {
         return states;
@@ -352,59 +295,4 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         return application;
     }
 
-    public LabeledButton getFixedLengthButton() {
-        return fixedLengthButton;
-    }
-
-    public LabeledButton getDeviceButton() {
-        return deviceButton;
-    }
-
-    public LabeledButton getQuantizeButton() {
-        return quantizeButton;
-    }
-
-    public LabeledButton getUpButton() {
-        return upButton;
-    }
-
-    public LabeledButton getDownButton() {
-        return downButton;
-    }
-
-    public LabeledButton getLeftButton() {
-        return leftButton;
-    }
-
-    public LabeledButton getRightButton() {
-        return rightButton;
-    }
-
-    public LabeledButton getNoteButton() {
-        return noteButton;
-    }
-
-    public List<LabeledButton> getSceneLaunchButtons() {
-        return sceneLaunchButtons;
-    }
-
-    public List<LabeledButton> getTrackSelectButtons() {
-        return trackSelectButtons;
-    }
-
-    public LabeledButton getSendsButton() {
-        return sendsButton;
-    }
-
-    public LabeledButton getStopButton() {
-        return stopButton;
-    }
-
-    public LabeledButton getPanButton() {
-        return panButton;
-    }
-
-    public LabeledButton getCustomButton() {
-        return customButton;
-    }
 }

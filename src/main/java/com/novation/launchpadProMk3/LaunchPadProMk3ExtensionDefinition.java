@@ -50,7 +50,7 @@ public class LaunchPadProMk3ExtensionDefinition extends ControllerExtensionDefin
 
     @Override
     public int getRequiredAPIVersion() {
-        return 14;
+        return 17;
     }
 
     @Override

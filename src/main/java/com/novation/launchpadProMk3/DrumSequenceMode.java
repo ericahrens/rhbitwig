@@ -211,7 +211,7 @@ public class DrumSequenceMode extends Layer {
 
     public DrumSequenceMode(final Layers layers, final LaunchpadProMk3ControllerExtension driver) {
         super(layers, "DRUM_SEQUENCE_LAYER");
-
+        HardwareElements hwElements = driver.getHwElements();
         mainLayer = new Layer(getLayers(), getName() + "_MAIN");
         shiftLayer = new Layer(getLayers(), getName() + "_SHIFT");
         muteLayer = new Layer(getLayers(), getName() + "_MUTE");
@@ -290,20 +290,24 @@ public class DrumSequenceMode extends Layer {
                 disableNotePlaying();
             }
         });
-        assignNoteRepeat(driver.getTrackSelectButtons());
-        assignGridResolution(driver.getSceneLaunchButtons());
+        assignNoteRepeat(hwElements.getTrackSelectButtons());
+        assignGridResolution(hwElements.getSceneLaunchButtons());
     }
 
-    private void initSpecialButtons(final LaunchpadProMk3ControllerExtension driver) {
-        driver.getFixedLengthButton().bindPressed(mainLayer, fixedLengthHeld, LpColor.PURPLE);
-        driver.getQuantizeButton().bind(mainLayer, this::macroLaunchNote, LpColor.CYAN);
-        driver.bindRecQuantize(shiftLayer, driver.getQuantizeButton());
+    private void initSpecialButtons(LaunchpadProMk3ControllerExtension driver) {
+        final HardwareElements hwElements = driver.getHwElements();
+        hwElements.getButton(LabelCcAssignments.FIXED_LENGTH).bindPressed(mainLayer, fixedLengthHeld, LpColor.PURPLE);
+        LabeledButton quantizeButton = hwElements.getButton(LabelCcAssignments.QUANTIZE);
+        quantizeButton.bind(mainLayer, this::macroLaunchNote, LpColor.CYAN);
+        driver.bindRecQuantize(shiftLayer, quantizeButton);
 
-        driver.getNoteButton().bindToggle(mainLayer, notePlayingActive, LpColor.LIME_LO, LpColor.BLACK);
-        driver.getCustomButton().bindToggle(mainLayer, randomModeActive, LpColor.GREEN_SPRING, LpColor.BLACK);
-        driver.getStopButton().bindPressed(mainLayer, stopButtonHeld, LpColor.RED);
+        hwElements.getButton(LabelCcAssignments.NOTE)
+                .bindToggle(mainLayer, notePlayingActive, LpColor.LIME_LO, LpColor.BLACK);
+        hwElements.getButton(LabelCcAssignments.CUSTOM)
+                .bindToggle(mainLayer, randomModeActive, LpColor.GREEN_SPRING, LpColor.BLACK);
+        hwElements.getButton(LabelCcAssignments.STOP_CLIP_SWING).bindPressed(mainLayer, stopButtonHeld, LpColor.RED);
 
-        final LabeledButton deviceButton = driver.getDeviceButton();
+        final LabeledButton deviceButton = hwElements.getButton(LabelCcAssignments.DEVICE_TEMPO);
         final ViewCursorControl control = driver.getViewControl();
         final PinnableCursorDevice device = control.getPrimaryDevice();
 
@@ -335,21 +339,15 @@ public class DrumSequenceMode extends Layer {
         cursorTrack.hasNext().markInterested();
         cursorTrack.hasPrevious().markInterested();
 
-//		driver.getRightButton().bind(mainLayer, () -> {
-//			cursorTrack.selectNext();
-//		}, cursorTrack.hasNext(), LpColor.MAGENTA);
-//		driver.getLeftButton().bind(mainLayer, () -> {
-//			cursorTrack.selectPrevious();
-//		}, cursorTrack.hasPrevious(), LpColor.MAGENTA);
-
-        driver.getDownButton()
+        hwElements.getButton(LabelCcAssignments.DOWN)
                 .bind(mainLayer, positionHandler::scrollRight, positionHandler.canScrollRight(), LpColor.WHITE);
-        driver.getUpButton()
+        hwElements.getButton(LabelCcAssignments.UP)
                 .bind(mainLayer, positionHandler::scrollLeft, positionHandler.canScrollLeft(), LpColor.WHITE);
 
-        driver.getSendsButton().bindPressed(mainLayer, this::handleSendButton, LpColor.BLUE);
+        hwElements.getButton(LabelCcAssignments.SENDS_TAP).bindPressed(mainLayer, this::handleSendButton, LpColor.BLUE);
 
-        driver.getPanButton().bindToggle(mainLayer, clipLaunchModeQuantize, LpColor.AMBER_HI, LpColor.AMBER_LO);
+        hwElements.getButton(LabelCcAssignments.PAN)
+                .bindToggle(mainLayer, clipLaunchModeQuantize, LpColor.AMBER_HI, LpColor.AMBER_LO);
     }
 
     private void handleSendButton(final Boolean pressed) {
@@ -368,10 +366,11 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void initDrumPadButtons(final LaunchpadProMk3ControllerExtension driver) {
+        HardwareElements hwElements = driver.getHwElements();
         final ViewCursorControl control = driver.getViewControl();
         for (int row = 4; row < 8; row++) {
             for (int col = 0; col < 4; col++) {
-                final GridButton button = driver.getGetGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col);
                 final int index = (7 - row) * 4 + col;
                 final PadContainer pad = new PadContainer(index, control.getDrumPadBank().getItemAt(index),
                         playing[index]);
@@ -389,9 +388,10 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void initSequenceSection(final LaunchpadProMk3ControllerExtension driver) {
+        HardwareElements hwElements = driver.getHwElements();
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < 8; col++) {
-                final GridButton button = driver.getGetGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col);
                 final int index = row * 8 + col;
                 button.bindPressed(mainLayer, p -> handleSeqSelection(index, p), () -> stepState(index));
             }
@@ -399,9 +399,10 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void initExtendSection(final LaunchpadProMk3ControllerExtension driver) {
+        HardwareElements hwElements = driver.getHwElements();
         for (int row = 4; row < 6; row++) {
             for (int col = 4; col < 8; col++) {
-                final GridButton button = driver.getGetGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col);
                 final int index = (row - 4) * 4 + col - 4;
 
                 final ClipLauncherSlot cs = slotBank.getItemAt(index);
@@ -430,7 +431,7 @@ public class DrumSequenceMode extends Layer {
         }
         for (int row = 4; row < 8; row++) {
             for (int col = 4; col < 8; col++) {
-                final GridButton button = driver.getGetGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col);
                 final int index = (row - 4) * 4 + col - 4;
                 button.bindPressed(velLayer, p -> handleVelocitySelection(index, p), () -> velocityValues(index));
                 button.bindPressed(randomLayer, p -> handleRndSelection(index, p), () -> rndValues(index));
@@ -439,29 +440,29 @@ public class DrumSequenceMode extends Layer {
         final PadContainer refPad = pads.get(0);
         for (int row = 6; row < 8; row++) {
             for (int col = 4; col < 8; col++) {
-                final GridButton button = driver.getGetGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col);
                 final int index = (row - 6) * 4 + col - 4;
                 button.bind(sendsLayer, () -> selectSendSlot(index, refPad));
                 button.bindLight(sendsLayer, () -> sendSlotColor(index, refPad));
             }
         }
 
-        final GridButton retriggerButton = driver.getGetGridButton(6, 4);
+        final GridButton retriggerButton = hwElements.getGridButton(6, 4);
         retriggerButton.bind(mainLayer, cursorClip::launch, LpColor.GREEN);
-        final GridButton originalLengthButton = driver.getGetGridButton(6, 5);
+        final GridButton originalLengthButton = hwElements.getGridButton(6, 5);
         originalLengthButton.bind(mainLayer, this::setBackToOriginalLength, LpColor.PURPLE);
-        final GridButton len8Button = driver.getGetGridButton(6, 6);
+        final GridButton len8Button = hwElements.getGridButton(6, 6);
         len8Button.bind(mainLayer, () -> setLengthByNotes(8), LpColor.YELLOW);
-        final GridButton len5Button = driver.getGetGridButton(6, 7);
+        final GridButton len5Button = hwElements.getGridButton(6, 7);
         len5Button.bind(mainLayer, () -> setLengthByNotes(5), LpColor.YELLOW);
 
-        final GridButton len4Button = driver.getGetGridButton(7, 4);
+        final GridButton len4Button = hwElements.getGridButton(7, 4);
         len4Button.bind(mainLayer, () -> setLengthByNotes(4), LpColor.YELLOW);
-        final GridButton len3Button = driver.getGetGridButton(7, 5);
+        final GridButton len3Button = hwElements.getGridButton(7, 5);
         len3Button.bind(mainLayer, () -> setLengthByNotes(3), LpColor.YELLOW);
-        final GridButton len2Button = driver.getGetGridButton(7, 6);
+        final GridButton len2Button = hwElements.getGridButton(7, 6);
         len2Button.bind(mainLayer, () -> setLengthByNotes(2), LpColor.YELLOW);
-        final GridButton len1Button = driver.getGetGridButton(7, 7);
+        final GridButton len1Button = hwElements.getGridButton(7, 7);
         len1Button.bind(mainLayer, () -> setLengthByNotes(1), LpColor.YELLOW);
     }
 
@@ -484,12 +485,19 @@ public class DrumSequenceMode extends Layer {
     }
 
     private void adjustMode(final int notes) {
+//        if (notes % 8 == 0) {
+//            cursorClip.launchMode().set("play_with_quantization");
+//        } else if (clipLaunchModeQuantize.get()) {
+//            cursorClip.launchMode().set("continue_with_quantization");
+//        } else {
+//            cursorClip.launchMode().set("continue_immediately");
+//        }
         if (notes % 8 == 0) {
-            cursorClip.launchMode().set("play_with_quantization");
+            cursorClip.launchMode().set("synced");
         } else if (clipLaunchModeQuantize.get()) {
-            cursorClip.launchMode().set("continue_with_quantization");
+            cursorClip.launchMode().set("from_start");
         } else {
-            cursorClip.launchMode().set("continue_immediately");
+            cursorClip.launchMode().set("default");
         }
     }
 
