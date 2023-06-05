@@ -6,6 +6,7 @@ import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
+import com.bitwig.extensions.debug.DebugConsole;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 
@@ -46,6 +47,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     @Override
     public void init() {
         final ControllerHost host = getHost();
+        DebugConsole.registerHost(host);
         layers = new Layers(this);
         surface = host.createHardwareSurface();
         transport = host.createTransport();
@@ -64,8 +66,8 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         mainLayer = new LpLayer(layers, "MainLayer");
         shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
         setUpMidiSysExCommands();
-        host.showPopupNotification(" Intialize Launchpad");
-        initGridButtons();
+        host.showPopupNotification("Launchpad Drum Control");
+        //initGridButtons();
         initModifierButtons();
         initTransportSection();
         initDrumSequenceLayer();
@@ -206,18 +208,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
             }
             return RgbState.of(LpColor.BLUE_HI);
         });
-    }
-
-    private void initGridButtons() {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                GridButton button = hwElements.getGridButton(row, col);
-                button.bindPressed(mainLayer, p -> {
-                }, LpColor.BLUE_HI);
-                button.bindPressed(shiftLayer, p -> {
-                }, LpColor.ORANGE);
-            }
-        }
     }
 
     public int beatToMs(final double beats) {
