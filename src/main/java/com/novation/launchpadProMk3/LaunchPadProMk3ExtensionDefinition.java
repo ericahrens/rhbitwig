@@ -25,7 +25,7 @@ public class LaunchPadProMk3ExtensionDefinition extends ControllerExtensionDefin
 
     @Override
     public String getVersion() {
-        return "1.01";
+        return "1.02";
     }
 
     @Override

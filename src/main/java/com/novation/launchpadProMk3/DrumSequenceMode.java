@@ -29,7 +29,7 @@ public class DrumSequenceMode extends Layer {
     private static final LpColor[] ARP_BUTTON_COLORS = new LpColor[]{LpColor.BLUE, LpColor.BLUE, LpColor.BLUE, LpColor.BLUE, LpColor.PURPLE, LpColor.PURPLE, LpColor.PURPLE, LpColor.PURPLE};
     private static final LpColor[] GRID_BUTTON_COLORS = new LpColor[]{LpColor.PINK, LpColor.PINK, LpColor.PINK, LpColor.PINK, LpColor.PINK, LpColor.RED, LpColor.RED, LpColor.RED};
 
-    private static final RndConfig[] RND_VALUES = new RndConfig[]{RndConfig.P25, RndConfig.P50, RndConfig.P75};
+    static final RndConfig[] RND_VALUES = new RndConfig[]{RndConfig.P25, RndConfig.P50, RndConfig.P75};
 
     private int selectedRefVel = 0;
     private int selectedRndIndex = 2;
@@ -71,6 +71,7 @@ public class DrumSequenceMode extends Layer {
     private final Layer sendsLayer;
     private final Layer shiftLayer;
     private final Layer randomLayer;
+    private final DrumSeqMultilineLayer multilineSeqLayer;
 
     private Layer currentLayer;
 
@@ -132,6 +133,7 @@ public class DrumSequenceMode extends Layer {
                     selectedPad = this;
                     focusOnSelectedPad();
                     selectedPadIndex = index;
+                    multilineSeqLayer.setSelectPadIndex(index);
                 }
             });
             pad.exists().addValueObserver(exists -> this.exists = exists);
@@ -220,6 +222,7 @@ public class DrumSequenceMode extends Layer {
         clipAreaNavLayer = new Layer(getLayers(), getName() + "_NAV");
         sendsLayer = new Layer(getLayers(), getName() + "_VEL");
         randomLayer = new Layer(getLayers(), getName() + "_RANDOM");
+        multilineSeqLayer = new DrumSeqMultilineLayer(layers, driver, this);
         currentLayer = mainLayer;
 
         noteInput = driver.getNoteInput();
@@ -305,6 +308,10 @@ public class DrumSequenceMode extends Layer {
         hwElements.getButton(LabelCcAssignments.CUSTOM)
                 .bindToggle(mainLayer, randomModeActive, LpColor.GREEN_SPRING, LpColor.BLACK);
         hwElements.getButton(LabelCcAssignments.STOP_CLIP_SWING).bindPressed(mainLayer, stopButtonHeld, LpColor.RED);
+        hwElements.getButton(LabelCcAssignments.CHORD).bindPressed(mainLayer, multilineSeqLayer::toggleIsActive);
+        hwElements.getButton(LabelCcAssignments.CHORD)
+                .bindLight(mainLayer,
+                        () -> multilineSeqLayer.isActive() ? RgbState.of(LpColor.ORANGE) : RgbState.of(LpColor.BLACK));
 
         final LabeledButton deviceButton = hwElements.getButton(LabelCcAssignments.DEVICE_TEMPO);
         final ViewCursorControl control = driver.getViewControl();
@@ -374,7 +381,8 @@ public class DrumSequenceMode extends Layer {
                 final PadContainer pad = new PadContainer(index, control.getDrumPadBank().getItemAt(index),
                         playing[index]);
                 pads.add(pad);
-                button.bindPressed(mainLayer, p -> handlePadSelection(pad, p), pad::getColor);
+                button.bindPressed(mainLayer, () -> handlePadSelection(pad));
+                button.bindLight(mainLayer, pad::getColor);
                 button.bindToggle(muteLayer, pad.pad.mute());
                 button.bindLight(muteLayer, pad::mutingColors);
                 button.bindToggle(soloLayer, pad.pad.solo());
@@ -383,7 +391,7 @@ public class DrumSequenceMode extends Layer {
                 button.bindLight(sendsLayer, pad::sendStatusColor);
             }
         }
-        pads.sort((pc1, pc2) -> pc1.index - pc2.index);
+        pads.sort(Comparator.comparingInt(pc -> pc.index));
     }
 
     private void initSequenceSection(final LaunchpadProMk3ControllerExtension driver) {
@@ -493,6 +501,14 @@ public class DrumSequenceMode extends Layer {
         }
     }
 
+    public double getGatePercent() {
+        return gatePercent;
+    }
+
+    public int getRefVelocity() {
+        return velTable[selectedRefVel];
+    }
+
     public void setBackToOriginalLength() {
         adjustMode(originalClipLength);
         cursorClip.getLoopLength().set(originalClipLength);
@@ -535,6 +551,7 @@ public class DrumSequenceMode extends Layer {
             button.bind(this, () -> {
                 selectedGridIndex = index;
                 positionHandler.setGridResolution(GRID_RATES[index]);
+                multilineSeqLayer.setGridResolution(GRID_RATES[index]);
             }, () -> getGridState(index));
         }
     }
@@ -689,6 +706,14 @@ public class DrumSequenceMode extends Layer {
         this.playingStep = playingStep - positionHandler.getStepOffset();
     }
 
+    public boolean isFixedLengthHeld() {
+        return fixedLengthHeld.get();
+    }
+
+    public boolean isRandomModeActive() {
+        return randomModeActive.get();
+    }
+
     private void handleSeqSelection(final int index, final boolean pressed) {
         if (!pressed) {
             return;
@@ -708,6 +733,10 @@ public class DrumSequenceMode extends Layer {
         }
     }
 
+    public RndConfig getCurrentRndValue() {
+        return RND_VALUES[selectedRndIndex];
+    }
+
     private void stepActionRandomMode(final int index, final NoteStep note) {
         final double setProb = RND_VALUES[selectedRndIndex].prob;
         if (note != null && note.state() == State.NoteOn) {
@@ -723,16 +752,13 @@ public class DrumSequenceMode extends Layer {
         }
     }
 
-    private void stepActionFixedLength(final int index) {
+    void stepActionFixedLength(final int index) {
         final double newLen = positionHandler.lengthWithLastStep(index);
         adjustMode(newLen);
         cursorClip.getLoopLength().set(newLen);
     }
 
-    private void handlePadSelection(final PadContainer pad, final boolean pressed) {
-        if (!pressed) {
-            return;
-        }
+    private void handlePadSelection(final PadContainer pad) {
         if (states.getClearButtonPressed().get()) {
             cursorClip.scrollToKey(drumScrollOffset + pad.index);
             if (randomModeActive.get()) {
@@ -757,6 +783,7 @@ public class DrumSequenceMode extends Layer {
             }
         } else {
             pad.pad.selectInEditor();
+            multilineSeqLayer.setSelectPadIndex(pad.index);
         }
     }
 
@@ -801,7 +828,7 @@ public class DrumSequenceMode extends Layer {
         return RgbState.of(0);
     }
 
-    private LpColor toColor(final double chance) {
+    LpColor toColor(final double chance) {
         if (chance == 0) {
             return LpColor.GREY_MD;
         }
