@@ -129,6 +129,11 @@ public abstract class LpButton {
         layer.bind(hwButton, hwButton.releasedAction(), action);
     }
 
+    public void bind(final Layer layer, final SettableBooleanValue value) {
+        layer.bind(hwButton, hwButton.pressedAction(), () -> value.set(true));
+        layer.bind(hwButton, hwButton.releasedAction(), () -> value.set(false));
+    }
+
     public void bindPressed(final Layer layer, final SettableBooleanValue value, final LpColor color) {
         final RgbState onState = RgbState.of(color.getHiIndex());
         final RgbState offState = RgbState.of(color.getLowIndex());

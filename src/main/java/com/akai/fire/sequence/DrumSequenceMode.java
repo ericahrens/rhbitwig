@@ -94,7 +94,7 @@ public class DrumSequenceMode extends Layer {
             }
         });
         cursorClip.isPinned().markInterested();
-        positionHandler = new StepViewPosition(cursorClip);
+        positionHandler = new StepViewPosition(cursorClip, 32, "AKAI");
 
         padHandler = new PadHandler(driver, this, mainLayer, muteLayer, soloLayer);
         clipHandler = new SeqClipHandler(driver, this, mainLayer);

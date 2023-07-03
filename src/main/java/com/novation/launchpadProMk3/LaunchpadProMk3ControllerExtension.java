@@ -171,6 +171,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
                         RgbState.of(LpColor.RED_HI.getIndex(), LightState.PULSING), RgbState.of(LpColor.BLACK));
 
         hwElements.getButton(LabelCcAssignments.LEFT).bind(mainLayer, () -> application.undo(), LpColor.BLUE);
+        hwElements.getButton(LabelCcAssignments.RIGHT).bind(mainLayer, () -> application.redo(), LpColor.BLUE);
 
         hwElements.getButton(LabelCcAssignments.CLEAR)
                 .bindPressed(mainLayer, states.getClearButtonPressed(), LpColor.WHITE);
@@ -181,7 +182,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         hwElements.getButton(LabelCcAssignments.MUTE_REDO)
                 .bindPressed(mainLayer, states.getMuteButtonPressed(), LpColor.ORANGE);
 
-        hwElements.getButton(LabelCcAssignments.RIGHT).bind(mainLayer, () -> application.redo(), LpColor.BLUE);
 
         hwElements.getButton(LabelCcAssignments.SOLO_CLICK)
                 .bindPressed(mainLayer, states.getSoloButtonPressed(), LpColor.YELLOW);

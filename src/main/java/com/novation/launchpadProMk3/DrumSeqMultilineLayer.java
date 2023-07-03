@@ -17,17 +17,20 @@ public class DrumSeqMultilineLayer extends Layer {
     boolean markIgnoreOrigLen;
     private LpColor trackColor;
     private final LpColor[] padColors = new LpColor[16];
-    private final NoteStep[][] assignments = new NoteStep[4][32];
+    private final NoteStep[][] assignments = new NoteStep[8][32];
     private int currentPadIndex;
+    private final Layer eightLane;
 
     public DrumSeqMultilineLayer(final Layers layers, final LaunchpadProMk3ControllerExtension driver,
                                  DrumSequenceMode parent) {
         super(layers, "FOUR_X_SEQUENCER");
         this.parent = parent;
+        this.eightLane = new Layer(layers, "EIGHT_LANE");
         ViewCursorControl control = driver.getViewControl();
         CursorTrack cursorTrack = control.getCursorTrack();
         cursorTrack.color().addValueObserver((r, g, b) -> trackColor = ColorLookup.getColor(r, g, b));
-        cursorClip = cursorTrack.createLauncherCursorClip("4xCLIP", "4RowClip", 16, 4);
+        cursorClip = cursorTrack.createLauncherCursorClip("4xCLIP", "4RowClip", 16, 8);
+        positionHandler = new StepViewPosition(cursorClip, 16, "8LANE");
         final DrumPadBank drumPadBank = control.getDrumPadBank();
         Arrays.fill(padColors, LpColor.BLACK);
         drumPadBank.scrollPosition().addValueObserver(offset -> {
@@ -50,15 +53,33 @@ public class DrumSeqMultilineLayer extends Layer {
             }
         });
 
-        positionHandler = new StepViewPosition(cursorClip);
+    }
+
+    public void toggleLaneMode() {
+        if (!isActive()) {
+            setIsActive(true);
+            eightLane.setIsActive(true);
+            ensureIndexOffset();
+        } else {
+            eightLane.toggleIsActive();
+            ensureIndexOffset();
+        }
+    }
+
+    public boolean isEightLaneActive() {
+        return eightLane.isActive();
     }
 
     public void setSelectPadIndex(int padIndex) {
-        this.currentPadIndex = Math.min(padIndex, 12);
-        cursorClip.scrollToKey(drumScrollOffset + currentPadIndex);
+        this.currentPadIndex = padIndex;
+        ensureIndexOffset();
     }
 
     private void initDrumPadButtons(HardwareElements hwElements) {
+        hwElements.getButton(LabelCcAssignments.DOWN)
+                .bind(this, positionHandler::scrollRight, positionHandler.canScrollRight(), LpColor.WHITE);
+        hwElements.getButton(LabelCcAssignments.UP)
+                .bind(this, positionHandler::scrollLeft, positionHandler.canScrollLeft(), LpColor.WHITE);
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 final GridButton button = hwElements.getGridButton(row, col);
@@ -66,6 +87,11 @@ public class DrumSeqMultilineLayer extends Layer {
                 int stepIndex = (row % 2) * 8 + col;
                 button.bindPressed(this, () -> handleSeqSelection(noteIndex, stepIndex));
                 button.bindLight(this, () -> getColor(noteIndex, stepIndex));
+
+                int noteIndex8 = row;
+                int stepIndex8 = col;
+                button.bindPressed(eightLane, () -> handleSeqSelection(noteIndex8, stepIndex8));
+                button.bindLight(eightLane, () -> getColor(noteIndex8, stepIndex8));
             }
         }
     }
@@ -74,6 +100,7 @@ public class DrumSeqMultilineLayer extends Layer {
         final int steps = positionHandler.getAvailableSteps();
         NoteStep assignment = assignments[noteIndex][stepIndex];
         LpColor color = padColors[(noteIndex + currentPadIndex) % 16];
+        color = color == LpColor.BLACK ? trackColor : color;
         if (stepIndex < steps) {
             if (assignment == null || assignment.state() != NoteStep.State.NoteOn) {
                 if (stepIndex == playingStep) {
@@ -110,7 +137,7 @@ public class DrumSeqMultilineLayer extends Layer {
         if (parent.isFixedLengthHeld()) {
             parent.stepActionFixedLength(stepIndex);
         } else if (parent.isRandomModeActive()) {
-            stepActionRandomMode(stepIndex, note);
+            stepActionRandomMode(noteIndex, stepIndex, note);
         } else {
             if (note == null || note.state() == NoteStep.State.Empty) {
                 cursorClip.setStep(stepIndex, noteIndex, parent.getRefVelocity(),
@@ -121,7 +148,7 @@ public class DrumSeqMultilineLayer extends Layer {
         }
     }
 
-    void stepActionRandomMode(final int index, final NoteStep note) {
+    void stepActionRandomMode(final int noteIndex, final int stepIndex, final NoteStep note) {
         DrumSequenceMode.RndConfig rndConfig = parent.getCurrentRndValue();
         final double setProb = rndConfig.getProb();
         if (note != null && note.state() == NoteStep.State.NoteOn) {
@@ -132,7 +159,7 @@ public class DrumSeqMultilineLayer extends Layer {
                 note.setChance(setProb);
             }
         } else if (note == null || note.state() == NoteStep.State.Empty) {
-            cursorClip.setStep(index, 0, parent.getRefVelocity(),
+            cursorClip.setStep(stepIndex, noteIndex, parent.getRefVelocity(),
                     positionHandler.getGridResolution() * parent.getGatePercent());
             //probValues[index] = RND_VALUES[selectedRndIndex].prob;
         }
@@ -155,5 +182,29 @@ public class DrumSeqMultilineLayer extends Layer {
 
     public void setGridResolution(double gridRate) {
         positionHandler.setGridResolution(gridRate);
+    }
+
+    @Override
+    protected void onActivate() {
+        super.onActivate();
+        ensureIndexOffset();
+    }
+
+    private void ensureIndexOffset() {
+        if (eightLane.isActive()) {
+            this.currentPadIndex = Math.min(this.currentPadIndex, 8);
+            cursorClip.scrollToKey(drumScrollOffset + currentPadIndex);
+            positionHandler.setStepsPerPage(8);
+        } else {
+            this.currentPadIndex = Math.min(this.currentPadIndex, 12);
+            cursorClip.scrollToKey(drumScrollOffset + currentPadIndex);
+            positionHandler.setStepsPerPage(16);
+        }
+    }
+
+    @Override
+    protected void onDeactivate() {
+        super.onDeactivate();
+        eightLane.setIsActive(false);
     }
 }

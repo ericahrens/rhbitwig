@@ -17,6 +17,7 @@ public class DrumSequenceMode extends Layer {
     private final int[] notesToPadsTable = new int[128];
     private final BooleanValueObject[] playing = new BooleanValueObject[16];
     private final boolean[] drumTracker = new boolean[16];
+    private final ControllerHost host;
     private int drumScrollOffset = 0;
     private final List<PadContainer> pads = new ArrayList<>();
     double gatePercent = 0.98;
@@ -42,6 +43,7 @@ public class DrumSequenceMode extends Layer {
     private final PinnableCursorClip cursorClip;
     private final StepViewPosition positionHandler;
     private final BooleanValueObject sendHeld = new BooleanValueObject();
+    private final BooleanValueObject altLaunchHeld = new BooleanValueObject();
 
     private final Arpeggiator arp;
     private final NoteStep[] assignments = new NoteStep[32];
@@ -79,6 +81,10 @@ public class DrumSequenceMode extends Layer {
     private boolean markIgnoreOrigLen = false;
     private final ClipLauncherSlotBank slotBank;
     private final CursorTrack cursorTrack;
+
+    private long downTimeChordButton = 0;
+    private long chordTapCount = 0;
+
 
     enum RndConfig {
         P10(0.10, LpColor.PINK),
@@ -224,7 +230,7 @@ public class DrumSequenceMode extends Layer {
         randomLayer = new Layer(getLayers(), getName() + "_RANDOM");
         multilineSeqLayer = new DrumSeqMultilineLayer(layers, driver, this);
         currentLayer = mainLayer;
-
+        this.host = driver.getHost();
         noteInput = driver.getNoteInput();
 
         final ViewCursorControl control = driver.getViewControl();
@@ -255,7 +261,7 @@ public class DrumSequenceMode extends Layer {
                 originalClipLength = clipLength;
             }
         });
-        positionHandler = new StepViewPosition(cursorClip);
+        positionHandler = new StepViewPosition(cursorClip, 32, "REGULAR");
 
         initDrumPadButtons(driver);
         initExtendSection(driver);
@@ -308,10 +314,12 @@ public class DrumSequenceMode extends Layer {
         hwElements.getButton(LabelCcAssignments.CUSTOM)
                 .bindToggle(mainLayer, randomModeActive, LpColor.GREEN_SPRING, LpColor.BLACK);
         hwElements.getButton(LabelCcAssignments.STOP_CLIP_SWING).bindPressed(mainLayer, stopButtonHeld, LpColor.RED);
-        hwElements.getButton(LabelCcAssignments.CHORD).bindPressed(mainLayer, multilineSeqLayer::toggleIsActive);
+        hwElements.getButton(LabelCcAssignments.CHORD).bindPressed(mainLayer, this::handleMultilanePressed);
+        hwElements.getButton(LabelCcAssignments.CHORD).bindReleased(mainLayer, this::handleMultilaneReleased);
         hwElements.getButton(LabelCcAssignments.CHORD)
                 .bindLight(mainLayer,
-                        () -> multilineSeqLayer.isActive() ? RgbState.of(LpColor.ORANGE) : RgbState.of(LpColor.BLACK));
+                        () -> multilineSeqLayer.isActive() ? (multilineSeqLayer.isEightLaneActive() ? RgbState.of(60,
+                                LightState.PULSING) : RgbState.of(LpColor.ORANGE)) : RgbState.of(LpColor.BLACK));
 
         final LabeledButton deviceButton = hwElements.getButton(LabelCcAssignments.DEVICE_TEMPO);
         final ViewCursorControl control = driver.getViewControl();
@@ -371,6 +379,48 @@ public class DrumSequenceMode extends Layer {
         }
     }
 
+    private void handleMultilanePressed() {
+        downTimeChordButton = System.currentTimeMillis();
+    }
+
+    private void handleMultilaneReleased() {
+        int detectedTaps = getChordTapCount();
+        if (detectedTaps == 2) {
+            handleDoubleTap();
+        } else if (detectedTaps == 1) {
+            handleSingleTap();
+        }
+    }
+
+    private void handleSingleTap() {
+        multilineSeqLayer.toggleIsActive();
+    }
+
+    private void handleDoubleTap() {
+        multilineSeqLayer.toggleLaneMode();
+    }
+
+    private int getChordTapCount() {
+        long time = System.currentTimeMillis() - downTimeChordButton;
+        if (time < 150) {
+            if (chordTapCount > 0) {
+                chordTapCount = 0;
+                return 2;
+            }
+            chordTapCount++;
+            host.scheduleTask(() -> {
+                if (chordTapCount == 1) {
+                    chordTapCount = 0;
+                    handleSingleTap();
+                }
+            }, 150);
+            return 0;
+        }
+        chordTapCount = 0;
+        downTimeChordButton = 0;
+        return 1;
+    }
+
     private void initDrumPadButtons(final LaunchpadProMk3ControllerExtension driver) {
         HardwareElements hwElements = driver.getHwElements();
         final ViewCursorControl control = driver.getViewControl();
@@ -409,33 +459,23 @@ public class DrumSequenceMode extends Layer {
         HardwareElements hwElements = driver.getHwElements();
         for (int row = 4; row < 6; row++) {
             for (int col = 4; col < 8; col++) {
+                if (col == 7 && row == 5) {
+                    continue;
+                }
                 final GridButton button = hwElements.getGridButton(row, col);
                 final int index = (row - 4) * 4 + col - 4;
 
                 final ClipLauncherSlot cs = slotBank.getItemAt(index);
-
-                cs.color()
-                        .addValueObserver(
-                                (r, g, b) -> slotColors[index] = ColorLookup.getColor(r, g, b, LpColor.BLACK));
-                cs.isSelected().addValueObserver(selected -> {
-                    if (selected) {
-                        selectedSlotIndex = index;
-                    }
-                });
-                slotColors[index] = ColorLookup.getColor(cs.color().get(), LpColor.BLACK);
-                cs.exists().markInterested();
-                cs.hasContent().markInterested();
-                cs.isPlaybackQueued().markInterested();
-                cs.isPlaying().markInterested();
-                cs.isRecording().markInterested();
-                cs.isRecordingQueued().markInterested();
-                cs.isSelected().markInterested();
-                cs.isStopQueued().markInterested();
-
+                prepareClipSlot(index, cs);
                 button.bindPressed(mainLayer, p -> handleClip(index, cs, p), () -> getClipSate(index, cs));
                 button.bindPressed(clipAreaNavLayer, p -> handlePositionSelection(index, p), () -> lengthState(index));
             }
         }
+        GridButton altControlButton = hwElements.getGridButton(5, 7);
+        altControlButton.bind(mainLayer, altLaunchHeld);
+        altControlButton.bindLight(mainLayer,
+                () -> altLaunchHeld.get() ? RgbState.of(2, LightState.PULSING) : RgbState.of(2));
+
         for (int row = 4; row < 8; row++) {
             for (int col = 4; col < 8; col++) {
                 final GridButton button = hwElements.getGridButton(row, col);
@@ -471,6 +511,24 @@ public class DrumSequenceMode extends Layer {
         len2Button.bind(mainLayer, () -> setLengthByNotes(2), LpColor.YELLOW);
         final GridButton len1Button = hwElements.getGridButton(7, 7);
         len1Button.bind(mainLayer, () -> setLengthByNotes(1), LpColor.YELLOW);
+    }
+
+    private void prepareClipSlot(int index, ClipLauncherSlot cs) {
+        cs.color().addValueObserver((r, g, b) -> slotColors[index] = ColorLookup.getColor(r, g, b, LpColor.BLACK));
+        cs.isSelected().addValueObserver(selected -> {
+            if (selected) {
+                selectedSlotIndex = index;
+            }
+        });
+        slotColors[index] = ColorLookup.getColor(cs.color().get(), LpColor.BLACK);
+        cs.exists().markInterested();
+        cs.hasContent().markInterested();
+        cs.isPlaybackQueued().markInterested();
+        cs.isPlaying().markInterested();
+        cs.isRecording().markInterested();
+        cs.isRecordingQueued().markInterested();
+        cs.isSelected().markInterested();
+        cs.isStopQueued().markInterested();
     }
 
     public void macroLaunchNote() {
@@ -602,8 +660,10 @@ public class DrumSequenceMode extends Layer {
 
     private void handleClip(final int index, final ClipLauncherSlot slot, final boolean pressed) {
         if (!pressed) {
-            if (states.isOnlyShiftActive()) {
+            if (altLaunchHeld.get()) {
                 slot.launchReleaseAlt();
+            } else if (states.isOnlyShiftActive()) {
+                slot.select();
             } else if (states.isNoModifiersActive()) {
                 slot.launchRelease();
             }
@@ -612,9 +672,10 @@ public class DrumSequenceMode extends Layer {
 
         final boolean hasContent = slot.hasContent().get();
         if (hasContent) {
-            if (states.getShiftModeActive().get()) {
-                slot.select();
+            if (altLaunchHeld.get()) {
                 slot.launchAlt();
+            } else if (states.isOnlyShiftActive()) {
+                slot.select();
                 states.notifyShiftFunctionInvoked();
             } else if (states.getClearButtonPressed().get()) {
                 final int previous = selectedSlotIndex;
@@ -737,7 +798,7 @@ public class DrumSequenceMode extends Layer {
         return RND_VALUES[selectedRndIndex];
     }
 
-    private void stepActionRandomMode(final int index, final NoteStep note) {
+    private void stepActionRandomMode(final int stepIndex, final NoteStep note) {
         final double setProb = RND_VALUES[selectedRndIndex].prob;
         if (note != null && note.state() == State.NoteOn) {
             final double prob = note.chance();
@@ -747,8 +808,9 @@ public class DrumSequenceMode extends Layer {
                 note.setChance(RND_VALUES[selectedRndIndex].prob);
             }
         } else if (note == null || note.state() == State.Empty) {
-            cursorClip.setStep(index, 0, velTable[selectedRefVel], positionHandler.getGridResolution() * gatePercent);
-            probValues[index] = RND_VALUES[selectedRndIndex].prob;
+            cursorClip.setStep(stepIndex, 0, velTable[selectedRefVel],
+                    positionHandler.getGridResolution() * gatePercent);
+            probValues[stepIndex] = RND_VALUES[selectedRndIndex].prob;
         }
     }
 

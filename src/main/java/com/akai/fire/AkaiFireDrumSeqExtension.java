@@ -11,7 +11,6 @@ import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.rh.BooleanValueObject;
@@ -62,7 +61,6 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
     @Override
     public void init() {
         host = getHost();
-        RemoteConsole.out.registerHost(host);
         Arrays.fill(lastCcValue, -1);
 
         layers = new Layers(this);
