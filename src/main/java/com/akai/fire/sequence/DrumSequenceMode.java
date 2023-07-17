@@ -471,11 +471,11 @@ public class DrumSequenceMode extends Layer {
 
     private void adjustMode(final int notes) {
         if (notes % 8 == 0) {
-            cursorClip.launchMode().set("play_with_quantization");
+            cursorClip.launchMode().set("default");
         } else if (clipLaunchModeQuant.get()) {
-            cursorClip.launchMode().set("continue_with_quantization");
+            cursorClip.launchMode().set("synced");
         } else {
-            cursorClip.launchMode().set("continue_immediately");
+            cursorClip.launchMode().set("from_start");
         }
     }
 
