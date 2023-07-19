@@ -293,6 +293,9 @@ public class DrumSequenceMode extends Layer {
 
         notePlayingActive.addValueObserver(active -> {
             if (active) {
+                if (multilineSeqLayer.isActive()) {
+                    multilineSeqLayer.setIsActive(false);
+                }
                 applyScale();
             } else if (!notePlayingEnabled()) {
                 disableNotePlaying();
@@ -394,10 +397,18 @@ public class DrumSequenceMode extends Layer {
 
     private void handleSingleTap() {
         multilineSeqLayer.toggleIsActive();
+        if (multilineSeqLayer.isActive() && notePlayingEnabled()) {
+            notePlayingActive.set(false);
+            states.getNoteRepeatActive().set(false);
+        }
     }
 
     private void handleDoubleTap() {
         multilineSeqLayer.toggleLaneMode();
+        if (multilineSeqLayer.isActive() && notePlayingEnabled()) {
+            notePlayingActive.set(false);
+            states.getNoteRepeatActive().set(false);
+        }
     }
 
     private int getChordTapCount() {
@@ -1122,6 +1133,9 @@ public class DrumSequenceMode extends Layer {
 
     private void handleNoteRepeatChanged(final boolean nrActive) {
         if (nrActive) {
+            if (multilineSeqLayer.isActive()) {
+                multilineSeqLayer.setIsActive(false);
+            }
             arp.isEnabled().set(true);
             arp.mode().set("all"); // that's the note repeat way
             arp.octaves().set(0);
