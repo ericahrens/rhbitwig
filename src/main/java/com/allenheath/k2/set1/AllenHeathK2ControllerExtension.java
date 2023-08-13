@@ -26,6 +26,16 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     private DirectParameterControl delayControl;
     private DirectParameterControl reverbControl;
 
+    private static ControllerHost debugHost;
+    private HwElements hwElements;
+    private SequencerLayer sequencerLayer;
+
+    public static void println(final String format, final Object... args) {
+        if (debugHost != null) {
+            debugHost.println(format.format(format, args));
+        }
+    }
+
     protected AllenHeathK2ControllerExtension(final ControllerExtensionDefinition definition,
                                               final ControllerHost host) {
         super(definition, host);
@@ -34,13 +44,14 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     @Override
     public void init() {
         final ControllerHost host = getHost();
-        
+        debugHost = host;
         layers = new Layers(this);
         surface = host.createHardwareSurface();
         midiIn = host.getMidiInPort(0);
         midiOut = host.getMidiOutPort(0);
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
+        midiIn.setMidiCallback(this::onMidi);
 
         delayControl = new DirectParameterControl(SpecialVstDevices.LEXICON_PSP, SpecialParam.PSP_REPEAT_INF);
         reverbControl = new DirectParameterControl(SpecialVst3Devices.MEAGAVERB3, SpecialParam.MEGA_VERB_GATE);
@@ -51,10 +62,22 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
         viewControl = new ViewCursorControl(host, controlList, 16);
         mainLayer = new Layer(layers, "MainLayer");
+        hwElements = new HwElements(surface, host, midiIn, midiOut);
+        sequencerLayer = new SequencerLayer(layers, hwElements, viewControl);
         host.showPopupNotification("Intialize Xone:K2 DJ Set");
         initSendsButtons();
         initDocumentProperties();
         mainLayer.activate();
+    }
+
+
+    private void onMidi(int msg, int data1, int data2) {
+//        println("MIDI> %02X %02X %02X", msg, data1, data2);
+//        if (msg == 0x9D && data1 == 0x0C && data2 == 0x7F) {
+//            for (int i = 0; i < 0x38; i++) {
+//                midiOut.sendMidi(Midi.NOTE_ON + 13, i, 0);
+//            }
+//        }
     }
 
     private void initDocumentProperties() {
@@ -102,7 +125,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
     @Override
     public void exit() {
-        getHost().showPopupNotification("Xone:K2 DJ Set exited");
+        sequencerLayer.exit();
     }
 
     @Override

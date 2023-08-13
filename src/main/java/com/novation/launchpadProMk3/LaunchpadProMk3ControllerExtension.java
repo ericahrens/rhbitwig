@@ -6,6 +6,8 @@ import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
+import com.bitwig.extensions.common.DrumSequencerSource;
+import com.bitwig.extensions.context.GlobalContext;
 import com.bitwig.extensions.debug.DebugConsole;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
@@ -257,6 +259,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     @Override
     public void exit() {
         drumseqenceMode.deactivate();
+        GlobalContext.getContext().removeProvider(DrumSequencerSource.class);
         final CompletableFuture<Boolean> shutdown = new CompletableFuture<>();
         Executors.newSingleThreadExecutor().execute(() -> shutDownController(shutdown));
         try {

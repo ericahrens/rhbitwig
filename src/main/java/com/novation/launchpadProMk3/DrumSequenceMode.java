@@ -2,6 +2,8 @@ package com.novation.launchpadProMk3;
 
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.api.NoteStep.State;
+import com.bitwig.extensions.common.DrumSequencerSource;
+import com.bitwig.extensions.context.GlobalContext;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.rh.BooleanValueObject;
@@ -10,7 +12,7 @@ import com.bitwig.extensions.rh.StepViewPosition;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 
-public class DrumSequenceMode extends Layer {
+public class DrumSequenceMode extends Layer implements DrumSequencerSource {
     private final NoteInput noteInput;
     private final Integer[] notesToDrumTable = new Integer[128];
     private final Integer[] velocityTable = new Integer[128];
@@ -85,6 +87,7 @@ public class DrumSequenceMode extends Layer {
     private long downTimeChordButton = 0;
     private long chordTapCount = 0;
 
+    private Map<String, DrumSequencerSource.ChangeListener> changeListeners = new HashMap<>();
 
     enum RndConfig {
         P10(0.10, LpColor.PINK),
@@ -139,6 +142,7 @@ public class DrumSequenceMode extends Layer {
                     selectedPad = this;
                     focusOnSelectedPad();
                     selectedPadIndex = index;
+                    notifyNoteOffset();
                     multilineSeqLayer.setSelectPadIndex(index);
                 }
             });
@@ -303,6 +307,7 @@ public class DrumSequenceMode extends Layer {
         });
         assignNoteRepeat(hwElements.getTrackSelectButtons());
         assignGridResolution(hwElements.getSceneLaunchButtons());
+        GlobalContext.getContext().provideListener(DrumSequencerSource.class, this);
     }
 
     private void initSpecialButtons(LaunchpadProMk3ControllerExtension driver) {
@@ -570,12 +575,45 @@ public class DrumSequenceMode extends Layer {
         }
     }
 
+    @Override
     public double getGatePercent() {
         return gatePercent;
     }
 
+    @Override
     public int getRefVelocity() {
         return velTable[selectedRefVel];
+    }
+
+    @Override
+    public double getGridResolution() {
+        return positionHandler.getGridResolution();
+    }
+
+    @Override
+    public int getNoteOffset() {
+        return drumScrollOffset + selectedPadIndex;
+    }
+
+    @Override
+    public void registerListener(String id, ChangeListener listener) {
+        if (!changeListeners.containsKey(id)) {
+            changeListeners.put(id, listener);
+        }
+    }
+
+    @Override
+    public void removeListener(String id) {
+        changeListeners.remove(id);
+    }
+
+    private void notifyNoteOffset() {
+        final int padIndex = selectedPadIndex == -1 ? 0 : selectedPadIndex;
+        changeListeners.entrySet().forEach(entry -> entry.getValue().changePadsOffset(drumScrollOffset, padIndex, 16));
+    }
+
+    private void notifyGridResolution(double resolution) {
+        changeListeners.entrySet().forEach(entry -> entry.getValue().changeGridResolution(resolution));
     }
 
     public void setBackToOriginalLength() {
@@ -621,6 +659,7 @@ public class DrumSequenceMode extends Layer {
                 selectedGridIndex = index;
                 positionHandler.setGridResolution(GRID_RATES[index]);
                 multilineSeqLayer.setGridResolution(GRID_RATES[index]);
+                notifyGridResolution(GRID_RATES[index]);
             }, () -> getGridState(index));
         }
     }
@@ -1012,6 +1051,7 @@ public class DrumSequenceMode extends Layer {
             drumScrollOffset = offset;
             focusOnSelectedPad();
             applyScale();
+            notifyNoteOffset();
         });
         for (int i = 0; i < 16; i++) {
             playing[i] = new BooleanValueObject();
