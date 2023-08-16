@@ -1,4 +1,4 @@
-package com.torso.t1;
+package com.rhcommons;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Parameter;
@@ -11,7 +11,7 @@ public class MapTranspose extends FollowDevice {
     public static final UUID BITWIG_MAP_TRANSPOSE = UUID.fromString("284a1949-29d5-4dd4-8315-86cef92fd2cd");
     private final Parameter[] pitchClasses = new Parameter[12];
     private final Parameter rootNote;
-    
+
     public MapTranspose(final int index, final ControllerHost host, final Track track) {
         super(index, host, track, BITWIG_MAP_TRANSPOSE);
         for (int i = 0; i < 12; i++) {

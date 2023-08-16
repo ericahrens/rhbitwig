@@ -72,6 +72,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
         //initGridButtons();
         initModifierButtons();
         initTransportSection();
+        Preferences preferences = host.getPreferences();
         initDrumSequenceLayer();
         mainLayer.activate();
         drumseqenceMode.activate();
@@ -115,7 +116,10 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
     }
 
     private void initDrumSequenceLayer() {
-        drumseqenceMode = new DrumSequenceMode(layers, this);
+        SettableBooleanValue padsToRight = getHost().getPreferences()
+                .getBooleanSetting("Drum Pads Right Side", "Layout", false);
+        padsToRight.markInterested();
+        drumseqenceMode = new DrumSequenceMode(layers, this, padsToRight.get());
         // implement a only pressed binding to avoid stupid if stuff..
     }
 

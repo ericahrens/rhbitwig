@@ -2,6 +2,7 @@ package com.torso.t1;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Track;
+import com.rhcommons.FollowDevice;
 
 import java.util.UUID;
 

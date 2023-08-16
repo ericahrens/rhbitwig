@@ -1,4 +1,4 @@
-package com.torso.t1;
+package com.rhcommons;
 
 import com.bitwig.extension.controller.api.*;
 
@@ -30,6 +30,10 @@ public class FollowDevice {
     public void info() {
         host.println(String.format("FD %d class=%s exist=%s", index, getClass().getSimpleName(),
                 followDevice.exists().get()));
+    }
+
+    public boolean exists() {
+        return followDevice.exists().get();
     }
 
     protected Parameter createParameter(final String id) {

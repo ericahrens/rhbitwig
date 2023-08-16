@@ -3,6 +3,7 @@ package com.torso.t1;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.Track;
+import com.rhcommons.FollowDevice;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,7 +47,7 @@ public class ArpDevice extends FollowDevice {
         }
     }
 
-    public void setPulseLocations(final List<Integer> pulseLocations,  final int steps) {
+    public void setPulseLocations(final List<Integer> pulseLocations, final int steps) {
         final boolean[] slots = new boolean[16];
         for (final Integer loc : pulseLocations) {
             if (loc >= 1 && loc < 17) {

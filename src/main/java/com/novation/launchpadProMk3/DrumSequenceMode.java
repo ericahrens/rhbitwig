@@ -86,6 +86,8 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
 
     private long downTimeChordButton = 0;
     private long chordTapCount = 0;
+    private int padStart = 0;
+    private int controlStart = 4;
 
     private Map<String, DrumSequencerSource.ChangeListener> changeListeners = new HashMap<>();
 
@@ -221,8 +223,12 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
 
     }
 
-    public DrumSequenceMode(final Layers layers, final LaunchpadProMk3ControllerExtension driver) {
+    public DrumSequenceMode(final Layers layers, final LaunchpadProMk3ControllerExtension driver, boolean padsRight) {
         super(layers, "DRUM_SEQUENCE_LAYER");
+        if (padsRight) {
+            padStart = 4;
+            controlStart = 0;
+        }
         HardwareElements hwElements = driver.getHwElements();
         mainLayer = new Layer(getLayers(), getName() + "_MAIN");
         shiftLayer = new Layer(getLayers(), getName() + "_SHIFT");
@@ -240,6 +246,7 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
         final ViewCursorControl control = driver.getViewControl();
         setupPlaying(control);
 
+
         cursorTrack = driver.getViewControl().getCursorTrack();
 
         cursorClip = cursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
@@ -255,7 +262,7 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
                 randomLayer.deactivate();
             }
         });
-        
+
         cursorClip.addNoteStepObserver(this::handleNoteStep);
         cursorClip.playingStep().addValueObserver(this::handlePlayingStep);
         cursorClip.getLoopLength().addValueObserver(clipLength -> {
@@ -442,7 +449,7 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
         final ViewCursorControl control = driver.getViewControl();
         for (int row = 4; row < 8; row++) {
             for (int col = 0; col < 4; col++) {
-                final GridButton button = hwElements.getGridButton(row, col);
+                final GridButton button = hwElements.getGridButton(row, col + padStart);
                 final int index = (7 - row) * 4 + col;
                 final PadContainer pad = new PadContainer(index, control.getDrumPadBank().getItemAt(index),
                         playing[index]);
@@ -474,12 +481,12 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
     private void initExtendSection(final LaunchpadProMk3ControllerExtension driver) {
         HardwareElements hwElements = driver.getHwElements();
         for (int row = 4; row < 6; row++) {
-            for (int col = 4; col < 8; col++) {
-                if (col == 7 && row == 5) {
+            for (int col = 0; col < 4; col++) {
+                if (col == 3 && row == 5) {
                     continue;
                 }
-                final GridButton button = hwElements.getGridButton(row, col);
-                final int index = (row - 4) * 4 + col - 4;
+                final GridButton button = hwElements.getGridButton(row, col + controlStart);
+                final int index = (row - 4) * 4 + col;
 
                 final ClipLauncherSlot cs = slotBank.getItemAt(index);
                 prepareClipSlot(index, cs);
@@ -487,45 +494,45 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
                 button.bindPressed(clipAreaNavLayer, p -> handlePositionSelection(index, p), () -> lengthState(index));
             }
         }
-        GridButton altControlButton = hwElements.getGridButton(5, 7);
+        GridButton altControlButton = hwElements.getGridButton(5, controlStart + 3);
         altControlButton.bind(mainLayer, altLaunchHeld);
         altControlButton.bindLight(mainLayer,
                 () -> altLaunchHeld.get() ? RgbState.of(2, LightState.PULSING) : RgbState.of(2));
 
         for (int row = 4; row < 8; row++) {
-            for (int col = 4; col < 8; col++) {
-                final GridButton button = hwElements.getGridButton(row, col);
-                final int index = (row - 4) * 4 + col - 4;
+            for (int col = 0; col < 4; col++) {
+                final GridButton button = hwElements.getGridButton(row, col + controlStart);
+                final int index = (row - 4) * 4 + col;
                 button.bindPressed(velLayer, p -> handleVelocitySelection(index, p), () -> velocityValues(index));
                 button.bindPressed(randomLayer, p -> handleRndSelection(index, p), () -> rndValues(index));
             }
         }
         final PadContainer refPad = pads.get(0);
         for (int row = 6; row < 8; row++) {
-            for (int col = 4; col < 8; col++) {
-                final GridButton button = hwElements.getGridButton(row, col);
-                final int index = (row - 6) * 4 + col - 4;
+            for (int col = 0; col < 4; col++) {
+                final GridButton button = hwElements.getGridButton(row, col + controlStart);
+                final int index = (row - 6) * 4 + col;
                 button.bind(sendsLayer, () -> selectSendSlot(index, refPad));
                 button.bindLight(sendsLayer, () -> sendSlotColor(index, refPad));
             }
         }
 
-        final GridButton retriggerButton = hwElements.getGridButton(6, 4);
+        final GridButton retriggerButton = hwElements.getGridButton(6, controlStart);
         retriggerButton.bind(mainLayer, cursorClip::launch, LpColor.GREEN);
-        final GridButton originalLengthButton = hwElements.getGridButton(6, 5);
+        final GridButton originalLengthButton = hwElements.getGridButton(6, controlStart + 1);
         originalLengthButton.bind(mainLayer, this::setBackToOriginalLength, LpColor.PURPLE);
-        final GridButton len8Button = hwElements.getGridButton(6, 6);
+        final GridButton len8Button = hwElements.getGridButton(6, controlStart + 2);
         len8Button.bind(mainLayer, () -> setLengthByNotes(8), LpColor.YELLOW);
-        final GridButton len5Button = hwElements.getGridButton(6, 7);
+        final GridButton len5Button = hwElements.getGridButton(6, controlStart + 3);
         len5Button.bind(mainLayer, () -> setLengthByNotes(5), LpColor.YELLOW);
 
-        final GridButton len4Button = hwElements.getGridButton(7, 4);
+        final GridButton len4Button = hwElements.getGridButton(7, controlStart);
         len4Button.bind(mainLayer, () -> setLengthByNotes(4), LpColor.YELLOW);
-        final GridButton len3Button = hwElements.getGridButton(7, 5);
+        final GridButton len3Button = hwElements.getGridButton(7, controlStart + 1);
         len3Button.bind(mainLayer, () -> setLengthByNotes(3), LpColor.YELLOW);
-        final GridButton len2Button = hwElements.getGridButton(7, 6);
+        final GridButton len2Button = hwElements.getGridButton(7, controlStart + 2);
         len2Button.bind(mainLayer, () -> setLengthByNotes(2), LpColor.YELLOW);
-        final GridButton len1Button = hwElements.getGridButton(7, 7);
+        final GridButton len1Button = hwElements.getGridButton(7, controlStart + 3);
         len1Button.bind(mainLayer, () -> setLengthByNotes(1), LpColor.YELLOW);
     }
 
@@ -1040,11 +1047,11 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
     private void setupPlaying(final ViewCursorControl control) {
         final DrumPadBank drumPadBank = control.getDrumPadBank();
         final CursorTrack cursorTrack = control.getCursorTrack();
-        for (int i = 0; i < notesToDrumTable.length; i++) {
-            notesToDrumTable[i] = -1;
-            notesToPadsTable[i] = -1;
-        }
+
+        Arrays.fill(notesToDrumTable, -1);
+        Arrays.fill(notesToPadsTable, -1);
         applyRefVelocity(velTable[selectedRefVel]);
+
         noteInput.setKeyTranslationTable(notesToDrumTable);
         noteInput.setVelocityTranslationTable(velocityTable);
         drumPadBank.scrollPosition().addValueObserver(offset -> {
@@ -1144,11 +1151,10 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
         if (!isActive()) {
             return;
         }
-        for (int i = 0; i < 128; i++) {
-            notesToPadsTable[i] = -1;
-        }
+        Arrays.fill(notesToPadsTable, -1);
+
         for (int i = 0; i < 16; i++) {
-            final int padnote = PAD_NOTES[i];
+            final int padnote = PAD_NOTES[i] + padStart;
             final int noteToPadIndex = drumScrollOffset + i;
             if (noteToPadIndex < 128) {
                 notesToDrumTable[padnote] = noteToPadIndex;
@@ -1165,9 +1171,7 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
             return;
         }
         holdNotes.clear();
-        for (int i = 0; i < 128; i++) {
-            notesToDrumTable[i] = -1;
-        }
+        Arrays.fill(notesToDrumTable, -1);
         noteInput.setKeyTranslationTable(notesToDrumTable);
     }
 

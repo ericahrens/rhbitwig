@@ -26,7 +26,6 @@ public class PadGrouping {
                 padToSlotIndex[container.getIndex()] = i;
             }
         }
-        AllenHeathK2ControllerExtension.println(" ==> %s", Arrays.toString(padToSlotIndex));
     }
 
     public int padIndexToSlot(int padIndex) {

@@ -62,7 +62,6 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
         final NoteStep[] assignments = new NoteStep[32];
 
         drumPadBank.scrollPosition().addValueObserver(drumPosition -> {
-            AllenHeathK2ControllerExtension.println(" POS = %d", drumPosition);
             adjustPosition();
         });
 
@@ -72,7 +71,6 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
         cursorClip.playingStep().addValueObserver(this::handlePlayingStep);
         cursorClip.getLoopLength().addValueObserver(clipLength -> {
             this.clipLength = clipLength;
-            AllenHeathK2ControllerExtension.println(" clip len = %f", clipLength);
         });
 
         for (int i = 0; i < 8; i++) {

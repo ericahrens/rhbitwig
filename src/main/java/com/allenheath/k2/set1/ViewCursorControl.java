@@ -2,7 +2,10 @@ package com.allenheath.k2.set1;
 
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.rh.SpecialDevices;
+import com.rhcommons.InKeyScale;
+import com.rhcommons.MapTranspose;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ViewCursorControl {
@@ -12,12 +15,12 @@ public class ViewCursorControl {
     private final DeviceBank drumBank;
     private final DrumPadBank drumPadBank;
     private final TrackBank trackBank;
+    private final List<MapTranspose> transposeDevices = new ArrayList<>();
     // private final Device drumDevice;
 
     public ViewCursorControl(final ControllerHost host, final List<DirectParameterControl> parameterControls,
                              final int tracks) {
         super();
-
         trackBank = host.createTrackBank(tracks, 8, 8);
         cursorTrack = host.createCursorTrack(8, 8);
 
@@ -56,6 +59,8 @@ public class ViewCursorControl {
             for (final DirectParameterControl directParameterControl : controls) {
                 setUpTrackDevice(i, track, cursorDevice, directParameterControl, host);
             }
+            MapTranspose mapTransposeDevice = new MapTranspose(index, host, track);
+            transposeDevices.add(mapTransposeDevice);
         }
     }
 
@@ -91,4 +96,22 @@ public class ViewCursorControl {
         return drumPadBank;
     }
 
+    public void setScale(String scaleValue) {
+        AllenHeathK2ControllerExtension.println(" set SCALE %s", scaleValue);
+        int n = scaleValue.length();
+        String type = scaleValue.substring(n - 1, n);
+        int number = Integer.parseInt(scaleValue.substring(0, n - 1)) - 1;
+        int baseNote = (6 * 12 + 11 - ("A".equals(type) ? 3 : 0) - number * 5) % 12;
+
+        AllenHeathK2ControllerExtension.println(" SCALE %d / %s = base = %d", number, type, baseNote);
+        transposeDevices.stream().filter(device -> device.exists()).forEach(device -> {
+            if ("A".equals(type)) {
+                device.setScale(InKeyScale.MINOR);
+                device.setRootNote(baseNote);
+            } else {
+                device.setScale(InKeyScale.MAJOR);
+                device.setRootNote(baseNote);
+            }
+        });
+    }
 }

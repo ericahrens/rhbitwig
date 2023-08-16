@@ -5,6 +5,8 @@ import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
+import com.rhcommons.SpecialVst3Devices;
+import com.rhcommons.SpecialVstDevices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,12 +82,21 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         }
     }
 
+    int counter = 0;
+
     private void fetchKey(int index) {
-        println(" FETCH KEY %d", index);
+        if (index == 0) {
+            viewControl.setScale("%dA".formatted(counter + 1));
+        }
+        if (index == 1) {
+            viewControl.setScale("%dB".formatted(counter + 1));
+        }
+
+        counter = (counter + 1) % 12;
     }
 
     private void onMidi(int msg, int data1, int data2) {
-        println("MIDI> %02X %02X %02X", msg, data1, data2);
+//        println("MIDI> %02X %02X %02X", msg, data1, data2);
 //        if (msg == 0x9D && data1 == 0x0C && data2 == 0x7F) {
 //            for (int i = 0; i < 0x38; i++) {
 //                midiOut.sendMidi(Midi.NOTE_ON + 13, i, 0);
