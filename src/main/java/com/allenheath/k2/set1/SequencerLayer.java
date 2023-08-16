@@ -12,7 +12,8 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
     public static final String LISTENER_ID = "k2.sequencer";
     private final PinnableCursorClip cursorClip;
     private final DrumPadBank drumPadBank;
-    private int drumPadOffset;
+    private final PadGrouping padGrouping;
+    private int drumPadOffset = 36;
     private int selectedPadIndex = 0;
     private double clipLength;
     private NoteStep[] assignments = new NoteStep[16];
@@ -51,31 +52,21 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
     };
     private DrumSequencerSource drumSequencerSource = selfProvider;
 
-    public SequencerLayer(Layers layers, HwElements hwElements, ViewCursorControl viewCursorControl) {
+    public SequencerLayer(Layers layers, HwElements hwElements, ViewCursorControl viewCursorControl,
+                          PadGrouping padGrouping) {
         super(layers, "SEQUENCER");
 
+        this.padGrouping = padGrouping;
         cursorClip = viewCursorControl.getCursorTrack().createLauncherCursorClip(16, 1);
         drumPadBank = viewCursorControl.getDrumPadBank();
         final NoteStep[] assignments = new NoteStep[32];
 
         drumPadBank.scrollPosition().addValueObserver(drumPosition -> {
-            this.drumPadOffset = drumPosition;
+            AllenHeathK2ControllerExtension.println(" POS = %d", drumPosition);
             adjustPosition();
         });
 
-        for (int i = 0; i < 8; i++) {
-            int index = i;
-            DrumPad pad = drumPadBank.getItemAt(index);
-            pad.addIsSelectedInEditorObserver(selected -> {
-                if (selected) {
-                    selectedPadIndex = index;
-                    adjustPosition();
-                }
-            });
-            if (i == 0) {
-                pad.playingNotes().addValueObserver(notes -> handleNotePlaying(notes));
-            }
-        }
+        viewCursorControl.getCursorTrack().playingNotes().addValueObserver(notes -> handleNotePlaying(notes));
 
         cursorClip.addNoteStepObserver(this::handleNoteStep);
         cursorClip.playingStep().addValueObserver(this::handlePlayingStep);
@@ -103,7 +94,6 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
         GlobalContext.getContext()
                 .registerForListener(DrumSequencerSource.class, LISTENER_ID, this::connectToSequencer,
                         this::disconnectFromSequencerProvider);
-
         this.setIsActive(true);
     }
 
@@ -126,10 +116,7 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
     @Override
     public void changePadsOffset(int bankOffset, int padOffset, int bankSize) {
         this.selectedPadIndex = padOffset;
-        this.drumPadOffset = bankOffset;
         adjustPosition();
-//        AllenHeathK2ControllerExtension.println(" NEW POSITION FROM External %d %d %d", bankOffset, padOffset,
-//                bankSize);
     }
 
     @Override
@@ -161,9 +148,12 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
     private void handleNotePlaying(PlayingNote[] notes) {
         Arrays.fill(playing, false);
         for (final PlayingNote playingNote : notes) {
-            final int padIndex = playingNote.pitch() - drumPadOffset - selectedPadIndex;
-            if (padIndex >= 0 && padIndex < 8) {
-                playing[padIndex] = true;
+            final int baseIndex = playingNote.pitch() - 36;
+            if (baseIndex >= 0 && baseIndex < 16) {
+                int slotIndex = padGrouping.padIndexToSlot(baseIndex);
+                if (slotIndex >= 0 && slotIndex < 8) {
+                    playing[slotIndex] = true;
+                }
             }
         }
     }

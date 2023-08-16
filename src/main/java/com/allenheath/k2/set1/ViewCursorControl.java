@@ -26,9 +26,6 @@ public class ViewCursorControl {
             // RemoteConsole.out.println(" => {}", index);
         });
 
-        cursorTrack.color().addValueObserver((r, g, b) -> {
-        });
-
         deviceBank = cursorTrack.createDeviceBank(8);
         primaryDevice = cursorTrack.createCursorDevice("drumdetection", "Pad Device", 8,
                 CursorDeviceFollowMode.FIRST_INSTRUMENT);

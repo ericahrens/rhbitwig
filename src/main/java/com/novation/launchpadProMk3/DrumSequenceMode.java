@@ -255,7 +255,7 @@ public class DrumSequenceMode extends Layer implements DrumSequencerSource {
                 randomLayer.deactivate();
             }
         });
-
+        
         cursorClip.addNoteStepObserver(this::handleNoteStep);
         cursorClip.playingStep().addValueObserver(this::handlePlayingStep);
         cursorClip.getLoopLength().addValueObserver(clipLength -> {

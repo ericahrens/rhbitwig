@@ -22,7 +22,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     private final StateButton[] reverbSendButtons = new StateButton[8];
     private final StateButton[] delaySendButtons = new StateButton[8];
     private final List<PadContainer> drumPadsList = new ArrayList<>();
-    private final PadAssignment[] assignmentList = new PadAssignment[8];
+    private final PadGrouping padGrouping = new PadGrouping();
     private DirectParameterControl delayControl;
     private DirectParameterControl reverbControl;
 
@@ -63,16 +63,29 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         viewControl = new ViewCursorControl(host, controlList, 16);
         mainLayer = new Layer(layers, "MainLayer");
         hwElements = new HwElements(surface, host, midiIn, midiOut);
-        sequencerLayer = new SequencerLayer(layers, hwElements, viewControl);
-        host.showPopupNotification("Intialize Xone:K2 DJ Set");
         initSendsButtons();
+        initDeckCaptureButtons();
         initDocumentProperties();
+        sequencerLayer = new SequencerLayer(layers, hwElements, viewControl, padGrouping);
         mainLayer.activate();
+
+        host.showPopupNotification("Intialize Xone:K2 DJ Set");
     }
 
+    private void initDeckCaptureButtons() {
+        for (int i = 0; i < 4; i++) {
+            final int index = i;
+            HardwareButton button = hwElements.getCaptureKeysFromDeckButton(i);
+            mainLayer.bindPressed(button, () -> fetchKey(index));
+        }
+    }
+
+    private void fetchKey(int index) {
+        println(" FETCH KEY %d", index);
+    }
 
     private void onMidi(int msg, int data1, int data2) {
-//        println("MIDI> %02X %02X %02X", msg, data1, data2);
+        println("MIDI> %02X %02X %02X", msg, data1, data2);
 //        if (msg == 0x9D && data1 == 0x0C && data2 == 0x7F) {
 //            for (int i = 0; i < 0x38; i++) {
 //                midiOut.sendMidi(Midi.NOTE_ON + 13, i, 0);
@@ -86,7 +99,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
             final int index = i;
             final SettableStringValue padAssignment = documentState.getStringSetting("Column " + (i + 1),
                     "Pad Assignments", 10, DEFAULT_PAD_ASSIGNMENTS[i]);
-            padAssignment.addValueObserver(value -> assignmentList[index].assign(value, drumPadsList));
+            padAssignment.addValueObserver(value -> padGrouping.assign(index, value, drumPadsList));
         }
     }
 
@@ -95,9 +108,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
             final PadContainer pad = new PadContainer(i, viewControl.getDrumPadBank().getItemAt(i));
             drumPadsList.add(pad);
         }
-        for (int i = 0; i < assignmentList.length; i++) {
-            assignmentList[i] = new PadAssignment(i);
-        }
+
 
         for (int i = 0; i < 8; i++) {
             final int channel = 13 + i / 4;
@@ -106,7 +117,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
                     midiIn, midiOut);
             final StateButton delButton = new StateButton("DEL_" + i + "_BUTTON", 40 + noteOffset, channel, surface,
                     midiIn, midiOut);
-            final PadAssignment assignment = assignmentList[i];
+            final PadAssignment assignment = padGrouping.getAssignment(i);
             delButton.bind(mainLayer, () -> assignment.toggleSendValue(0), () -> assignment.sendStatusColor(0));
             revButton.bind(mainLayer, () -> assignment.toggleSendValue(1), () -> assignment.sendStatusColor(1));
             reverbSendButtons[i] = revButton;

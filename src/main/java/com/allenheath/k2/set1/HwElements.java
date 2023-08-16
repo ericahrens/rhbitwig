@@ -7,6 +7,7 @@ public class HwElements {
 
     private final MultiStateHardwareLight[] channelLight = new MultiStateHardwareLight[8];
     private final StateButton[][] gridButtons = new StateButton[4][8];
+    private final HardwareButton[] captureKeysFromDeckButton = new HardwareButton[4];
     private final MidiOut midiOut;
 
     public HwElements(HardwareSurface surface, ControllerHost host, MidiIn midiIn, MidiOut midiOut) {
@@ -26,6 +27,16 @@ public class HwElements {
                         0xD + (col / 4), surface, midiIn, midiOut);
             }
         }
+        for (int i = 0; i < captureKeysFromDeckButton.length; i++) {
+            HardwareButton button = surface.createHardwareButton("CAPTURE_" + i);
+            captureKeysFromDeckButton[i] = button;
+            button.isPressed().markInterested();
+            int channel = 0xD + (i / 2);
+            int noteValue = 0x34 + (i % 2) * 2;
+            button.pressedAction()
+                    .setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, noteValue));
+            button.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, noteValue));
+        }
     }
 
     private void updateButtonLed(InternalHardwareLightState state, int channel, int noteValue) {
@@ -41,6 +52,10 @@ public class HwElements {
         }
     }
 
+    public HardwareButton getCaptureKeysFromDeckButton(int index) {
+        return captureKeysFromDeckButton[index];
+    }
+
     public MultiStateHardwareLight getChannelLight(int index) {
         return channelLight[index];
     }
@@ -48,4 +63,5 @@ public class HwElements {
     public StateButton getStateButton(int row, int col) {
         return gridButtons[row][col];
     }
+
 }
