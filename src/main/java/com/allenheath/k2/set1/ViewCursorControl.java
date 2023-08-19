@@ -97,13 +97,11 @@ public class ViewCursorControl {
     }
 
     public void setScale(String scaleValue) {
-        AllenHeathK2ControllerExtension.println(" set SCALE %s", scaleValue);
         int n = scaleValue.length();
         String type = scaleValue.substring(n - 1, n);
         int number = Integer.parseInt(scaleValue.substring(0, n - 1)) - 1;
         int baseNote = (6 * 12 + 11 - ("A".equals(type) ? 3 : 0) - number * 5) % 12;
 
-        AllenHeathK2ControllerExtension.println(" SCALE %d / %s = base = %d", number, type, baseNote);
         transposeDevices.stream().filter(device -> device.exists()).forEach(device -> {
             if ("A".equals(type)) {
                 device.setScale(InKeyScale.MINOR);

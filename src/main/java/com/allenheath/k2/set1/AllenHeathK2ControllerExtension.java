@@ -1,5 +1,9 @@
 package com.allenheath.k2.set1;
 
+import com.bitwig.extension.api.opensoundcontrol.OscAddressSpace;
+import com.bitwig.extension.api.opensoundcontrol.OscConnection;
+import com.bitwig.extension.api.opensoundcontrol.OscMessage;
+import com.bitwig.extension.api.opensoundcontrol.OscModule;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
@@ -7,13 +11,23 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.rhcommons.SpecialVst3Devices;
 import com.rhcommons.SpecialVstDevices;
+import com.sun.net.httpserver.HttpServer;
+import com.torso.t1.DeviceTrack;
+import com.torso.t1.T1DataPack;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
     private static final String[] DEFAULT_PAD_ASSIGNMENTS = {"1,2", "4", "3", "5,6", "7", "9", "10", "11"};
+    public static final String TRAKTOR_CONTROL_LABEL = "Traktor Http Control";
+    public static final String TRAKTOR_KONDUIT_CATEGORY = "Traktor Konduit OSC";
     private HardwareSurface surface;
     private MidiIn midiIn;
     private MidiOut midiOut;
@@ -31,7 +45,12 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     private static ControllerHost debugHost;
     private HwElements hwElements;
     private SequencerLayer sequencerLayer;
-
+    private OscModule oscModule;
+    private OscConnection oscConnection;
+    
+    private HttpServer server;
+    private TraktorState traktorState = new TraktorState();
+    
     public static void println(final String format, final Object... args) {
         if (debugHost != null) {
             debugHost.println(format.format(format, args));
@@ -54,7 +73,9 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
         midiIn.setMidiCallback(this::onMidi);
-
+        oscModule = host.getOscModule();
+        initOsc();
+    
         delayControl = new DirectParameterControl(SpecialVstDevices.LEXICON_PSP, SpecialParam.PSP_REPEAT_INF);
         reverbControl = new DirectParameterControl(SpecialVst3Devices.MEAGAVERB3, SpecialParam.MEGA_VERB_GATE);
 
@@ -70,10 +91,72 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         initDocumentProperties();
         sequencerLayer = new SequencerLayer(layers, hwElements, viewControl, padGrouping);
         mainLayer.activate();
-
+        initTestButtonsInDocumentState(host);
+        initServers();
         host.showPopupNotification("Intialize Xone:K2 DJ Set");
     }
-
+    
+    private void initTestButtonsInDocumentState(final ControllerHost host) {
+        if(oscConnection!=null) {
+            final Signal signal = host.getDocumentState().getSignalSetting("Test OSC", "OSC", "TEST");
+            signal.addSignalObserver(() -> {
+                try {
+                    oscConnection.sendMessage("/deck/A/metadata/key", true);
+                }
+                catch (IOException e) {
+                    println(" Failed send %s", e.getMessage());
+                }
+            });
+        }
+        Signal fetchDeckA = host.getDocumentState().getSignalSetting("Apply Key Deck A","Test","Deck A");
+        fetchDeckA.addSignalObserver(() -> {
+            fetchKey(0);
+        });
+        Signal fetchDeckB = host.getDocumentState().getSignalSetting("Apply Key Deck B","Test","Deck B");
+        fetchDeckB.addSignalObserver(() -> {
+            fetchKey(1);
+        });
+    }
+    
+    private void initServers() {
+        final Preferences preferences = getHost().getPreferences();
+        final SettableBooleanValue active = preferences.getBooleanSetting("Active", TRAKTOR_CONTROL_LABEL, true);
+        final SettableStringValue hostValue = preferences.getStringSetting("Host",
+            TRAKTOR_CONTROL_LABEL, 15, "127.0.0.1");
+        final SettableRangedValue portValue =
+            preferences.getNumberSetting("Port", TRAKTOR_CONTROL_LABEL, 2000.0, 6000.0, 1, "", 3000);
+        if(active.get()) {
+            int port = (int)portValue.getRaw();
+            try {
+                server = HttpServer.create(new InetSocketAddress(hostValue.get(), port), 0);
+                server.createContext("/", new HttpJsonHandler(traktorState));
+                server.setExecutor(Executors.newSingleThreadExecutor());
+                server.start();
+                println(" Http Server on port %d",port);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private void initOsc() {
+        final OscAddressSpace address = oscModule.createAddressSpace();
+        final Preferences preferences = getHost().getPreferences();
+        final SettableBooleanValue active = preferences.getBooleanSetting("Active", TRAKTOR_KONDUIT_CATEGORY, false);
+        final SettableRangedValue inPortValue =
+            preferences.getNumberSetting("Port Receive", TRAKTOR_KONDUIT_CATEGORY, 6000, 13000, 1, "", 12345);
+        final SettableRangedValue outPortValue =
+            preferences.getNumberSetting("Port Send", TRAKTOR_KONDUIT_CATEGORY, 6000, 10000, 1, "", 9800);
+    
+        if(active.get()) {
+            int inPort = (int) inPortValue.getRaw();
+            int outPort = (int) outPortValue.getRaw();
+            address.registerDefaultMethod(this::handleMessage);
+            oscModule.createUdpServer(inPort, address);
+            oscConnection = oscModule.connectToUdpServer("127.0.0.1", outPort, null);
+        }
+    }
+    
     private void initDeckCaptureButtons() {
         for (int i = 0; i < 4; i++) {
             final int index = i;
@@ -82,19 +165,32 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         }
     }
 
-    int counter = 0;
-
     private void fetchKey(int index) {
-        if (index == 0) {
-            viewControl.setScale("%dA".formatted(counter + 1));
+        if(oscConnection != null) {
+            try {
+                println(" SEND OSC > %s", "/deck/%c/metadata/key".formatted('A'+index));
+                oscConnection.sendMessage("/deck/%c/metadata/key".formatted('A'+index), true);
+            }
+            catch (IOException e) {
+                println("Failed to send message %s", e.getMessage());
+            }
         }
-        if (index == 1) {
-            viewControl.setScale("%dB".formatted(counter + 1));
-        }
-
-        counter = (counter + 1) % 12;
+        traktorState.getKey(index).ifPresent(key-> {
+            println(" Setting Scale %s",key);
+            viewControl.setScale(key);
+        });
     }
-
+    
+    private void handleMessage(final OscConnection connection, final OscMessage message) {
+        String path = message.getAddressPattern();
+        println(" %s %s", message.getAddressPattern(),message.getArguments());
+        if(path.matches("/deck/[A-B]/metadata/key") && message.getArguments().get(0) instanceof String) {
+            String[] x = path.split("/");
+            int index = 'A'-x[2].charAt(0);
+            traktorState.setKey(index, message.getString(0));
+        }
+    }
+    
     private void onMidi(int msg, int data1, int data2) {
 //        println("MIDI> %02X %02X %02X", msg, data1, data2);
 //        if (msg == 0x9D && data1 == 0x0C && data2 == 0x7F) {
@@ -147,6 +243,9 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
     @Override
     public void exit() {
+        if(server != null) {
+            server.stop(0);
+        }
         sequencerLayer.exit();
     }
 
