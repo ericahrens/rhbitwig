@@ -26,7 +26,15 @@ public class StateButton {
         hwButton.pressedAction().setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, noteValue));
         hwButton.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, noteValue));
     }
-
+    
+    public HardwareButton getHwButton() {
+        return hwButton;
+    }
+    
+    public MultiStateHardwareLight getLight() {
+        return light;
+    }
+    
     void updateButtonLed(final InternalHardwareLightState state) {
         final RedGreenButtonState rgbState = (RedGreenButtonState) state;
         if (state != null) {

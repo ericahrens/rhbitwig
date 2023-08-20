@@ -16,6 +16,7 @@ public class ViewCursorControl {
     private final DrumPadBank drumPadBank;
     private final TrackBank trackBank;
     private final List<MapTranspose> transposeDevices = new ArrayList<>();
+    private final List<ArpFollowDevice> arpDevices = new ArrayList<>();
     // private final Device drumDevice;
 
     public ViewCursorControl(final ControllerHost host, final List<DirectParameterControl> parameterControls,
@@ -59,8 +60,8 @@ public class ViewCursorControl {
             for (final DirectParameterControl directParameterControl : controls) {
                 setUpTrackDevice(i, track, cursorDevice, directParameterControl, host);
             }
-            MapTranspose mapTransposeDevice = new MapTranspose(index, host, track);
-            transposeDevices.add(mapTransposeDevice);
+            transposeDevices.add(new MapTranspose(index, host, track));
+            arpDevices.add(new ArpFollowDevice(index, host, track));
         }
     }
 
@@ -110,6 +111,13 @@ public class ViewCursorControl {
                 device.setScale(InKeyScale.MAJOR);
                 device.setRootNote(baseNote);
             }
+        });
+    }
+    
+    public void setArpValue(int index, final double value) {
+        int pos = (int) Math.min(Math.round(value*128),127);
+        arpDevices.stream().filter(ArpFollowDevice::exists).forEach(device -> {
+            device.setValue(index, pos);
         });
     }
 }

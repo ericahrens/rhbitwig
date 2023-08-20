@@ -59,7 +59,6 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
         this.padGrouping = padGrouping;
         cursorClip = viewCursorControl.getCursorTrack().createLauncherCursorClip(16, 1);
         drumPadBank = viewCursorControl.getDrumPadBank();
-        final NoteStep[] assignments = new NoteStep[32];
 
         drumPadBank.scrollPosition().addValueObserver(drumPosition -> {
             adjustPosition();
@@ -72,6 +71,12 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
         cursorClip.getLoopLength().addValueObserver(clipLength -> {
             this.clipLength = clipLength;
         });
+        
+        for(int i=0;i<16;i++) {
+            final int index = i;
+            DrumPad pad = drumPadBank.getItemAt(i);
+            pad.addIsSelectedInEditorObserver(selected -> handlePadSelection(index,selected));
+        }
 
         for (int i = 0; i < 8; i++) {
             int index = i;
@@ -97,6 +102,16 @@ public class SequencerLayer extends Layer implements DrumSequencerSource.ChangeL
 
     public void exit() {
         GlobalContext.getContext().removeListener(LISTENER_ID);
+    }
+    
+    private void handlePadSelection(int index, boolean selected) {
+        if(selected) {
+            AllenHeathK2ControllerExtension.println("Select %d",index);
+            if(this.drumSequencerSource == selfProvider) {
+                this.selectedPadIndex = index;
+                adjustPosition();
+            }
+        }
     }
 
     private void connectToSequencer(DrumSequencerSource source) {

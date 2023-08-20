@@ -1,5 +1,6 @@
 package com.allenheath.k2.set1;
 
+import com.bitwig.extension.api.Color;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.rh.Midi;
 
@@ -8,6 +9,7 @@ public class HwElements {
     private final MultiStateHardwareLight[] channelLight = new MultiStateHardwareLight[8];
     private final StateButton[][] gridButtons = new StateButton[4][8];
     private final HardwareButton[] captureKeysFromDeckButton = new HardwareButton[4];
+    private final HardwareSlider[] mainSliders = new HardwareSlider[8];
     private final MidiOut midiOut;
 
     public HwElements(HardwareSurface surface, ControllerHost host, MidiIn midiIn, MidiOut midiOut) {
@@ -15,16 +17,33 @@ public class HwElements {
         for (int i = 0; i < 8; i++) {
             final int index = i;
             final int channel = 0xD + i / 4;
+
+            mainSliders[i] = surface.createHardwareSlider("SLIDER_" + i);
+            mainSliders[i].setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(channel,0x10 + (index % 4)));
+            mainSliders[i].setBounds(5 + i * 10 + (i / 4) * 5, 50, 8, 40);
+            mainSliders[i].setLabel(String.valueOf(i + 1));
+
+            
             channelLight[i] = surface.createMultiStateHardwareLight("CHANEL_STATE_" + i);
             channelLight[i].state() //
                     .onUpdateHardware(state -> updateButtonLed(state, channel, 0x34 + (index % 4)));
+            placeLight(i,channelLight[i]);
         }
         for (int row = 0; row < 2; row++) {
             for (int col = 0; col < 8; col++) {
                 int off = col % 4;
                 int y = (1 - row) * 4;
-                gridButtons[row][col] = new StateButton("GRID_%d_%d".formatted(row, col), 0x1C + y + off,
-                        0xD + (col / 4), surface, midiIn, midiOut);
+                final StateButton button = new StateButton("GRID_%d_%d".formatted(row, col),
+                    0x1C + y + off,
+                    0xD + (col / 4),
+                    surface,
+                    midiIn,
+                    midiOut);
+                gridButtons[row][col] = button;
+                button.getHwButton().setBounds(5+col*10+(col/4)*5, 20+row*10, 8, 7);
+                button.getHwButton().setLabel("X");
+                button.getLight().setBounds(5+col*10+(col/4)*5, 20+row*10, 8, 7);
+                button.getLight().setColorToStateFunction(RedGreenButtonState::toState);
             }
         }
         for (int i = 0; i < captureKeysFromDeckButton.length; i++) {
@@ -38,7 +57,14 @@ public class HwElements {
             button.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, noteValue));
         }
     }
-
+    
+    private void placeLight(final int index, final MultiStateHardwareLight multiStateHardwareLight) {
+        multiStateHardwareLight.setBounds(5 + index*10+(index/4)*5, 5, 8, 7);
+        multiStateHardwareLight.setLabel("XX");
+        multiStateHardwareLight.setLabelColor(Color.fromRGB255(255,255,255));
+        multiStateHardwareLight.setColorToStateFunction(RedGreenButtonState::toState);
+     }
+    
     private void updateButtonLed(InternalHardwareLightState state, int channel, int noteValue) {
         if (state instanceof RedGreenButtonState rgbState) {
             final RedGreenColor color = rgbState.getColor();
@@ -62,6 +88,10 @@ public class HwElements {
 
     public StateButton getStateButton(int row, int col) {
         return gridButtons[row][col];
+    }
+    
+    public HardwareSlider getSlider(int index) {
+        return mainSliders[index];
     }
 
 }

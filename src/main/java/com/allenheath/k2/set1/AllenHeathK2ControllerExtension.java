@@ -7,8 +7,10 @@ import com.bitwig.extension.api.opensoundcontrol.OscModule;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
+import com.bitwig.extensions.framework.BooleanObject;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
+import com.bitwig.extensions.rh.BooleanValueObject;
 import com.rhcommons.SpecialVst3Devices;
 import com.rhcommons.SpecialVstDevices;
 import com.sun.net.httpserver.HttpServer;
@@ -26,6 +28,7 @@ import java.util.concurrent.Executors;
 public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
     private static final String[] DEFAULT_PAD_ASSIGNMENTS = {"1,2", "4", "3", "5,6", "7", "9", "10", "11"};
+    public static final String ARP_CONTROL_OPTION = "Arp Control";
     public static final String TRAKTOR_CONTROL_LABEL = "Traktor Http Control";
     public static final String TRAKTOR_KONDUIT_CATEGORY = "Traktor Konduit OSC";
     private HardwareSurface surface;
@@ -34,6 +37,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     private Layers layers;
     private NoteInput noteInput;
     private ViewCursorControl viewControl;
+    private Layer sliderLayer;
     private Layer mainLayer;
     private final StateButton[] reverbSendButtons = new StateButton[8];
     private final StateButton[] delaySendButtons = new StateButton[8];
@@ -67,6 +71,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         final ControllerHost host = getHost();
         debugHost = host;
         layers = new Layers(this);
+        
         surface = host.createHardwareSurface();
         midiIn = host.getMidiInPort(0);
         midiOut = host.getMidiOutPort(0);
@@ -82,18 +87,46 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         final List<DirectParameterControl> controlList = new ArrayList<>();
         controlList.add(delayControl);
         controlList.add(reverbControl);
-
+    
         viewControl = new ViewCursorControl(host, controlList, 16);
         mainLayer = new Layer(layers, "MainLayer");
+        sliderLayer = new Layer(layers, "SLIDER_LAYER");
         hwElements = new HwElements(surface, host, midiIn, midiOut);
         initSendsButtons();
         initDeckCaptureButtons();
         initDocumentProperties();
+        initSliderSection();
         sequencerLayer = new SequencerLayer(layers, hwElements, viewControl, padGrouping);
         mainLayer.activate();
         initTestButtonsInDocumentState(host);
         initServers();
         host.showPopupNotification("Intialize Xone:K2 DJ Set");
+        initGuiSurface(surface);
+    }
+    
+    private void initSliderSection() {
+        final DocumentState documentState = getHost().getDocumentState();
+        final SettableEnumValue arpSliderMode = documentState.getEnumSetting(
+            "Slider Control",
+            "Slider",
+            new String[] {"No Mapping", ARP_CONTROL_OPTION}, ARP_CONTROL_OPTION);
+ 
+        for(int i=0;i<8;i++) {
+            int index = i;
+            final HardwareSlider slider = hwElements.getSlider(i);
+            sliderLayer.bind(slider, value->viewControl.setArpValue(index, value));
+        }
+        arpSliderMode.addValueObserver(state-> {
+            if(ARP_CONTROL_OPTION.equals(state)) {
+                sliderLayer.setIsActive(true);
+            } else {
+                sliderLayer.setIsActive(false);
+            }
+        });
+     }
+    
+    private void initGuiSurface(final HardwareSurface surface) {
+        surface.setPhysicalSize(100 , 100);
     }
     
     private void initTestButtonsInDocumentState(final ControllerHost host) {
@@ -108,14 +141,6 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
                 }
             });
         }
-        Signal fetchDeckA = host.getDocumentState().getSignalSetting("Apply Key Deck A","Test","Deck A");
-        fetchDeckA.addSignalObserver(() -> {
-            fetchKey(0);
-        });
-        Signal fetchDeckB = host.getDocumentState().getSignalSetting("Apply Key Deck B","Test","Deck B");
-        fetchDeckB.addSignalObserver(() -> {
-            fetchKey(1);
-        });
     }
     
     private void initServers() {
@@ -183,10 +208,9 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
     
     private void handleMessage(final OscConnection connection, final OscMessage message) {
         String path = message.getAddressPattern();
-        println(" %s %s", message.getAddressPattern(),message.getArguments());
-        if(path.matches("/deck/[A-B]/metadata/key") && message.getArguments().get(0) instanceof String) {
+        if(path.matches("/deck/[A-D]/metadata/key") && message.getArguments().get(0) instanceof String) {
             String[] x = path.split("/");
-            int index = 'A'-x[2].charAt(0);
+            int index = x[2].charAt(0)-'A';
             traktorState.setKey(index, message.getString(0));
         }
     }
