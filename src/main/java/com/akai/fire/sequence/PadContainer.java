@@ -6,8 +6,8 @@ import com.akai.fire.lights.RgbLigthState;
 import com.bitwig.extension.controller.api.DrumPad;
 import com.bitwig.extension.controller.api.Send;
 import com.bitwig.extensions.framework.Layer;
-import com.bitwig.extensions.rh.BooleanValueObject;
-import com.bitwig.extensions.rh.DawColor;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
+import com.bitwig.extensions.framework.values.DawColor;
 
 class PadContainer {
 

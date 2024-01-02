@@ -8,7 +8,7 @@ import com.bitwig.extension.controller.api.DeviceMatcher;
 import com.bitwig.extension.controller.api.DrumPadBank;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.TrackBank;
-import com.bitwig.extensions.rh.SpecialDevices;
+import com.bitwig.extensions.framework.values.SpecialDevices;
 
 public class ViewCursorControl {
 	private final CursorTrack cursorTrack;

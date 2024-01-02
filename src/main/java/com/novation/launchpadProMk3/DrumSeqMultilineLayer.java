@@ -3,7 +3,7 @@ package com.novation.launchpadProMk3;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
-import com.bitwig.extensions.rh.StepViewPosition;
+import com.bitwig.extensions.framework.values.StepViewPosition;
 
 import java.util.Arrays;
 

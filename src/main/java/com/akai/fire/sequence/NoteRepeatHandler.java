@@ -4,7 +4,7 @@ import com.akai.fire.AkaiFireDrumSeqExtension;
 import com.akai.fire.lights.BiColorLightState;
 import com.bitwig.extension.controller.api.Arpeggiator;
 import com.bitwig.extension.controller.api.NoteInput;
-import com.bitwig.extensions.rh.BooleanValueObject;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 
 public class NoteRepeatHandler {
 

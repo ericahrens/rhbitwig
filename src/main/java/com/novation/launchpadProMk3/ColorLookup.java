@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.bitwig.extension.api.Color;
-import com.bitwig.extensions.rh.DawColor;
+import com.bitwig.extensions.framework.values.DawColor;
 
 public class ColorLookup {
 	private static Map<Integer, DawColor> lookupMap = new HashMap<>();

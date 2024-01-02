@@ -6,8 +6,8 @@ import com.bitwig.extensions.common.DrumSequencerSource;
 import com.bitwig.extensions.context.GlobalContext;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
-import com.bitwig.extensions.rh.BooleanValueObject;
-import com.bitwig.extensions.rh.StepViewPosition;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
+import com.bitwig.extensions.framework.values.StepViewPosition;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;

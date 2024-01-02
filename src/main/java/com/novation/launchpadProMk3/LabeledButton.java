@@ -4,7 +4,7 @@ import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
 import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.MidiOut;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.Midi;
 
 public class LabeledButton extends LpButton {
 	private final int ccValue;

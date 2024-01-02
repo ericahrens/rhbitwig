@@ -16,8 +16,8 @@ import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extension.controller.api.NoteStep.State;
 import com.bitwig.extension.controller.api.PinnableCursorClip;
 import com.bitwig.extensions.framework.Layer;
-import com.bitwig.extensions.rh.BooleanValueObject;
-import com.bitwig.extensions.rh.StepViewPosition;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
+import com.bitwig.extensions.framework.values.StepViewPosition;
 
 import java.util.*;
 import java.util.stream.Collectors;

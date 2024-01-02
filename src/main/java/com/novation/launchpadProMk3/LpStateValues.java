@@ -1,6 +1,6 @@
 package com.novation.launchpadProMk3;
 
-import com.bitwig.extensions.rh.BooleanValueObject;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 
 public class LpStateValues {
     private final BooleanValueObject shiftModeActive = new BooleanValueObject();

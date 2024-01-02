@@ -1,7 +1,7 @@
 package com.allenheath.k2.set1;
 
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extensions.rh.SpecialDevices;
+import com.bitwig.extensions.framework.values.SpecialDevices;
 import com.rhcommons.InKeyScale;
 import com.rhcommons.MapTranspose;
 

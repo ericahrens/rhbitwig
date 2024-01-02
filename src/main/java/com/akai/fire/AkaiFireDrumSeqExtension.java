@@ -13,8 +13,8 @@ import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
-import com.bitwig.extensions.rh.BooleanValueObject;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
+import com.bitwig.extensions.framework.values.Midi;
 
 import java.util.Arrays;
 import java.util.HashMap;

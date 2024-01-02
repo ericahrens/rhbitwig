@@ -2,7 +2,7 @@ package com.novation.launchcontrol.arp;
 
 import com.bitwig.extension.controller.api.HardwareActionMatcher;
 import com.bitwig.extension.controller.api.MidiIn;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.Midi;
 
 public enum Assignment {
 	SEND_UP(Midi.CC, 104, 0), //

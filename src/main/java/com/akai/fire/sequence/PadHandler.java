@@ -13,7 +13,7 @@ import com.akai.fire.lights.RgbLigthState;
 import com.akai.fire.sequence.NoteAction.Type;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
-import com.bitwig.extensions.rh.BooleanValueObject;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;

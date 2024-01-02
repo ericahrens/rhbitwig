@@ -2,7 +2,7 @@ package com.allenheath.k2.set1;
 
 import com.bitwig.extension.api.Color;
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.Midi;
 
 public class HwElements {
 
@@ -40,9 +40,9 @@ public class HwElements {
                     midiIn,
                     midiOut);
                 gridButtons[row][col] = button;
-                button.getHwButton().setBounds(5+col*10+(col/4)*5, 20+row*10, 8, 7);
-                button.getHwButton().setLabel("X");
-                button.getLight().setBounds(5+col*10+(col/4)*5, 20+row*10, 8, 7);
+                button.getHwButton().setBounds(5+col*10+(col/4)*5, 25+row*10, 8, 7);
+                button.getHwButton().setLabel(String.valueOf(row*8+col+1));
+                button.getLight().setBounds(5+col*10+(col/4)*5, 25+row*10, 8, 7);
                 button.getLight().setColorToStateFunction(RedGreenButtonState::toState);
             }
         }
@@ -55,12 +55,14 @@ public class HwElements {
             button.pressedAction()
                     .setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, noteValue));
             button.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, noteValue));
+            button.setBounds(5+i*20+(i/2)*5, 15, 8, 7);
+            button.setLabel("Deck " + (char)('A'+i));
         }
     }
     
     private void placeLight(final int index, final MultiStateHardwareLight multiStateHardwareLight) {
         multiStateHardwareLight.setBounds(5 + index*10+(index/4)*5, 5, 8, 7);
-        multiStateHardwareLight.setLabel("XX");
+        multiStateHardwareLight.setLabel("");
         multiStateHardwareLight.setLabelColor(Color.fromRGB255(255,255,255));
         multiStateHardwareLight.setColorToStateFunction(RedGreenButtonState::toState);
      }

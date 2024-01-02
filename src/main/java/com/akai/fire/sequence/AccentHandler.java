@@ -1,7 +1,7 @@
 package com.akai.fire.sequence;
 
 import com.akai.fire.lights.BiColorLightState;
-import com.bitwig.extensions.rh.BooleanValueObject;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 
 public class AccentHandler {
 	private static final int ACCENT_OFFSET = 11;

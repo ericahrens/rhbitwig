@@ -2,7 +2,7 @@ package com.allenheath.k2.set1;
 
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extensions.framework.Layer;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.Midi;
 
 import java.util.function.Supplier;
 

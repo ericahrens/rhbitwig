@@ -7,21 +7,15 @@ import com.bitwig.extension.api.opensoundcontrol.OscModule;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extensions.framework.BooleanObject;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
-import com.bitwig.extensions.rh.BooleanValueObject;
 import com.rhcommons.SpecialVst3Devices;
 import com.rhcommons.SpecialVstDevices;
 import com.sun.net.httpserver.HttpServer;
-import com.torso.t1.DeviceTrack;
-import com.torso.t1.T1DataPack;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 

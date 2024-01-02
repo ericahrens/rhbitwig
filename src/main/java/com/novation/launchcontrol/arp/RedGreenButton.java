@@ -2,7 +2,7 @@ package com.novation.launchcontrol.arp;
 
 import com.bitwig.extension.controller.api.HardwareButton;
 import com.bitwig.extension.controller.api.MultiStateHardwareLight;
-import com.bitwig.extensions.rh.Midi;
+import com.bitwig.extensions.framework.values.Midi;
 
 public class RedGreenButton {
 	private final HardwareButton hwButton;
