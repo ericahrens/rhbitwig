@@ -1,5 +1,6 @@
 package com.yaeltex.common;
 
+import com.bitwig.extension.api.Color;
 import com.bitwig.extension.controller.api.HardwareLightVisualState;
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
 
@@ -20,7 +21,8 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
 	public static final YaeltexButtonLedState DEEP_GREEN = new YaeltexButtonLedState(YaelTexColors.DEEP_GREEN, 0);
 	public static final YaeltexButtonLedState WHITE = new YaeltexButtonLedState(YaelTexColors.WHITE, 0);
 
-	private int colorCode = 0;
+	private final int colorCode;
+	private final Color color;
 
 	private static final YaeltexButtonLedState[] colorMap = new YaeltexButtonLedState[128];
 
@@ -47,20 +49,21 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
 		return color;
 	}
 
-	private YaeltexButtonLedState(final YaelTexColors colorCode) {
-		super();
-		this.colorCode = colorCode.getValue();
+	private YaeltexButtonLedState(final YaelTexColors color) {
+		this(color,0);
 	}
 	
-	private YaeltexButtonLedState(final YaelTexColors colorCode, final int offset) {
+	private YaeltexButtonLedState(final YaelTexColors color, final int offset) {
 		super();
 		assert offset < 3;
-		this.colorCode = colorCode.getValue() + offset;
+		this.colorCode = color.getValue() + offset;
+		this.color = ColorUtil.getColor(this.colorCode);
 	}
 	
 	private YaeltexButtonLedState(final int colorCode) {
 		super();
 		this.colorCode = colorCode;
+		color = ColorUtil.getColor(this.colorCode);
 	}
 
 	public int getColorCode() {
@@ -69,9 +72,14 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
 
 	@Override
 	public HardwareLightVisualState getVisualState() {
-		return null;
+		return  HardwareLightVisualState.createForColor(color);
 	}
-
+	
+	public Color getColor() {
+		return color;
+	}
+	
+	
 	@Override
 	public boolean equals(final Object obj) {
 		return obj instanceof YaeltexButtonLedState && equals((YaeltexButtonLedState) obj);

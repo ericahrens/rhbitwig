@@ -17,4 +17,12 @@ public enum YaelTexColors {
 	public int getValue() {
 		return value;
 	}
+	
+	public static int toColor(double r, double g, double b) {
+		final int rv = (int) Math.floor(r * 255);
+		final int gv = (int) Math.floor(g * 255);
+		final int bv = (int) Math.floor(b * 255);
+		
+		return 0;
+	}
 }

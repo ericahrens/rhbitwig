@@ -10,6 +10,7 @@ import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
 import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.MultiStateHardwareLight;
+import com.bitwig.extension.controller.api.RelativePosition;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.time.TimeRepeatEvent;
 import com.bitwig.extensions.framework.time.TimedDelayEvent;
@@ -46,7 +47,7 @@ public class RgbButton {
         hwButton.pressedAction().setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, midiId));
         hwButton.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, midiId));
         light = surface.createMultiStateHardwareLight(name + "_LIGHT_" + midiId);
-        light.state().setValue(YaeltexButtonLedState.RED);
+        light.state().setValue(YaeltexButtonLedState.OFF);
         hwButton.isPressed().markInterested();
         light.state().onUpdateHardware(this::updateState);
     }
@@ -59,13 +60,11 @@ public class RgbButton {
     
     private void updateState(final InternalHardwareLightState internalHardwareLightState) {
         if (internalHardwareLightState instanceof YaeltexButtonLedState state) {
-            FuseExtension.println(" UPDATE => %d",state.getColorCode());
             midiProcessor.sendMidi(Midi.NOTE_ON | channel, midiId, state.getColorCode());
         } else {
             midiProcessor.sendMidi(Midi.NOTE_ON, midiId, 0);
         }
     }
-    
     
     public void refresh() {
         light.state().setValue(null);
@@ -167,4 +166,13 @@ public class RgbButton {
         }
     }
     
+    public void setBounds(final double xMm, final double yMm, final double widthMm, final double heightMm) {
+        hwButton.setBounds(xMm, yMm, widthMm, heightMm);
+        light.setBounds(xMm, yMm, widthMm, heightMm);
+    }
+    
+    public void setLabel(String label) {
+        hwButton.setLabel(label);
+        hwButton.setLabelPosition(RelativePosition.BELOW);
+    }
 }
