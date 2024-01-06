@@ -18,7 +18,6 @@ import com.bitwig.extensions.framework.time.TimedEvent;
 import com.bitwig.extensions.framework.values.Midi;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.fuse.FuseExtension;
 
 public class RgbButton {
     
@@ -33,11 +32,7 @@ public class RgbButton {
     protected final int midiId;
     private final int channel;
     
-    public RgbButton(
-        final int channel,
-        final int midiId,
-        String name,
-        HardwareSurface surface,
+    public RgbButton(final int channel, final int midiId, String name, HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor) {
         this.midiProcessor = midiProcessor;
         final MidiIn midiIn = midiProcessor.getMidiIn();
@@ -52,8 +47,7 @@ public class RgbButton {
         light.state().onUpdateHardware(this::updateState);
     }
     
-    public RgbButton(
-        final int midiId, String name, HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
+    public RgbButton(final int midiId, String name, HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         this(0, midiId, name, surface, midiProcessor);
     }
     
@@ -99,8 +93,8 @@ public class RgbButton {
         layer.bindLightState(() -> pressedCombine.apply(hwButton.isPressed().get()), light);
     }
     
-    public void bindLightPressed(
-        final Layer layer, final InternalHardwareLightState state, final InternalHardwareLightState holdState) {
+    public void bindLightPressed(final Layer layer, final InternalHardwareLightState state,
+        final InternalHardwareLightState holdState) {
         layer.bindLightState(() -> hwButton.isPressed().get() ? holdState : state, light);
     }
     
@@ -147,8 +141,7 @@ public class RgbButton {
      * @param action action to be invoked and after a delay repeat
      */
     public void bindRepeatHold(final Layer layer, final Runnable action) {
-        layer.bind(hwButton,
-            hwButton.pressedAction(),
+        layer.bind(hwButton, hwButton.pressedAction(),
             () -> initiateRepeat(action, STD_REPEAT_DELAY, STD_REPEAT_FREQUENCY));
         layer.bind(hwButton, hwButton.releasedAction(), this::cancelEvent);
     }
