@@ -1,18 +1,20 @@
 package com.yaeltex.devices;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.CursorDevice;
+import com.bitwig.extension.controller.api.CursorRemoteControlsPage;
 import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
 import com.bitwig.extension.controller.api.DeviceMatcher;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extensions.framework.Layer;
+import com.bitwig.extensions.framework.Layers;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 import com.bitwig.extensions.framework.values.SpecialDevices;
-import com.yaeltex.fuse.FuseExtension;
+import com.yaeltex.bindings.DirectParameterBinding;
 import com.yaeltex.fuse.SynthControl1;
 import com.yaeltex.fuse.SynthControl2;
 
@@ -22,15 +24,29 @@ public class DirectDeviceControl {
     private final Map<SpecialDevices, Object> deviceLookup = new HashMap<>();
     private final Track baseTrack;
     private final int index;
-    private Device activeDevice;
-    private DirectDevice activeDirectDevice;
+    private DeviceState activeDevice;
+    private CursorRemoteControlsPage remotes;
+    private final BooleanValueObject specDeviceAvailable = new BooleanValueObject();
+    private final Layer directLayer;
+    private final Layer remoteLayer;
     
-    public DirectDeviceControl(int index, Track baseTrack, ControllerHost host) {
+    public DirectDeviceControl(int index, Track baseTrack, ControllerHost host, Layers layers) {
         this.index = index;
-        //cursorDevice = baseTrack.createCursorDevice();
         
         this.baseTrack = baseTrack;
         this.host = host;
+        this.directLayer = new Layer(layers, "DIRECT_%d".formatted(index));
+        this.remoteLayer = new Layer(layers, "REMOTES_%d".formatted(index));
+        specDeviceAvailable.addValueObserver(available -> {
+            directLayer.setIsActive(available);
+            remoteLayer.setIsActive(!available);
+        });
+    }
+    
+    public void activate() {
+        final boolean available = specDeviceAvailable.get();
+        directLayer.setIsActive(available);
+        remoteLayer.setIsActive(!available);
     }
     
     public void addSpecificBitwig(DirectDevice type) {
@@ -38,50 +54,71 @@ public class DirectDeviceControl {
         final DeviceBank matcherBank = baseTrack.createDeviceBank(1);
         final Device device = matcherBank.getDevice(0);
         matcherBank.setDeviceMatcher(matcher);
+        host.createInstrumentMatcher();
+        final CursorDevice cursorDevice = baseTrack.createCursorDevice();
+        final DeviceState deviceState = new DeviceState(type, device);
+        
+        remotes = cursorDevice.createCursorRemoteControlsPage(8);
         device.exists().addValueObserver(exist -> {
-            activeDevice = exist ? device : null;
-            activeDirectDevice = exist ? type : null;
-            
+            activeDevice = exist ? deviceState : null;
+            specDeviceAvailable.set(exist);
         });
-        device.addDirectParameterIdObserver(ids -> {
-            FuseExtension.println(" %d %s => %s", index, type, Arrays.stream(ids).collect(Collectors.joining("\n")));
+        
+        device.addDirectParameterIdObserver(parameters -> {
+            // need the observer
         });
         device.addDirectParameterNormalizedValueObserver((id, value) -> {
-            FuseExtension.println(" %d %s <%s> => %s", index, type, id, value);
+            type.getParamType(id).ifPresent(parameterType -> {
+                deviceState.updateValue(parameterType, value);
+            });
         });
     }
     
-    public void bindSynth(Layer layer, SynthControl1 control) {
-        control.cutoff().value().addValueObserver(v -> applyValue(ParameterType.CUT, v));
-        control.resonance().value().addValueObserver(v -> applyValue(ParameterType.RES, v));
-        control.mod().value().addValueObserver(v -> applyValue(ParameterType.MOD, v));
-        control.amount().value().addValueObserver(v -> applyValue(ParameterType.AMT, v));
-        control.adsrKnobs()[0].value().addValueObserver(v -> applyValue(ParameterType.ENV_A, v));
-        control.adsrKnobs()[1].value().addValueObserver(v -> applyValue(ParameterType.ENV_D, v));
-        control.adsrKnobs()[2].value().addValueObserver(v -> applyValue(ParameterType.ENV_S, v));
-        control.adsrKnobs()[3].value().addValueObserver(v -> applyValue(ParameterType.ENV_R, v));
+    public void bindSynth(SynthControl1 control) {
+        directLayer.addBinding(new DirectParameterBinding(control.cutoff(), ParameterType.CUT, this));
+        directLayer.addBinding(new DirectParameterBinding(control.resonance(), ParameterType.RES, this));
+        directLayer.addBinding(new DirectParameterBinding(control.mod(), ParameterType.MOD, this));
+        directLayer.addBinding(new DirectParameterBinding(control.amount(), ParameterType.AMT, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[0], ParameterType.ENV_A, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[1], ParameterType.ENV_D, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[2], ParameterType.ENV_S, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[3], ParameterType.ENV_R, this));
+        
+        remoteLayer.bind(control.cutoff(), remotes.getParameter(0));
+        remoteLayer.bind(control.resonance(), remotes.getParameter(1));
+        remoteLayer.bind(control.mod(), remotes.getParameter(2));
+        remoteLayer.bind(control.amount(), remotes.getParameter(3));
+        for (int i = 0; i < 4; i++) {
+            remoteLayer.bind(control.adsrKnobs()[i], remotes.getParameter(4 + i));
+        }
     }
     
-    public void bindSynth(Layer layer, SynthControl2 control) {
-        control.cutoff().value().addValueObserver(v -> applyValue(ParameterType.CUT, v));
-        control.resonance().value().addValueObserver(v -> applyValue(ParameterType.RES, v));
-        control.mod().value().addValueObserver(v -> applyValue(ParameterType.MOD, v));
-        control.amount().value().addValueObserver(v -> applyValue(ParameterType.AMT, v));
-        control.adsrKnobs()[0].value().addValueObserver(v -> applyValue(ParameterType.ENV_A, v));
-        control.adsrKnobs()[1].value().addValueObserver(v -> applyValue(ParameterType.ENV_D, v));
-        control.adsrKnobs()[2].value().addValueObserver(v -> applyValue(ParameterType.ENV_S, v));
-        control.adsrKnobs()[3].value().addValueObserver(v -> applyValue(ParameterType.ENV_R, v));
+    public void bindSynth(SynthControl2 control) {
+        directLayer.addBinding(new DirectParameterBinding(control.cutoff(), ParameterType.CUT, this));
+        directLayer.addBinding(new DirectParameterBinding(control.resonance(), ParameterType.RES, this));
+        directLayer.addBinding(new DirectParameterBinding(control.mod(), ParameterType.MOD, this));
+        directLayer.addBinding(new DirectParameterBinding(control.amount(), ParameterType.AMT, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[0], ParameterType.ENV_A, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[1], ParameterType.ENV_D, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[2], ParameterType.ENV_S, this));
+        directLayer.addBinding(new DirectParameterBinding(control.adsrKnobs()[3], ParameterType.ENV_R, this));
+        remoteLayer.bind(control.cutoff(), remotes.getParameter(0));
+        remoteLayer.bind(control.resonance(), remotes.getParameter(1));
+        remoteLayer.bind(control.mod(), remotes.getParameter(2));
+        remoteLayer.bind(control.amount(), remotes.getParameter(3));
+        for (int i = 0; i < 4; i++) {
+            remoteLayer.bind(control.adsrKnobs()[i], remotes.getParameter(4 + i));
+        }
     }
     
-    private void applyValue(ParameterType type, double v) {
-        if (activeDirectDevice == null) {
+    public void applyValue(ParameterType type, double v) {
+        if (activeDevice == null) {
             return;
         }
-        final String name = activeDirectDevice.getParamName(type);
-        FuseExtension.println(" %s, %s => %f ", type, name, v);
-        if (name != null) {
-            activeDevice.setDirectParameterValueNormalized(name, v, 1.0);
-        }
+        activeDevice.applyValue(type, v);
     }
     
+    public int getIndex() {
+        return this.index;
+    }
 }

@@ -19,6 +19,8 @@ import com.yaeltex.controls.RingEncoder;
 @Component
 public class HwElements {
     
+    private static final double MID_X_OFF = 200;
+    
     private final HardwareSlider masterSlider;
     private final HardwareSlider crossFader;
     private final List<StripControl> stripControls = new ArrayList<>();
@@ -200,9 +202,9 @@ public class HwElements {
         masterSlider.setIsHorizontal(true);
         crossFader.setBounds(300, 290, 120, 25);
         crossFader.setIsHorizontal(true);
-        double leftOff = 220;
+        double leftOff = MID_X_OFF;
         double topOff = 40;
-        double sliderWidth = 10;
+        double sliderWidth = 13;
         double buttonSize = 10;
         double knobSize = 15;
         layoutSliders(synthControl1, leftOff, topOff, sliderWidth);
@@ -225,6 +227,23 @@ public class HwElements {
         
         layoutSynth2Adsr(synthControl6, leftOff, topOff + spacing * 3, knobSize);
         layoutSynthLgKnobs(synthControl6, leftOff + 90, topOff + spacing * 3, lgKnobSize);
+        
+        topOff = 5;
+        leftOff = MID_X_OFF - 80;
+        double encoderSize = 24;
+        for (int i = 0; i < 4; i++) {
+            fxControls[i].setBounds(leftOff + knobSize * 1.3 * i, topOff, knobSize, knobSize);
+            masterControls[i].setBounds(MID_X_OFF + knobSize * 1.3 * i, 290, knobSize, knobSize);
+            encoders[i].setBounds(MID_X_OFF + encoderSize * i * 1.2, topOff, encoderSize);
+        }
+        for (int i = 0; i < 8; i++) {
+            fxButtons[i].setBounds(
+                350 + (i % 4) * buttonSize * 1.2, topOff + (i / 4) * buttonSize * 1.2, buttonSize, buttonSize);
+            fxButtons[i].setLabel("%s".formatted(i + 1));
+            masterButtons[i].setBounds(
+                MID_X_OFF + (i % 4) * buttonSize * 1.2, 255 + (i / 4) * buttonSize * 1.2, buttonSize, buttonSize);
+            masterButtons[i].setLabel("%s".formatted(i + 1));
+        }
     }
     
     private void layoutSynth2Adsr(SynthControl2 control, final double leftOff, final double topOff,

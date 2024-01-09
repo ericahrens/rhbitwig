@@ -89,4 +89,11 @@ public class RingEncoder {
         midiProcessor.sendMidi(Midi.CC, midiValue, 0);
     }
     
+    public void setBounds(final double xMM, final double yMm, final double size) {
+        double lightSize = 2;
+        double buttonOffset = 6;
+        encoder.setBounds(xMM + lightSize, yMm, size - buttonOffset, size - buttonOffset);
+        light.setBounds(xMM, yMm, lightSize, size);
+        button.setBounds(xMM + buttonOffset, yMm + size - buttonOffset, buttonOffset, buttonOffset);
+    }
 }

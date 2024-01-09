@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.bitwig.extension.api.Color;
 import com.bitwig.extension.controller.api.HardwareActionBindable;
 import com.bitwig.extension.controller.api.HardwareButton;
 import com.bitwig.extension.controller.api.HardwareSurface;
@@ -38,10 +39,10 @@ public class RgbButton {
         final MidiIn midiIn = midiProcessor.getMidiIn();
         this.midiId = midiId;
         this.channel = channel;
+        light = surface.createMultiStateHardwareLight(name + "_LIGHT_" + midiId);
         hwButton = surface.createHardwareButton(name + "_" + midiId);
         hwButton.pressedAction().setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, midiId));
         hwButton.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, midiId));
-        light = surface.createMultiStateHardwareLight(name + "_LIGHT_" + midiId);
         light.state().setValue(YaeltexButtonLedState.OFF);
         hwButton.isPressed().markInterested();
         light.state().onUpdateHardware(this::updateState);
@@ -161,11 +162,12 @@ public class RgbButton {
     
     public void setBounds(final double xMm, final double yMm, final double widthMm, final double heightMm) {
         hwButton.setBounds(xMm, yMm, widthMm, heightMm);
-        light.setBounds(xMm, yMm, widthMm, heightMm);
+        light.setBounds(xMm + 1, yMm + 1, widthMm - 2, heightMm - 2);
     }
     
     public void setLabel(String label) {
         hwButton.setLabel(label);
         hwButton.setLabelPosition(RelativePosition.BELOW);
+        hwButton.setLabelColor(Color.fromHex("#fff"));
     }
 }

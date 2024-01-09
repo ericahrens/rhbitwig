@@ -1,6 +1,9 @@
 package com.yaeltex.fuse;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.AbsoluteHardwareKnob;
@@ -26,6 +29,7 @@ public class FuseExtension extends ControllerExtension {
     private static ControllerHost debugHost;
     private Layer mainLayer;
     private HardwareSurface surface;
+    private final List<DirectDeviceControl> deviceControls = new ArrayList<>();
     
     public static void println(final String format, final Object... args) {
         if (debugHost != null) {
@@ -54,8 +58,8 @@ public class FuseExtension extends ControllerExtension {
         midiProcessor.start();
         
         diContext.activate();
-        
         mainLayer.setIsActive(true);
+        deviceControls.forEach(control -> control.activate());
     }
     
     
@@ -68,6 +72,7 @@ public class FuseExtension extends ControllerExtension {
         final Transport transport = diContext.getService(Transport.class);
         final Project project = diContext.getService(Project.class);
         final ControllerHost host = diContext.getService(ControllerHost.class);
+        final Layers layers = diContext.getService(Layers.class);
         
         final RingEncoder[] encoders = hwElements.getEncoders();
         
@@ -99,7 +104,7 @@ public class FuseExtension extends ControllerExtension {
         for (int i = 0; i < 6; i++) {
             final StripControl stripControl = hwElements.getStripControls().get(i);
             final Track track = bitwigControl.getTrackBank().getItemAt(i);
-            bindSynControl(i, hwElements, host, track);
+            bindSynControl(i, hwElements, host, track, layers);
             bind(stripControl, track);
         }
         
@@ -111,22 +116,22 @@ public class FuseExtension extends ControllerExtension {
     }
     
     private void bindSynControl(final int index, final HwElements hwElements, final ControllerHost host,
-        final Track track) {
-        final DirectDeviceControl control = new DirectDeviceControl(index, track, host);
-        control.addSpecificBitwig(DirectDevice.POLY_SYNTH);
-        control.addSpecificBitwig(DirectDevice.PHOSCYON);
+        final Track track, Layers layers) {
+        final DirectDeviceControl control = new DirectDeviceControl(index, track, host, layers);
+        deviceControls.add(control);
+        Arrays.stream(DirectDevice.values()).forEach(type -> control.addSpecificBitwig(type));
         if (index == 0) {
-            control.bindSynth(mainLayer, hwElements.getSynthControl1());
+            control.bindSynth(hwElements.getSynthControl1());
         } else if (index == 1) {
-            control.bindSynth(mainLayer, hwElements.getSynthControl2());
+            control.bindSynth(hwElements.getSynthControl2());
         }
         switch (index) {
-            case 0 -> control.bindSynth(mainLayer, hwElements.getSynthControl1());
-            case 1 -> control.bindSynth(mainLayer, hwElements.getSynthControl2());
-            case 2 -> control.bindSynth(mainLayer, hwElements.getSynthControl3());
-            case 3 -> control.bindSynth(mainLayer, hwElements.getSynthControl4());
-            case 4 -> control.bindSynth(mainLayer, hwElements.getSynthControl5());
-            case 5 -> control.bindSynth(mainLayer, hwElements.getSynthControl6());
+            case 0 -> control.bindSynth(hwElements.getSynthControl1());
+            case 1 -> control.bindSynth(hwElements.getSynthControl2());
+            case 2 -> control.bindSynth(hwElements.getSynthControl3());
+            case 3 -> control.bindSynth(hwElements.getSynthControl4());
+            case 4 -> control.bindSynth(hwElements.getSynthControl5());
+            case 5 -> control.bindSynth(hwElements.getSynthControl6());
         }
     }
     

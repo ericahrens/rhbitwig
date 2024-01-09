@@ -3,6 +3,7 @@ package com.yaeltex.devices;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.bitwig.extension.controller.api.ControllerHost;
@@ -18,7 +19,17 @@ public enum DirectDevice {
         List.of(new TypePairings(ParameterType.CUT, "PID34"), new TypePairings(ParameterType.RES, "PID35"),
             new TypePairings(ParameterType.AMT, "PID36"), new TypePairings(ParameterType.MOD, "PID38"),
             new TypePairings(ParameterType.ENV_A, "PID621"), new TypePairings(ParameterType.ENV_D, "PID37"),
-            new TypePairings(ParameterType.ENV_S, "PID39"), new TypePairings(ParameterType.ENV_R, "PID65d")));
+            new TypePairings(ParameterType.ENV_S, "PID39"), new TypePairings(ParameterType.ENV_R, "PID65d"))), //
+    ACID_V("41727475415649535433303350726F63", false,
+        List.of(new TypePairings(ParameterType.CUT, "PID4"), new TypePairings(ParameterType.RES, "PID5"),
+            new TypePairings(ParameterType.AMT, "PID6"), new TypePairings(ParameterType.MOD, "PID8"),
+            new TypePairings(ParameterType.ENV_A, "PID9"), new TypePairings(ParameterType.ENV_D, "PID7"),
+            new TypePairings(ParameterType.ENV_S, "PIDb"), new TypePairings(ParameterType.ENV_R, "PID10"))), //
+    PIGMENTS("41727475415649534B61743150726F63", false,
+        List.of(new TypePairings(ParameterType.CUT, "PIDa5"), new TypePairings(ParameterType.RES, "PIDa6"),
+            new TypePairings(ParameterType.AMT, "PID3"), new TypePairings(ParameterType.MOD, "PID4"),
+            new TypePairings(ParameterType.ENV_A, "PID1"), new TypePairings(ParameterType.ENV_D, "PID2"),
+            new TypePairings(ParameterType.ENV_S, "PID3"), new TypePairings(ParameterType.ENV_R, "PID4")));
     
     private final String id;
     private final UUID uuid;
@@ -48,6 +59,10 @@ public enum DirectDevice {
     
     public String getParamName(final ParameterType type) {
         return typeToParamName.get(type);
+    }
+    
+    public Optional<ParameterType> getParamType(String parameterName) {
+        return Optional.ofNullable(paramNameToType.get(parameterName));
     }
     
 }
