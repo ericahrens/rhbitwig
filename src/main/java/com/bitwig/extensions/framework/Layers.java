@@ -13,7 +13,7 @@ public class Layers {
     @SuppressWarnings("rawtypes")
     private final List<Binding> activeBindings = new ArrayList<>();
     private final ControllerExtension controllerExtension;
-    private double globalSensitivity = 1;
+    private final double globalSensitivity = 1;
     
     public Layers(final ControllerExtension controllerExtension) {
         super();
@@ -64,8 +64,8 @@ public class Layers {
         for (final Iterator<Binding> i = activeBindings.iterator(); i.hasNext(); ) {
             final Binding activeBinding = i.next();
             
-            if (Objects.equals(activeBinding.getExclusivityObject(), exclusivityObject)
-                && activeBinding.getLayer() != layer) {
+            if (activeBinding.getLayer() != layer &&  //
+                Objects.equals(activeBinding.getExclusivityObject(), exclusivityObject)) {
                 i.remove();
                 activeBinding.setIsActive(false);
             }
@@ -82,20 +82,6 @@ public class Layers {
     
     public double getGlobalSensitivity() {
         return globalSensitivity;
-    }
-    
-    public void setGlobalSensitivity(final double value) {
-        if (value != globalSensitivity) {
-            globalSensitivity = value;
-            
-            for (final Layer layer : layers) {
-                for (final Binding binding : layer.getBindings()) {
-                    if (binding instanceof BindingWithSensitivity) {
-                        ((BindingWithSensitivity) binding).setGlobalSensitivity(value);
-                    }
-                }
-            }
-        }
     }
     
 }
