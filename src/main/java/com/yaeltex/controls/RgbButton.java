@@ -33,7 +33,7 @@ public class RgbButton {
     protected final int midiId;
     private final int channel;
     
-    public RgbButton(final int channel, final int midiId, String name, HardwareSurface surface,
+    public RgbButton(final int channel, final int midiId, final String name, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor) {
         this.midiProcessor = midiProcessor;
         final MidiIn midiIn = midiProcessor.getMidiIn();
@@ -43,12 +43,13 @@ public class RgbButton {
         hwButton = surface.createHardwareButton(name + "_" + midiId);
         hwButton.pressedAction().setPressureActionMatcher(midiIn.createNoteOnVelocityValueMatcher(channel, midiId));
         hwButton.releasedAction().setActionMatcher(midiIn.createNoteOffActionMatcher(channel, midiId));
+        hwButton.setBackgroundLight(light);
         light.state().setValue(YaeltexButtonLedState.OFF);
         hwButton.isPressed().markInterested();
         light.state().onUpdateHardware(this::updateState);
     }
     
-    public RgbButton(final int midiId, String name, HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
+    public RgbButton(final int midiId, final String name, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         this(0, midiId, name, surface, midiProcessor);
     }
     
@@ -110,12 +111,12 @@ public class RgbButton {
      *                    condition
      * @param delayTime   the delay time
      */
-    public void bindDelayedHold(final Layer layer, Runnable clickAction, Consumer<Boolean> holdAction, long delayTime) {
+    public void bindDelayedHold(final Layer layer, final Runnable clickAction, final Consumer<Boolean> holdAction, final long delayTime) {
         layer.bind(hwButton, hwButton.pressedAction(), () -> initiateHold(holdAction, delayTime));
         layer.bind(hwButton, hwButton.releasedAction(), () -> handleDelayedRelease(clickAction, holdAction));
     }
     
-    private void initiateHold(Consumer<Boolean> holdAction, long delayTime) {
+    private void initiateHold(final Consumer<Boolean> holdAction, final long delayTime) {
         recordedDownTime = System.currentTimeMillis();
         currentTimer = new TimedDelayEvent(() -> {
             holdAction.accept(true);
@@ -165,7 +166,7 @@ public class RgbButton {
         light.setBounds(xMm + 1, yMm + 1, widthMm - 2, heightMm - 2);
     }
     
-    public void setLabel(String label) {
+    public void setLabel(final String label) {
         hwButton.setLabel(label);
         hwButton.setLabelPosition(RelativePosition.BELOW);
         hwButton.setLabelColor(Color.fromHex("#fff"));

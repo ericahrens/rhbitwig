@@ -30,6 +30,7 @@ public class FuseExtension extends ControllerExtension {
     private final List<DirectDeviceControl> deviceControls = new ArrayList<>();
     private final SendMode[][] modeStates = new SendMode[6][4];
     private final boolean[][] preFaderStates = new boolean[6][4];
+    private final boolean[][] sendExists = new boolean[6][4];
     private int selectedFxChan = -1;
     private BitwigControl bitwigControl;
     
@@ -124,7 +125,7 @@ public class FuseExtension extends ControllerExtension {
     }
     
     private YaeltexButtonLedState getSendSate(final int sendIndex) {
-        if (selectedFxChan == -1) {
+        if (selectedFxChan == -1 || !sendExists[selectedFxChan][sendIndex]) {
             return YaeltexButtonLedState.OFF;
         }
         return preFaderStates[selectedFxChan][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
@@ -168,6 +169,7 @@ public class FuseExtension extends ControllerExtension {
             final Send send = track.sendBank().getItemAt(i);
             send.sendMode().addValueObserver(enumRaw -> modeStates[index][sendIndex] = SendMode.toMode(enumRaw));
             send.isPreFader().addValueObserver(preFader -> preFaderStates[index][sendIndex] = preFader);
+            send.exists().addValueObserver(exists -> sendExists[index][sendIndex] = exists);
             mainLayer.bind(knob, send);
         }
         control.fxButton().bindPressed(mainLayer, () -> selectFxFocus(index));
