@@ -60,12 +60,12 @@ public class HwElements {
     }
     
     private record SynthControlOffset(int faderCc, int knobOffset, int buttonOffset) {
-        public SynthControlOffset(int faderCc, int knobOffset) {
+        public SynthControlOffset(final int faderCc, final int knobOffset) {
             this(faderCc, knobOffset, -1);
         }
     }
     
-    public HwElements(ControllerHost host, HardwareSurface surface, YaeltexMidiProcessor midiProcessor) {
+    public HwElements(final ControllerHost host, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         surface.setPhysicalSize(430, 330);
         masterSlider = createSliderPitchBend("MASTER_FILTER", surface, midiProcessor, 6);
         crossFader = createSliderPitchBend("CROSS_FADER", surface, midiProcessor, 7);
@@ -91,13 +91,13 @@ public class HwElements {
         }
         
         for (int i = 0; i < encoders.length; i++) {
-            encoders[i] = new RingEncoder(0, 0x00 + i, "ENCODER_%d".formatted(i + 1), surface, midiProcessor);
+            encoders[i] = new RingEncoder(0, i, "ENCODER_%d".formatted(i + 1), surface, midiProcessor);
         }
         
         layoutControl1();
     }
     
-    private StripControl createStripControl(int index, HardwareSurface surface, YaeltexMidiProcessor midiProcessor) {
+    private StripControl createStripControl(final int index, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         final StripControlOffsets config = midiMappings[index];
         final HardwareSlider fader =
             createSliderPitchBend("MIX_FADER_%d".formatted(index + 1), surface, midiProcessor, index);
@@ -109,8 +109,8 @@ public class HwElements {
             new RgbButton(config.fxOffset(), "FX_%d".formatted(index + 1), surface, midiProcessor);
         final RgbButton muteButton =
             new RgbButton(config.fxOffset() + 1, "MUTE_%d".formatted(index + 1), surface, midiProcessor);
-        int knobOffset = 0x50 + index * 4;
-        List<AbsoluteHardwareKnob> fxKnobs = new ArrayList<>();
+        final int knobOffset = 0x50 + index * 4;
+        final List<AbsoluteHardwareKnob> fxKnobs = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             fxKnobs.add(
                 createKnob("CH_%d_FX%d".formatted(index + 1, i + 1), surface, midiProcessor, 0, knobOffset + i));
@@ -125,7 +125,7 @@ public class HwElements {
         return control;
     }
     
-    private SynthControl1 createSynthControl1(int index, HardwareSurface surface, YaeltexMidiProcessor midiProcessor) {
+    private SynthControl1 createSynthControl1(final int index, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         final SynthControlOffset config = controlCc[index];
         final HardwareSlider cutoff =
             createSliderCc("SC_CUTOFF_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc());
@@ -135,12 +135,12 @@ public class HwElements {
             createSliderCc("SC_MOD_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc() + 2);
         final HardwareSlider amount =
             createSliderCc("SC_AMT_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc() + 3);
-        AbsoluteHardwareKnob[] adsrs = new AbsoluteHardwareKnob[4];
+        final AbsoluteHardwareKnob[] adsrs = new AbsoluteHardwareKnob[4];
         for (int i = 0; i < 4; i++) {
             adsrs[i] = createKnob("SC_%s_%d".formatted(ADSR_LABEL[i], index + 1), surface, midiProcessor, 0,
                 config.knobOffset() + i);
         }
-        RgbButton[] buttons = new RgbButton[4];
+        final RgbButton[] buttons = new RgbButton[4];
         for (int i = 0; i < 4; i++) {
             buttons[i] =
                 new RgbButton(config.buttonOffset() + i, "SC_BUTTON_%d_%d".formatted(i + 1, index + 1), surface,
@@ -150,7 +150,7 @@ public class HwElements {
         return new SynthControl1(index, cutoff, resonance, modulation, amount, adsrs, buttons);
     }
     
-    private SynthControl2 createSynthControl2(int index, HardwareSurface surface, YaeltexMidiProcessor midiProcessor) {
+    private SynthControl2 createSynthControl2(final int index, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
         final SynthControlOffset config = controlCc[index + 2];
         final AbsoluteHardwareKnob modulation =
             createKnob("SC2_MOD_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc());
@@ -160,7 +160,7 @@ public class HwElements {
             createKnob("SC2_CUTOFF_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc() + 2);
         final AbsoluteHardwareKnob resonance =
             createKnob("SC2_RESONANCE_%d".formatted(index + 1), surface, midiProcessor, 0, config.faderCc() + 3);
-        AbsoluteHardwareKnob[] adsrs = new AbsoluteHardwareKnob[4];
+        final AbsoluteHardwareKnob[] adsrs = new AbsoluteHardwareKnob[4];
         for (int i = 0; i < 4; i++) {
             adsrs[i] = createKnob("SC2_%s_%d".formatted(ADSR_LABEL[i], index + 1), surface, midiProcessor, 0,
                 config.knobOffset() + i);
@@ -170,25 +170,25 @@ public class HwElements {
     }
     
     
-    private HardwareSlider createSliderPitchBend(String name, final HardwareSurface surface,
+    private HardwareSlider createSliderPitchBend(final String name, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor, final int channel) {
-        HardwareSlider fader = surface.createHardwareSlider(name);
+        final HardwareSlider fader = surface.createHardwareSlider(name);
         final MidiIn midiIn = midiProcessor.getMidiIn();
         fader.setAdjustValueMatcher(midiIn.createAbsolutePitchBendValueMatcher(channel));
         return fader;
     }
     
-    private HardwareSlider createSliderCc(String name, final HardwareSurface surface,
-        final YaeltexMidiProcessor midiProcessor, final int channel, int ccNr) {
-        HardwareSlider fader = surface.createHardwareSlider(name);
+    private HardwareSlider createSliderCc(final String name, final HardwareSurface surface,
+        final YaeltexMidiProcessor midiProcessor, final int channel, final int ccNr) {
+        final HardwareSlider fader = surface.createHardwareSlider(name);
         final MidiIn midiIn = midiProcessor.getMidiIn();
         fader.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(channel, ccNr));
         return fader;
     }
     
-    private AbsoluteHardwareKnob createKnob(String name, HardwareSurface surface, YaeltexMidiProcessor midiProcessor,
-        int channel, int ccNr) {
-        AbsoluteHardwareKnob knob = surface.createAbsoluteHardwareKnob(name);
+    private AbsoluteHardwareKnob createKnob(final String name, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor,
+        final int channel, final int ccNr) {
+        final AbsoluteHardwareKnob knob = surface.createAbsoluteHardwareKnob(name);
         final MidiIn midiIn = midiProcessor.getMidiIn();
         knob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(channel, ccNr));
         final MultiStateHardwareLight knobLight = surface.createMultiStateHardwareLight(name + "_LIGHT");
@@ -204,9 +204,9 @@ public class HwElements {
         crossFader.setIsHorizontal(true);
         double leftOff = MID_X_OFF;
         double topOff = 40;
-        double sliderWidth = 13;
-        double buttonSize = 10;
-        double knobSize = 15;
+        final double sliderWidth = 13;
+        final double buttonSize = 10;
+        final double knobSize = 15;
         layoutSliders(synthControl1, leftOff, topOff, sliderWidth);
         layoutSliders(synthControl2, leftOff + 130, topOff, sliderWidth);
         for (int i = 0; i < 4; i++) {
@@ -214,8 +214,8 @@ public class HwElements {
             layoutControl1(synthControl2, leftOff + 95, topOff, buttonSize, knobSize, i);
         }
         topOff = 130;
-        double lgKnobSize = 20;
-        double spacing = 30;
+        final double lgKnobSize = 20;
+        final double spacing = 30;
         layoutSynth2Adsr(synthControl3, leftOff, topOff, knobSize);
         layoutSynthLgKnobs(synthControl3, leftOff + 90, topOff, lgKnobSize);
         
@@ -230,7 +230,7 @@ public class HwElements {
         
         topOff = 5;
         leftOff = MID_X_OFF - 80;
-        double encoderSize = 24;
+        final double encoderSize = 24;
         for (int i = 0; i < 4; i++) {
             fxControls[i].setBounds(leftOff + knobSize * 1.3 * i, topOff, knobSize, knobSize);
             masterControls[i].setBounds(MID_X_OFF + knobSize * 1.3 * i, 290, knobSize, knobSize);
@@ -246,7 +246,7 @@ public class HwElements {
         }
     }
     
-    private void layoutSynth2Adsr(SynthControl2 control, final double leftOff, final double topOff,
+    private void layoutSynth2Adsr(final SynthControl2 control, final double leftOff, final double topOff,
         final double knobSize) {
         for (int i = 0; i < 4; i++) {
             final AbsoluteHardwareKnob knob = control.adsrKnobs()[i];
@@ -256,9 +256,9 @@ public class HwElements {
         }
     }
     
-    private void layoutSynthLgKnobs(SynthControl2 control, final double lgLeftOff, final double topOff,
+    private void layoutSynthLgKnobs(final SynthControl2 control, final double lgLeftOff, final double topOff,
         final double lgKnobSize) {
-        double wfactor = 0.9;
+        final double wfactor = 0.9;
         control.mod().setBounds(lgLeftOff, topOff, lgKnobSize * wfactor, lgKnobSize * wfactor);
         control.mod().setLabel("MOD");
         control.mod().setLabelPosition(RelativePosition.BELOW);
@@ -273,7 +273,7 @@ public class HwElements {
         control.resonance().setLabelPosition(RelativePosition.BELOW);
     }
     
-    private void layoutSliders(SynthControl1 control, final double leftOff, final double topOff,
+    private void layoutSliders(final SynthControl1 control, final double leftOff, final double topOff,
         final double sliderWidth) {
         control.cutoff().setBounds(leftOff, topOff, sliderWidth * 0.9, 70);
         control.cutoff().setLabel("Cut");
@@ -289,7 +289,7 @@ public class HwElements {
         control.amount().setLabelPosition(RelativePosition.BELOW);
     }
     
-    private void layoutControl1(SynthControl1 control, final double leftOff, final double topOff,
+    private void layoutControl1(final SynthControl1 control, final double leftOff, final double topOff,
         final double buttonSize, final double knobSize, final int index) {
         final AbsoluteHardwareKnob knob = control.adsrKnobs()[index];
         knob.setBounds(leftOff + (index % 2) * knobSize * 1.2, topOff + (index / 2) * knobSize * 1.2 + 40,
@@ -348,5 +348,12 @@ public class HwElements {
     
     public AbsoluteHardwareKnob[] getFxControls() {
         return fxControls;
+    }
+    
+    public RgbButton getFxMainButton(final int index) {
+        if (index >= 0 && index < fxButtons.length) {
+            return fxButtons[index];
+        }
+        return fxButtons[0];
     }
 }

@@ -11,6 +11,7 @@ import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
 import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.MultiStateHardwareLight;
+import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.RelativePosition;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.time.TimeRepeatEvent;
@@ -49,7 +50,8 @@ public class RgbButton {
         light.state().onUpdateHardware(this::updateState);
     }
     
-    public RgbButton(final int midiId, final String name, final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor) {
+    public RgbButton(final int midiId, final String name, final HardwareSurface surface,
+        final YaeltexMidiProcessor midiProcessor) {
         this(0, midiId, name, surface, midiProcessor);
     }
     
@@ -95,6 +97,18 @@ public class RgbButton {
         layer.bindLightState(() -> pressedCombine.apply(hwButton.isPressed().get()), light);
     }
     
+    public void bindToggleValue(final Layer layer, final Parameter parameter, final YaeltexButtonLedState color) {
+        parameter.value().markInterested();
+        layer.bindLightState(() -> parameter.value().get() == 0 ? YaeltexButtonLedState.OFF : color, light);
+        layer.bindPressed(hwButton, () -> {
+            if (parameter.value().get() < 1) {
+                parameter.value().set(1);
+            } else {
+                parameter.value().set(0);
+            }
+        });
+    }
+    
     public void bindLightPressed(final Layer layer, final InternalHardwareLightState state,
         final InternalHardwareLightState holdState) {
         layer.bindLightState(() -> hwButton.isPressed().get() ? holdState : state, light);
@@ -111,7 +125,8 @@ public class RgbButton {
      *                    condition
      * @param delayTime   the delay time
      */
-    public void bindDelayedHold(final Layer layer, final Runnable clickAction, final Consumer<Boolean> holdAction, final long delayTime) {
+    public void bindDelayedHold(final Layer layer, final Runnable clickAction, final Consumer<Boolean> holdAction,
+        final long delayTime) {
         layer.bind(hwButton, hwButton.pressedAction(), () -> initiateHold(holdAction, delayTime));
         layer.bind(hwButton, hwButton.releasedAction(), () -> handleDelayedRelease(clickAction, holdAction));
     }
@@ -171,4 +186,5 @@ public class RgbButton {
         hwButton.setLabelPosition(RelativePosition.BELOW);
         hwButton.setLabelColor(Color.fromHex("#fff"));
     }
+    
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.AbsoluteHardwareKnob;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.CursorRemoteControlsPage;
 import com.bitwig.extension.controller.api.HardwareSlider;
 import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.Project;
@@ -16,8 +17,10 @@ import com.bitwig.extension.controller.api.Transport;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Context;
+import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
+import com.yaeltex.controls.RgbButton;
 import com.yaeltex.controls.RingEncoder;
 import com.yaeltex.devices.DirectDevice;
 import com.yaeltex.devices.DirectDeviceControl;
@@ -33,6 +36,7 @@ public class FuseExtension extends ControllerExtension {
     private final boolean[][] sendExists = new boolean[6][4];
     private int selectedFxChan = -1;
     private BitwigControl bitwigControl;
+    private final List<Layer> sendsRemoteLayer = new ArrayList<>();
     
     public static void println(final String format, final Object... args) {
         if (debugHost != null) {
@@ -47,14 +51,17 @@ public class FuseExtension extends ControllerExtension {
     @Override
     public void init() {
         debugHost = getHost();
-        for (int i = 0; i < modeStates.length; i++) {
-            Arrays.fill(modeStates[i], SendMode.AUTO);
+        for (final SendMode[] modeState : modeStates) {
+            Arrays.fill(modeState, SendMode.AUTO);
         }
         
         final Context diContext = new Context(this);
         final YaeltexMidiProcessor midiProcessor = new YaeltexMidiProcessor(getHost());
         diContext.registerService(YaeltexMidiProcessor.class, midiProcessor);
         mainLayer = new Layer(diContext.getService(Layers.class), "MAIN_LAYER");
+        for (int i = 0; i < 4; i++) {
+            sendsRemoteLayer.add(diContext.createLayer("SEND_CONTROL_%d"));
+        }
         surface = diContext.getService(HardwareSurface.class);
         final HwElements hwElements = diContext.getService(HwElements.class);
         bitwigControl = diContext.getService(BitwigControl.class);
@@ -72,18 +79,12 @@ public class FuseExtension extends ControllerExtension {
         final HwElements hwElements = diContext.getService(HwElements.class);
         final Transport transport = diContext.getService(Transport.class);
         final Project project = diContext.getService(Project.class);
-        final ControllerHost host = diContext.getService(ControllerHost.class);
         final Layers layers = diContext.getService(Layers.class);
         
         final RingEncoder[] encoders = hwElements.getEncoders();
         
-        //        final IntValueObject iv = new IntValueObject(0, 0, 100);
-        //        encoders[0].bind(mainLayer, iv);
-        //        encoders[0].bindLight(mainLayer, () -> YaeltexButtonLedState.YELLOW);
-        //        encoders[1].bind(mainLayer, project.cueMix(), YaelTexColors.DEEP_SKY_BLUE);
-        //
-        final HardwareSlider xfader = hwElements.getCrossFader();
-        mainLayer.bind(xfader, transport.crossfade());
+        final HardwareSlider xFader = hwElements.getCrossFader();
+        mainLayer.bind(xFader, transport.crossfade());
         
         final AbsoluteHardwareKnob[] masterKnobs = hwElements.getMasterControls();
         
@@ -95,14 +96,16 @@ public class FuseExtension extends ControllerExtension {
         for (int i = 0; i < 6; i++) {
             final StripControl stripControl = hwElements.getStripControls().get(i);
             final Track track = bitwigControl.getTrackBank().getItemAt(i);
-            bindSynControl(i, hwElements, host, track, layers);
+            bindSynControl(i, hwElements, track, layers);
             bind(stripControl, track, i);
         }
         
         for (int i = 0; i < 4; i++) {
             final Track effectsTrack = bitwigControl.getEffectTrackBank().getItemAt(i);
+            final Layer layer = sendsRemoteLayer.get(i);
             final AbsoluteHardwareKnob control = hwElements.getFxControls()[i];
             mainLayer.bind(control, effectsTrack.volume());
+            bindSendsEncoderLayer(layer, effectsTrack, encoders);
         }
         
         for (int i = 0; i < 4; i++) {
@@ -112,6 +115,24 @@ public class FuseExtension extends ControllerExtension {
             encoder.getButton().bindLight(mainLayer, () -> getSendSate(sendIndex));
         }
         
+        for (int i = 0; i < 4; i++) {
+            final int index = i;
+            final RgbButton button = hwElements.getFxMainButton(i < 2 ? i : i + 2);
+            button.bindPressed(mainLayer, () -> selectFxFocus(index + 6));
+            button.bindLight(mainLayer, () -> fxSelectionIndex(index + 6));
+        }
+        
+    }
+    
+    private void bindSendsEncoderLayer(final Layer layer, final Track effectsTrack, final RingEncoder[] encoders) {
+        final CursorRemoteControlsPage trackRemotes =
+            effectsTrack.createCursorRemoteControlsPage("track-remotes", 8, null);
+        for (int i = 0; i < 4; i++) {
+            final RingEncoder encoder = encoders[i];
+            encoder.bind(layer, trackRemotes.getParameter(i), YaelTexColors.BLUE);
+            encoder.getButton().bindToggleValue(layer, trackRemotes.getParameter(i + 4),
+                YaeltexButtonLedState.of(YaelTexColors.BRIGHT_YELLOW));
+        }
     }
     
     private void togglePrePostLocal(final int sendIndex) {
@@ -125,29 +146,24 @@ public class FuseExtension extends ControllerExtension {
     }
     
     private YaeltexButtonLedState getSendSate(final int sendIndex) {
-        if (selectedFxChan == -1 || !sendExists[selectedFxChan][sendIndex]) {
+        if ((selectedFxChan == -1 || selectedFxChan > 5) || !sendExists[selectedFxChan][sendIndex]) {
             return YaeltexButtonLedState.OFF;
         }
         return preFaderStates[selectedFxChan][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
     }
     
-    private void bindSynControl(final int index, final HwElements hwElements, final ControllerHost host,
-        final Track track, final Layers layers) {
-        final DirectDeviceControl control = new DirectDeviceControl(index, track, host, layers);
+    private void bindSynControl(final int index, final HwElements hwElements, final Track track, final Layers layers) {
+        final DirectDeviceControl control = new DirectDeviceControl(index, track, layers);
         deviceControls.add(control);
         Arrays.stream(DirectDevice.values()).forEach(control::addSpecificBitwig);
-        if (index == 0) {
-            control.bindSynth(hwElements.getSynthControl1());
-        } else if (index == 1) {
-            control.bindSynth(hwElements.getSynthControl2());
-        }
+        final StripControl stripControl = hwElements.getStripControls().get(index);
         switch (index) {
-            case 0 -> control.bindSynth(hwElements.getSynthControl1());
-            case 1 -> control.bindSynth(hwElements.getSynthControl2());
-            case 2 -> control.bindSynth(hwElements.getSynthControl3());
-            case 3 -> control.bindSynth(hwElements.getSynthControl4());
-            case 4 -> control.bindSynth(hwElements.getSynthControl5());
-            case 5 -> control.bindSynth(hwElements.getSynthControl6());
+            case 0 -> control.bindSynth(hwElements.getSynthControl1(), stripControl);
+            case 1 -> control.bindSynth(hwElements.getSynthControl2(), stripControl);
+            case 2 -> control.bindSynth(hwElements.getSynthControl3(), stripControl);
+            case 3 -> control.bindSynth(hwElements.getSynthControl4(), stripControl);
+            case 4 -> control.bindSynth(hwElements.getSynthControl5(), stripControl);
+            case 5 -> control.bindSynth(hwElements.getSynthControl6(), stripControl);
         }
     }
     
@@ -161,8 +177,7 @@ public class FuseExtension extends ControllerExtension {
         control.muteButton().bindPressed(mainLayer, () -> track.mute().toggle());
         control.muteButton()
             .bindLight(mainLayer, () -> track.mute().get() ? YaeltexButtonLedState.ORANGE : YaeltexButtonLedState.OFF);
-        //control.fxButton().bindPressed(mainLayer, () -> togglePrePost(track, index));
-        //control.fxButton().bindLight(mainLayer, () -> prePostColor(index));
+        
         for (int i = 0; i < 4; i++) {
             final int sendIndex = i;
             final AbsoluteHardwareKnob knob = control.fxKnobs().get(i);
@@ -177,27 +192,24 @@ public class FuseExtension extends ControllerExtension {
     }
     
     private void selectFxFocus(final int index) {
+        if (selectedFxChan > 5) {
+            sendsRemoteLayer.get(selectedFxChan - 6).setIsActive(false);
+        }
         if (selectedFxChan == index) {
             selectedFxChan = -1;
         } else {
             selectedFxChan = index;
         }
+        if (selectedFxChan > 5) {
+            sendsRemoteLayer.get(selectedFxChan - 6).setIsActive(true);
+        }
     }
     
     private YaeltexButtonLedState fxSelectionIndex(final int index) {
-        return selectedFxChan == index ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.OFF;
-    }
-    
-    private YaeltexButtonLedState prePostColor(final int index) {
-        return preFaderStates[index][0] ? YaeltexButtonLedState.DEEP_GREEN : YaeltexButtonLedState.AQUA;
-    }
-    
-    private void togglePrePost(final Track track, final int index) {
-        modeStates[index][0] = modeStates[index][0].toggle();
-        for (int i = 0; i < 4; i++) {
-            final Send send = track.sendBank().getItemAt(i);
-            send.sendMode().set(modeStates[index][0].getEnumRaw());
+        if (selectedFxChan == index) {
+            return index < 6 ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.RED;
         }
+        return YaeltexButtonLedState.OFF;
     }
     
     private void selectAb(final Track track) {
@@ -226,7 +238,7 @@ public class FuseExtension extends ControllerExtension {
     
     @Override
     public void exit() {
-    
+        
     }
     
     @Override
