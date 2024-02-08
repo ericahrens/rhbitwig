@@ -20,7 +20,6 @@ public class BitwigControl {
     private final Track rootTrack;
     private final PinnableCursorDevice cursorDevice;
     private final PinnableCursorDevice primaryDevice;
-    private int selectedTrackIndex;
     private final int[] trackColors = new int[NUM_TRACKS];
     
     public BitwigControl(final ControllerHost host) {
@@ -47,11 +46,6 @@ public class BitwigControl {
         track.crossFadeMode().markInterested();
         track.color().addValueObserver((r, g, b) -> {
             trackColors[index] = YaelTexColors.toColor(r, g, b);
-        });
-        track.addIsSelectedInMixerObserver(select -> {
-            if (select) {
-                this.selectedTrackIndex = index;
-            }
         });
     }
     

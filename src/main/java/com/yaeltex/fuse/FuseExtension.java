@@ -63,16 +63,22 @@ public class FuseExtension extends ControllerExtension {
             sendsRemoteLayer.add(diContext.createLayer("SEND_CONTROL_%d"));
         }
         surface = diContext.getService(HardwareSurface.class);
-        final HwElements hwElements = diContext.getService(HwElements.class);
         bitwigControl = diContext.getService(BitwigControl.class);
         
-        final HardwareSlider masterFilter = hwElements.getMasterSlider();
+        bindProjects(diContext);
         bindTracks(diContext);
         midiProcessor.start();
         
         diContext.activate();
         mainLayer.setIsActive(true);
         deviceControls.forEach(DirectDeviceControl::activate);
+    }
+    
+    private void bindProjects(final Context diContext) {
+        final HwElements hwElements = diContext.getService(HwElements.class);
+        final ProjectRemoteHandler remoteHandler = diContext.getService(ProjectRemoteHandler.class);
+        
+        remoteHandler.bindMasterControls(hwElements, mainLayer);
     }
     
     private void bindTracks(final Context diContext) {
@@ -91,7 +97,7 @@ public class FuseExtension extends ControllerExtension {
         final Track rootTrack = bitwigControl.getRootTrack();
         mainLayer.bind(masterKnobs[0], rootTrack.volume());
         mainLayer.bind(masterKnobs[1], project.cueMix());
-        mainLayer.bind(masterKnobs[2], project.cueVolume());
+        mainLayer.bind(masterKnobs[3], project.cueVolume());
         
         for (int i = 0; i < 6; i++) {
             final StripControl stripControl = hwElements.getStripControls().get(i);
@@ -122,34 +128,6 @@ public class FuseExtension extends ControllerExtension {
             button.bindLight(mainLayer, () -> fxSelectionIndex(index + 6));
         }
         
-    }
-    
-    private void bindSendsEncoderLayer(final Layer layer, final Track effectsTrack, final RingEncoder[] encoders) {
-        final CursorRemoteControlsPage trackRemotes =
-            effectsTrack.createCursorRemoteControlsPage("track-remotes", 8, null);
-        for (int i = 0; i < 4; i++) {
-            final RingEncoder encoder = encoders[i];
-            encoder.bind(layer, trackRemotes.getParameter(i), YaelTexColors.BLUE);
-            encoder.getButton().bindToggleValue(layer, trackRemotes.getParameter(i + 4),
-                YaeltexButtonLedState.of(YaelTexColors.BRIGHT_YELLOW));
-        }
-    }
-    
-    private void togglePrePostLocal(final int sendIndex) {
-        if (selectedFxChan == -1) {
-            return;
-        }
-        final Track track = bitwigControl.getTrackBank().getItemAt(selectedFxChan);
-        final Send send = track.sendBank().getItemAt(sendIndex);
-        final SendMode newState = modeStates[selectedFxChan][sendIndex].toggle();
-        send.sendMode().set(newState.getEnumRaw());
-    }
-    
-    private YaeltexButtonLedState getSendSate(final int sendIndex) {
-        if ((selectedFxChan == -1 || selectedFxChan > 5) || !sendExists[selectedFxChan][sendIndex]) {
-            return YaeltexButtonLedState.OFF;
-        }
-        return preFaderStates[selectedFxChan][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
     }
     
     private void bindSynControl(final int index, final HwElements hwElements, final Track track, final Layers layers) {
@@ -191,6 +169,34 @@ public class FuseExtension extends ControllerExtension {
         control.fxButton().bindLight(mainLayer, () -> fxSelectionIndex(index));
     }
     
+    private void bindSendsEncoderLayer(final Layer layer, final Track effectsTrack, final RingEncoder[] encoders) {
+        final CursorRemoteControlsPage trackRemotes =
+            effectsTrack.createCursorRemoteControlsPage("track-remotes", 8, null);
+        for (int i = 0; i < 4; i++) {
+            final RingEncoder encoder = encoders[i];
+            encoder.bind(layer, trackRemotes.getParameter(i), YaelTexColors.BLUE);
+            encoder.getButton().bindToggleValue(layer, trackRemotes.getParameter(i + 4),
+                YaeltexButtonLedState.of(YaelTexColors.BRIGHT_YELLOW));
+        }
+    }
+    
+    private void togglePrePostLocal(final int sendIndex) {
+        if (selectedFxChan == -1) {
+            return;
+        }
+        final Track track = bitwigControl.getTrackBank().getItemAt(selectedFxChan);
+        final Send send = track.sendBank().getItemAt(sendIndex);
+        final SendMode newState = modeStates[selectedFxChan][sendIndex].toggle();
+        send.sendMode().set(newState.getEnumRaw());
+    }
+    
+    private YaeltexButtonLedState getSendSate(final int sendIndex) {
+        if ((selectedFxChan == -1 || selectedFxChan > 5) || !sendExists[selectedFxChan][sendIndex]) {
+            return YaeltexButtonLedState.OFF;
+        }
+        return preFaderStates[selectedFxChan][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
+    }
+    
     private void selectFxFocus(final int index) {
         if (selectedFxChan > 5) {
             sendsRemoteLayer.get(selectedFxChan - 6).setIsActive(false);
@@ -212,6 +218,17 @@ public class FuseExtension extends ControllerExtension {
         return YaeltexButtonLedState.OFF;
     }
     
+    private YaeltexButtonLedState fromXFadeMode(final Track track) {
+        final String mode = track.crossFadeMode().get();
+        if (mode.equals("AB")) {
+            return YaeltexButtonLedState.OFF;
+        }
+        if (mode.equals("A")) {
+            return YaeltexButtonLedState.BLUE;
+        }
+        return YaeltexButtonLedState.GREEN;
+    }
+    
     private void selectAb(final Track track) {
         final String mode = track.crossFadeMode().get();
         if (mode.equals("AB")) {
@@ -223,17 +240,6 @@ public class FuseExtension extends ControllerExtension {
         if (mode.equals("B")) {
             track.crossFadeMode().set("AB");
         }
-    }
-    
-    private YaeltexButtonLedState fromXFadeMode(final Track track) {
-        final String mode = track.crossFadeMode().get();
-        if (mode.equals("AB")) {
-            return YaeltexButtonLedState.OFF;
-        }
-        if (mode.equals("A")) {
-            return YaeltexButtonLedState.BLUE;
-        }
-        return YaeltexButtonLedState.GREEN;
     }
     
     @Override

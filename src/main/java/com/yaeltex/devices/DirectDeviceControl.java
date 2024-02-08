@@ -35,18 +35,13 @@ public class DirectDeviceControl {
         remotes = baseTrack.createCursorRemoteControlsPage("track-remotes", 8, null);
         remotes.selectedPageIndex().markInterested();
         remotes.pageCount().markInterested();
-        if (index < 2) {
-            remotes2 = baseTrack.createCursorRemoteControlsPage("track-remotes2", 8, null);
-            remotes2.selectedPageIndex().markInterested();
-            //            remotes2.pageNames().addValueObserver(pageNames -> {
-            //                FuseExtension.println("PAGES = %s", Arrays.toString(pageNames));
-            //            });
-            remotes2.pageCount().addValueObserver(pages -> {
-                if (pages > 1) {
-                    remotes2.selectedPageIndex().set(1);
-                }
-            });
-        }
+        remotes2 = baseTrack.createCursorRemoteControlsPage("track-remotes2", 8, null);
+        remotes2.selectedPageIndex().markInterested();
+        remotes2.pageCount().addValueObserver(pages -> {
+            if (pages > 1) {
+                remotes2.selectedPageIndex().set(1);
+            }
+        });
     }
     
     public void bindSynth(final SynthControl1 control, final StripControl stripControl) {
@@ -75,6 +70,8 @@ public class DirectDeviceControl {
         for (int i = 0; i < 4; i++) {
             remoteLayer.bind(control.adsrKnobs()[i], remotes.getParameter(4 + i));
         }
+        remoteLayer.bind(stripControl.plusKnob(), remotes2.getParameter(0));
+        remoteLayer.bind(stripControl.multKnob(), remotes2.getParameter(1));
     }
     
     public void applyValue(final ParameterType type, final double v) {

@@ -23,16 +23,20 @@ import com.yaeltex.common.YaeltexMidiProcessor;
 
 public class RgbButton {
     
+    private TimedEvent currentTimer;
+    private long recordedDownTime;
+    private final int channel;
     public static final int STD_REPEAT_DELAY = 400;
     public static final int STD_REPEAT_FREQUENCY = 50;
-    
     protected MultiStateHardwareLight light;
     protected HardwareButton hwButton;
     protected YaeltexMidiProcessor midiProcessor;
-    private TimedEvent currentTimer;
-    private long recordedDownTime;
     protected final int midiId;
-    private final int channel;
+    
+    public RgbButton(final int midiId, final String name, final HardwareSurface surface,
+        final YaeltexMidiProcessor midiProcessor) {
+        this(0, midiId, name, surface, midiProcessor);
+    }
     
     public RgbButton(final int channel, final int midiId, final String name, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor) {
@@ -49,12 +53,6 @@ public class RgbButton {
         hwButton.isPressed().markInterested();
         light.state().onUpdateHardware(this::updateState);
     }
-    
-    public RgbButton(final int midiId, final String name, final HardwareSurface surface,
-        final YaeltexMidiProcessor midiProcessor) {
-        this(0, midiId, name, surface, midiProcessor);
-    }
-    
     
     private void updateState(final InternalHardwareLightState internalHardwareLightState) {
         if (internalHardwareLightState instanceof YaeltexButtonLedState state) {
@@ -98,8 +96,12 @@ public class RgbButton {
     }
     
     public void bindToggleValue(final Layer layer, final Parameter parameter, final YaeltexButtonLedState color) {
-        parameter.value().markInterested();
+        bindToggleValue(layer, parameter);
         layer.bindLightState(() -> parameter.value().get() == 0 ? YaeltexButtonLedState.OFF : color, light);
+    }
+    
+    public void bindToggleValue(final Layer layer, final Parameter parameter) {
+        parameter.value().markInterested();
         layer.bindPressed(hwButton, () -> {
             if (parameter.value().get() < 1) {
                 parameter.value().set(1);
