@@ -1,9 +1,7 @@
 package com.yaeltex.fuse;
 
-import com.bitwig.extension.controller.api.Clip;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
-import com.bitwig.extension.controller.api.CursorRemoteControlsPage;
 import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.Track;
@@ -22,23 +20,17 @@ public class BitwigControl {
     private final Track rootTrack;
     private final PinnableCursorDevice cursorDevice;
     private final PinnableCursorDevice primaryDevice;
-    private final CursorRemoteControlsPage deviceRemotePages;
-    private final Clip cursorClip;
-    private int selectedTrackIndex;
     private final int[] trackColors = new int[NUM_TRACKS];
     
-    public BitwigControl(ControllerHost host) {
+    public BitwigControl(final ControllerHost host) {
         rootTrack = host.getProject().getRootTrackGroup();
-        trackBank = host.createTrackBank(NUM_TRACKS, NUM_SENDS, NUM_SCENES, true);
+        trackBank = host.createTrackBank(NUM_TRACKS, NUM_SENDS, NUM_SCENES, false);
         cursorTrack = host.createCursorTrack(NUM_SENDS, NUM_SCENES);
         cursorTrack.exists().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
-        deviceRemotePages = cursorDevice.createCursorRemoteControlsPage(8);
-        cursorClip = host.createLauncherCursorClip(32, 127);
         
         effectTrackBank = host.createEffectTrackBank(NUM_SENDS, NUM_SENDS, NUM_SCENES);
         
-        //cursorClip = cursorTrack.createLauncherCursorClip(32, 127);
         primaryDevice =
             cursorTrack.createCursorDevice("drumdetection", "Pad Device", 8, CursorDeviceFollowMode.FIRST_INSTRUMENT);
         for (int index = 0; index < NUM_TRACKS; index++) {
@@ -46,7 +38,7 @@ public class BitwigControl {
         }
     }
     
-    private void prepareTrack(final Track track, int index) {
+    private void prepareTrack(final Track track, final int index) {
         track.arm().markInterested();
         track.exists().markInterested();
         track.solo().markInterested();
@@ -54,11 +46,6 @@ public class BitwigControl {
         track.crossFadeMode().markInterested();
         track.color().addValueObserver((r, g, b) -> {
             trackColors[index] = YaelTexColors.toColor(r, g, b);
-        });
-        track.addIsSelectedInMixerObserver(select -> {
-            if (select) {
-                this.selectedTrackIndex = index;
-            }
         });
     }
     
@@ -70,10 +57,6 @@ public class BitwigControl {
         return trackBank;
     }
     
-    public Clip getCursorClip() {
-        return cursorClip;
-    }
-    
     public CursorTrack getCursorTrack() {
         return cursorTrack;
     }
@@ -82,7 +65,4 @@ public class BitwigControl {
         return rootTrack;
     }
     
-    public CursorRemoteControlsPage getDeviceRemotePages() {
-        return deviceRemotePages;
-    }
 }
