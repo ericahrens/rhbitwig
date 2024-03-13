@@ -1,6 +1,6 @@
 com.akai.fire.AkaiFireDrumSeqDefinition
 com.yaeltex.seqarp168.YaeltexArpControlExtensionDefinition
-com.yaeltex.seqarp168new.SeqArp168ExtensionDefinition
+com.yaeltex.seqarp168mk2.SeqArp168ExtensionDefinition
 com.yaeltex.fuse.FuseControlExtensionDefinition
 com.novation.launchpadProMk3.LaunchPadProMk3ExtensionDefinition
 com.novation.launchcontrol.arp.LpcArpControlExtensionDefinition

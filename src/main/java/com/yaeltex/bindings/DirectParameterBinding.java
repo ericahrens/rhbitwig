@@ -10,14 +10,13 @@ public class DirectParameterBinding extends Binding<AbsoluteHardwareControl, Par
     
     
     public DirectParameterBinding(final AbsoluteHardwareControl source, final ParameterType target,
-        DirectDeviceControl device) {
+        final DirectDeviceControl device) {
         super(source, source, target);
         this.device = device;
         source.value().addValueObserver(this::valueChange);
     }
     
-    private void valueChange(double newValue) {
-        //FuseExtension.println(" %d -  %s %f %s", device.getIndex(), getTarget(), newValue, isActive());
+    private void valueChange(final double newValue) {
         if (isActive()) {
             device.applyValue(getTarget(), newValue);
         }

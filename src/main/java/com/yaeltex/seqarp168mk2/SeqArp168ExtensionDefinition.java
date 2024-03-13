@@ -1,4 +1,4 @@
-package com.yaeltex.seqarp168new;
+package com.yaeltex.seqarp168mk2;
 
 import java.util.UUID;
 
@@ -15,7 +15,7 @@ public class SeqArp168ExtensionDefinition extends ControllerExtensionDefinition 
     
     @Override
     public String getName() {
-        return "SEQARP168";
+        return "SEQARP168 Mk2";
     }
     
     @Override
@@ -50,7 +50,7 @@ public class SeqArp168ExtensionDefinition extends ControllerExtensionDefinition 
     
     @Override
     public int getRequiredAPIVersion() {
-        return 13;
+        return 18;
     }
     
     @Override

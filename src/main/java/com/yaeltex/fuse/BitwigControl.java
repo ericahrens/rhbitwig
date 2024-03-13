@@ -7,7 +7,7 @@ import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extensions.framework.di.Component;
-import com.yaeltex.common.YaelTexColors;
+import com.yaeltex.common.ColorUtil;
 
 @Component
 public class BitwigControl {
@@ -45,7 +45,7 @@ public class BitwigControl {
         track.mute().markInterested();
         track.crossFadeMode().markInterested();
         track.color().addValueObserver((r, g, b) -> {
-            trackColors[index] = YaelTexColors.toColor(r, g, b);
+            trackColors[index] = ColorUtil.matchToIndex(r, g, b);
         });
     }
     

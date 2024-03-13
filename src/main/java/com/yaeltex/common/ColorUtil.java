@@ -1,8 +1,14 @@
 package com.yaeltex.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.bitwig.extension.api.Color;
 
 public class ColorUtil {
+    
+    private static final Map<Integer, Integer> codeLookup = new HashMap<>();
+    
     private static final int[][] colorRangeTable = {
         //  R       G       B
         {0x00, 0x00, 0x00},
@@ -148,8 +154,64 @@ public class ColorUtil {
         {0xf0, 0xf0, 0xf0}
     };
     
-    public static Color getColor(int index) {
-        return Color.fromRGB255(colorRangeTable[index][0],colorRangeTable[index][1],colorRangeTable[index][2]);
+    public static Color getColor(final int index) {
+        return Color.fromRGB255(colorRangeTable[index][0], colorRangeTable[index][1], colorRangeTable[index][2]);
     }
     
+    private static int restrict(final int value) {
+        return Math.max(0, Math.min(255, value));
+    }
+    
+    public static int matchToIndex(final double r, final double g, final double b) {
+        final int rv = (int) Math.floor(r * 255);
+        final int gv = (int) Math.floor(g * 255);
+        final int bv = (int) Math.floor(b * 255);
+        final int code = rv << 16 | gv << 8 | bv;
+        return codeLookup.computeIfAbsent(code, key -> matchToIndex(rv, gv, bv));
+    }
+    
+    public static int matchToIndex(final int red, final int green, final int blue) {
+        if (red == 0 && green == 0 && blue == 0) {
+            return 0;
+        }
+        int rv = red;
+        int gv = green;
+        final int bv = blue;
+        
+        //SeqArp168Extension.println("LOOK %d %d %d", rv, gv, bv);
+        if (red == green && green == blue) {
+            return 127;
+        }
+        
+        gv = restrict(gv + 8);
+        rv = restrict(rv - 8);
+        
+        int currDiff = 1000;
+        int index = -1;
+        for (int i = 0; i < 128; i++) {
+            final int dr = Math.abs(rv - colorRangeTable[i][0]);
+            final int dg = Math.abs(gv - colorRangeTable[i][1]);
+            final int db = Math.abs(bv - colorRangeTable[i][2]);
+            
+            final int diff = dr + dg + db;
+            
+            if (diff < currDiff) {
+                currDiff = diff;
+                index = i;
+                if (currDiff == 0) {
+                    return i;
+                }
+            }
+        }
+        if (index != -1) {
+            return index;
+        }
+        
+        return 127;
+    }
+    
+    public static String getValue(final int index) {
+        return "%02x %02x %02x".formatted(colorRangeTable[index][0], colorRangeTable[index][1],
+            colorRangeTable[index][2]);
+    }
 }

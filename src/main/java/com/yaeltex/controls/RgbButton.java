@@ -19,6 +19,7 @@ import com.bitwig.extensions.framework.time.TimedDelayEvent;
 import com.bitwig.extensions.framework.time.TimedEvent;
 import com.bitwig.extensions.framework.values.Midi;
 import com.yaeltex.common.YaeltexButtonLedState;
+import com.yaeltex.common.YaeltexIntensityColorState;
 import com.yaeltex.common.YaeltexMidiProcessor;
 
 public class RgbButton {
@@ -57,6 +58,10 @@ public class RgbButton {
     private void updateState(final InternalHardwareLightState internalHardwareLightState) {
         if (internalHardwareLightState instanceof YaeltexButtonLedState state) {
             midiProcessor.sendMidi(Midi.NOTE_ON | channel, midiId, state.getColorCode());
+            //midiProcessor.sendMidi(Midi.NOTE_ON | 0x15, midiId, 1);
+        } else if (internalHardwareLightState instanceof YaeltexIntensityColorState state) {
+            midiProcessor.sendMidi(Midi.NOTE_ON | channel, midiId, state.getColorCode());
+            midiProcessor.sendMidi(Midi.NOTE_ON | 0x14, midiId, state.getIntensity());
         } else {
             midiProcessor.sendMidi(Midi.NOTE_ON, midiId, 0);
         }
