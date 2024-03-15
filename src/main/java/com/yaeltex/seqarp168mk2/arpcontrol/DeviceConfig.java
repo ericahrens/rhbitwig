@@ -12,4 +12,8 @@ public abstract class DeviceConfig {
     }
     
     public abstract void setIsActive(final boolean active);
+    
+    public boolean isActive() {
+        return active;
+    }
 }

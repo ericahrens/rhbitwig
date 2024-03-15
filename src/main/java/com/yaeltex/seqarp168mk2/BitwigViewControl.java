@@ -6,10 +6,12 @@ import java.util.Optional;
 
 import com.bitwig.extension.controller.api.Clip;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
 import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
 import com.bitwig.extension.controller.api.DeviceMatcher;
+import com.bitwig.extension.controller.api.DrumPadBank;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
@@ -22,8 +24,8 @@ import com.yaeltex.seqarp168mk2.device.FocusDevice;
 
 @Component
 public class BitwigViewControl {
-    private static final int NUM_SCENES = 16;
-    private static final int NUM_TRACKS = 6;
+    private static final int NUM_SCENES = 8;
+    private static final int NUM_TRACKS = 8;
     private static final int NUM_SENDS = 4;
     
     private final TrackBank trackBank;
@@ -36,6 +38,9 @@ public class BitwigViewControl {
     private final DeviceMatcher arpDeviceMatcher;
     private final List<ArpInstance> arpInstances = new ArrayList<>();
     private final Device focusArpDevice;
+    private final DeviceBank drumBank;
+    private final PinnableCursorDevice drumFollowDevice;
+    private final DrumPadBank drumPadBank;
     
     
     public BitwigViewControl(final ControllerHost host) {
@@ -45,8 +50,19 @@ public class BitwigViewControl {
         cursorTrack.exists().markInterested();
         cursorTrack.name().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
-        cursorClip = host.createLauncherCursorClip(32, 127);
+        cursorClip = host.createLauncherCursorClip(32, 16);
         arpDeviceMatcher = host.createBitwigDeviceMatcher(SpecialDevices.ARPEGGIATOR.getUuid());
+        
+        drumFollowDevice =
+            cursorTrack.createCursorDevice("drumdetection", "Pad Device", 4, CursorDeviceFollowMode.FIRST_INSTRUMENT);
+        drumFollowDevice.hasDrumPads().markInterested();
+        drumFollowDevice.exists().markInterested();
+        final DeviceMatcher drumMatcher =
+            host.createBitwigDeviceMatcher(com.bitwig.extensions.framework.values.SpecialDevices.DRUM.getUuid());
+        drumBank = cursorTrack.createDeviceBank(1);
+        drumBank.setDeviceMatcher(drumMatcher);
+        //drumDevice = drumBank.getItemAt(0);
+        drumPadBank = drumFollowDevice.createDrumPadBank(16);
         
         final DeviceBank deviceBank = cursorTrack.createDeviceBank(1);
         deviceBank.setDeviceMatcher(arpDeviceMatcher);
@@ -107,4 +123,15 @@ public class BitwigViewControl {
         }
     }
     
+    public PinnableCursorDevice getCursorDevice() {
+        return cursorDevice;
+    }
+    
+    public Clip getCursorClip() {
+        return cursorClip;
+    }
+    
+    public DrumPadBank getDrumPadBank() {
+        return drumPadBank;
+    }
 }

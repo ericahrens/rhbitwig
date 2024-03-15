@@ -1,24 +1,27 @@
 package com.yaeltex.seqarp168mk2.arpcontrol;
 
+import java.util.function.Consumer;
+
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.values.ValueObject;
 import com.yaeltex.seqarp168mk2.BitwigViewControl;
-import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 
 public class ButtonDeviceConfiguration extends DeviceConfig {
     private final ButtonDeviceLayer layer1;
     private final ButtonDeviceLayer layer2;
     
-    public ButtonDeviceConfiguration(final Layers layers, final SeqArpHardwareElements hwElements,
-        final BitwigViewControl viewControl, final ValueObject<FocusDeviceMode> deviceFocus) {
+    public ButtonDeviceConfiguration(final Layers layers, final String name, final BitwigViewControl viewControl,
+        final ValueObject<FocusDeviceMode> deviceFocus) {
         super(deviceFocus);
-        layer1 = new ButtonDeviceLayer(layers, "BUTTON_1", viewControl.getArpDevice1());
-        layer2 = new ButtonDeviceLayer(layers, "BUTTON_2", viewControl.getArpDevice2());
-        
-        layer1.bindButtonValues(hwElements);
-        layer2.bindButtonValues(hwElements);
+        layer1 = new ButtonDeviceLayer(layers, "%s_BUTTON_1".formatted(name), viewControl.getArpDevice1());
+        layer2 = new ButtonDeviceLayer(layers, "%s_BUTTON_2".formatted(name), viewControl.getArpDevice2());
         
         deviceFocus.addValueObserver(((oldValue, newValue) -> changeDeviceFocus(newValue)));
+    }
+    
+    public void bind(final Consumer<ButtonDeviceLayer> binder) {
+        binder.accept(layer1);
+        binder.accept(layer2);
     }
     
     private void changeDeviceFocus(final FocusDeviceMode newValue) {
@@ -43,4 +46,6 @@ public class ButtonDeviceConfiguration extends DeviceConfig {
             layer2.setIsActive(active);
         }
     }
+    
+    
 }

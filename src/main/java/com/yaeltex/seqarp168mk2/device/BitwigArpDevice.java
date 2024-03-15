@@ -134,5 +134,31 @@ public class BitwigArpDevice {
         return rateModeParam;
     }
     
+    public Parameter getOctaveParam() {
+        return octaveParam;
+    }
     
+    public Parameter getModeParam() {
+        return modeParam;
+    }
+    
+    public Parameter getStepLength() {
+        return arpStepsParam;
+    }
+    
+    public Parameter getGlobalGateParam() {
+        return globalGateParam;
+    }
+    
+    public Parameter getGlobalVelParam() {
+        return globalVelParam;
+    }
+    
+    public Parameter getRetriggerParam() {
+        return retriggerParam;
+    }
+    
+    public Parameter getShuffleParam() {
+        return shuffleParam;
+    }
 }
