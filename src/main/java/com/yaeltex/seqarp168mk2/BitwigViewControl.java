@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.bitwig.extension.controller.api.Clip;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
 import com.bitwig.extension.controller.api.CursorTrack;
@@ -12,6 +11,7 @@ import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
 import com.bitwig.extension.controller.api.DeviceMatcher;
 import com.bitwig.extension.controller.api.DrumPadBank;
+import com.bitwig.extension.controller.api.PinnableCursorClip;
 import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
@@ -32,7 +32,6 @@ public class BitwigViewControl {
     private final Track rootTrack;
     private final CursorTrack cursorTrack;
     private final PinnableCursorDevice cursorDevice;
-    private final Clip cursorClip;
     private final FocusDevice arpDevice1;
     private final FocusDevice arpDevice2;
     private final DeviceMatcher arpDeviceMatcher;
@@ -41,16 +40,18 @@ public class BitwigViewControl {
     private final DeviceBank drumBank;
     private final PinnableCursorDevice drumFollowDevice;
     private final DrumPadBank drumPadBank;
+    private final PinnableCursorClip cursorClip;
     
     
     public BitwigViewControl(final ControllerHost host) {
         rootTrack = host.getProject().getRootTrackGroup();
         trackBank = host.createTrackBank(NUM_TRACKS, NUM_SENDS, NUM_SCENES, true);
         cursorTrack = host.createCursorTrack(NUM_SENDS, NUM_SCENES);
+        trackBank.followCursorTrack(cursorTrack);
         cursorTrack.exists().markInterested();
         cursorTrack.name().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
-        cursorClip = host.createLauncherCursorClip(32, 16);
+        cursorClip = cursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
         arpDeviceMatcher = host.createBitwigDeviceMatcher(SpecialDevices.ARPEGGIATOR.getUuid());
         
         drumFollowDevice =
@@ -127,11 +128,15 @@ public class BitwigViewControl {
         return cursorDevice;
     }
     
-    public Clip getCursorClip() {
+    public PinnableCursorClip getCursorClip() {
         return cursorClip;
     }
     
     public DrumPadBank getDrumPadBank() {
         return drumPadBank;
+    }
+    
+    public TrackBank getTrackBank() {
+        return trackBank;
     }
 }

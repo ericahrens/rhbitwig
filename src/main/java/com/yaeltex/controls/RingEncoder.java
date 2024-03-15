@@ -20,6 +20,7 @@ import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
 import com.yaeltex.seqarp168mk2.bindings.EncoderBaseValueBinding;
 import com.yaeltex.seqarp168mk2.bindings.EncoderOffsetValueBinding;
+import com.yaeltex.seqarp168mk2.bindings.EncoderParameterValueBinding;
 import com.yaeltex.seqarp168mk2.device.NoteControlValue;
 
 public class RingEncoder {
@@ -33,7 +34,9 @@ public class RingEncoder {
     private final MultiStateHardwareLight light;
     
     public enum Mode {
-        SIGNED_BIT, BINARY_OFFSET, BINARY_OFFSET_REVERSE
+        SIGNED_BIT,
+        BINARY_OFFSET,
+        BINARY_OFFSET_REVERSE
     }
     
     public RingEncoder(final int channel, final int midiValue, final String name, final HardwareSurface surface,
@@ -56,12 +59,12 @@ public class RingEncoder {
         final AbsoluteHardwareValueMatcher absoluteMatcher = midiIn.createAbsoluteCCValueMatcher(channel, midiValue);
         encoder = surface.createRelativeHardwareKnob(name);
         switch (mode) {
-            case SIGNED_BIT -> encoder.setAdjustValueMatcher(
-                midiIn.createRelativeSignedBit2CCValueMatcher(channel, midiValue, 100));
-            case BINARY_OFFSET -> encoder.setAdjustValueMatcher(
-                midiIn.createRelativeSignedBitCCValueMatcher(channel, midiValue, 100));
-            case BINARY_OFFSET_REVERSE -> encoder.setAdjustValueMatcher(
-                midiIn.createRelativeSignedBitCCValueMatcher(channel, midiValue, -100));
+            case SIGNED_BIT ->
+                encoder.setAdjustValueMatcher(midiIn.createRelativeSignedBit2CCValueMatcher(channel, midiValue, 100));
+            case BINARY_OFFSET ->
+                encoder.setAdjustValueMatcher(midiIn.createRelativeSignedBitCCValueMatcher(channel, midiValue, 100));
+            case BINARY_OFFSET_REVERSE ->
+                encoder.setAdjustValueMatcher(midiIn.createRelativeSignedBitCCValueMatcher(channel, midiValue, -100));
         }
         
         encoder.setStepSize(0.0075);
@@ -91,6 +94,11 @@ public class RingEncoder {
         return midiProcessor.createIncrementBinder(incHandler::accept);
     }
     
+    public RelativeHardwarControlBindable createAccelIncrementBinder(final IntConsumer incHandler,
+        final int resolution) {
+        return midiProcessor.createAccelIncrementBinder(incHandler::accept, resolution);
+    }
+    
     public void bind(final Layer layer, final IntConsumer incHandler) {
         layer.bind(encoder, midiProcessor.createIncrementBinder(incHandler::accept));
     }
@@ -109,6 +117,11 @@ public class RingEncoder {
     
     public void bind(final Layer layer, final SettableRangedValue value) {
         layer.bind(encoder, value);
+    }
+    
+    public void bindValue(final Layer layer, final SettableRangedValue value, final BooleanValue existsSource,
+        final int resolution) {
+        layer.addBinding(new EncoderParameterValueBinding(this, value, existsSource, resolution));
     }
     
     public void bindNoteValue(final Layer layer, final NoteControlValue noteValue, final Parameter parameter,
