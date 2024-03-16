@@ -8,6 +8,10 @@ import com.yaeltex.controls.RingEncoder;
 import com.yaeltex.seqarp168mk2.device.NoteControlValue;
 
 public class EncoderBaseValueBinding extends Binding<RingEncoder, NoteControlValue> {
+    private final NoteControlValue value;
+    private final RelativeHardwarControlBindable incBinder;
+    private int viewValue = 0;
+    private boolean exists;
     public static final int[] NOTE_ENCODER_MAPPING = new int[] { //
         // -23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13
         10, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, //
@@ -18,11 +22,6 @@ public class EncoderBaseValueBinding extends Binding<RingEncoder, NoteControlVal
         // 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
         100, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 112, 127 //
     };
-    
-    private final NoteControlValue value;
-    private final RelativeHardwarControlBindable incBinder;
-    private int viewValue = 0;
-    private boolean exists;
     
     public EncoderBaseValueBinding(final RingEncoder encoder, final NoteControlValue value,
         final BooleanValue existsReference, final Parameter viewParameter) {

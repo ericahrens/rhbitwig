@@ -96,7 +96,7 @@ public class SeqArp168Extension extends ControllerExtension {
         optButton.bindIsPressed(layer, this::handleOptButtonPressed);
         
         final RgbButton timeWarpButton = hwElements.getControlButton(3);
-        timeWarpButton.bindIsPressed(layer, pressed -> arpLayer.setTimeWarpActive(pressed));
+        timeWarpButton.bindIsPressed(layer, pressed -> handleTimeWarpPressed(pressed));
         timeWarpButton.bindLightPressed(
             layer, pressed -> pressed ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.WHITE);
         
@@ -113,14 +113,36 @@ public class SeqArp168Extension extends ControllerExtension {
             layer, () -> arpLayer.getButtonMode() == ArpButtonMode.STEP_VEL_GLOBAL
                 ? YaeltexButtonLedState.GREEN
                 : YaeltexButtonLedState.OFF);
-        stepGlobalVelButton.bindPressed(layer, () -> arpLayer.setMode(ArpButtonMode.STEP_VEL_GLOBAL));
+        stepGlobalVelButton.bindPressed(layer, this::handleVelGlobal);
         
         final RgbButton stepGlobalGateButton = hwElements.getControlButton(5);
         stepGlobalGateButton.bindLight(
             layer, () -> arpLayer.getButtonMode() == ArpButtonMode.STEP_GATE_GLOBAL
                 ? YaeltexButtonLedState.GREEN
                 : YaeltexButtonLedState.OFF);
-        stepGlobalGateButton.bindPressed(layer, () -> arpLayer.setMode(ArpButtonMode.STEP_GATE_GLOBAL));
+        stepGlobalGateButton.bindPressed(layer, this::handleStepGlobal);
+    }
+    
+    private void handleTimeWarpPressed(final boolean pressed) {
+        if (mode != Mode.ARP) {
+            setMode(Mode.ARP);
+        }
+        arpLayer.setTimeWarpActive(pressed);
+    }
+    
+    private void handleVelGlobal() {
+        if (mode != Mode.ARP) {
+            setMode(Mode.ARP);
+        }
+        arpLayer.setMode(ArpButtonMode.STEP_VEL_GLOBAL);
+    }
+    
+    
+    private void handleStepGlobal() {
+        if (mode != Mode.ARP) {
+            setMode(Mode.ARP);
+        }
+        arpLayer.setMode(ArpButtonMode.STEP_GATE_GLOBAL);
     }
     
     private void handleOptButtonPressed(final boolean pressed) {

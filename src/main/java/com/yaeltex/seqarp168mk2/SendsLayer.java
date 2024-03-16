@@ -1,5 +1,6 @@
 package com.yaeltex.seqarp168mk2;
 
+import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.Send;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
@@ -19,16 +20,24 @@ public class SendsLayer extends Layer {
     private final boolean[][] preFaderStates = new boolean[8][4];
     private final boolean[][] sendExists = new boolean[8][4];
     private final boolean[] trackExists = new boolean[8];
+    private int selectTrackIndex = -1;
     
     public SendsLayer(final Layers layers, final SeqArpHardwareElements hwElements,
         final BitwigViewControl viewControl) {
         super(layers, "SENDS_LAYER");
         final TrackBank trackBank = viewControl.getTrackBank();
+        final CursorTrack cursorTrack = viewControl.getCursorTrack();
+        
         for (int i = 0; i < 8; i++) {
             final int trackIndex = i;
             final Track track = trackBank.getItemAt(i);
             track.color().addValueObserver((r, g, b) -> trackColors[trackIndex] = YaeltexButtonLedState.of(r, g, b));
             track.exists().addValueObserver(exists -> trackExists[trackIndex] = exists);
+            track.addIsSelectedInMixerObserver(selected -> {
+                if (selected) {
+                    this.selectTrackIndex = trackIndex;
+                }
+            });
             for (int j = 0; j < 4; j++) {
                 final int sendIndex = j;
                 final Send send = track.sendBank().getItemAt(sendIndex);
@@ -60,6 +69,11 @@ public class SendsLayer extends Layer {
     private YaeltexButtonLedState getSendSate(final int trackIndex, final int sendIndex) {
         if (!sendExists[trackIndex][sendIndex] || !trackExists[trackIndex]) {
             return YaeltexButtonLedState.OFF;
+        }
+        if (trackIndex == selectTrackIndex) {
+            return preFaderStates[trackIndex][sendIndex]
+                ? YaeltexButtonLedState.AQUA_SEL
+                : YaeltexButtonLedState.YELLOW_BRIGHT;
         }
         return preFaderStates[trackIndex][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
     }

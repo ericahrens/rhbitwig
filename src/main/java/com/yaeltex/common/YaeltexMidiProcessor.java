@@ -93,4 +93,7 @@ public class YaeltexMidiProcessor {
     }
     
     
+    public void delayAction(final Runnable action, final int time) {
+        host.scheduleTask(action, time);
+    }
 }

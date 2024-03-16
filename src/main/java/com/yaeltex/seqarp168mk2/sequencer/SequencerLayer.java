@@ -1,13 +1,11 @@
 package com.yaeltex.seqarp168mk2.sequencer;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.akai.fire.sequence.IntSetValue;
 import com.bitwig.extension.controller.api.ClipLauncherSlot;
 import com.bitwig.extension.controller.api.ClipLauncherSlotBank;
 import com.bitwig.extension.controller.api.CursorTrack;
@@ -20,6 +18,7 @@ import com.bitwig.extension.controller.api.PlayingNote;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Component;
+import com.bitwig.extensions.framework.values.IntValueObject;
 import com.bitwig.extensions.framework.values.StepViewPosition;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
@@ -42,15 +41,14 @@ public class SequencerLayer extends Layer {
     private final YaeltexMidiProcessor midiProcessor;
     private final PinnableCursorClip clip;
     private final NoteStep[] assignments = new NoteStep[32];
-    private final HashMap<Integer, NoteStep> expectedNoteChanges = new HashMap<>();
     private final Set<Integer> addedSteps = new HashSet<>();
     private final Set<Integer> modifiedSteps = new HashSet<>();
     private int playingStep;
     private boolean markIgnoreOrigLen = false;
     private final double gatePercent = 0.98;
     private final StepViewPosition positionHandler;
-    private final IntSetValue heldSteps = new IntSetValue();
     private final int inputVelocity = 100;
+    private final OperatorNoteState operatorNoteState;
     
     public SequencerLayer(final Layers layers, final SeqArpHardwareElements hwElements,
         final BitwigViewControl viewControl, final YaeltexMidiProcessor midiProcessor) {
@@ -58,6 +56,7 @@ public class SequencerLayer extends Layer {
         this.viewControl = viewControl;
         this.midiProcessor = midiProcessor;
         this.clip = viewControl.getCursorClip();
+        this.operatorNoteState = new OperatorNoteState(assignments, midiProcessor);
         
         positionHandler = new StepViewPosition(clip, 32, "YAELTEXT");
         setupClip();
@@ -71,6 +70,13 @@ public class SequencerLayer extends Layer {
         final CursorTrack cursorTrack = this.viewControl.getCursorTrack();
         cursorTrack.color().addValueObserver((r, g, b) -> trackColor = YaeltexButtonLedState.of(r, g, b));
         cursorTrack.playingNotes().addValueObserver(notes -> handleNotesPlaying(notes));
+        bindPadSelection(hwElements, drumPadBank);
+        bindClipLaunching(hwElements, cursorTrack);
+        bindStepSequencer(hwElements);
+        bindOperators(hwElements);
+    }
+    
+    private void bindPadSelection(final SeqArpHardwareElements hwElements, final DrumPadBank drumPadBank) {
         for (int i = 0; i < drumPadBank.getSizeOfBank(); i++) {
             final int index = i;
             final RingEncoder encoder = hwElements.getEncoder(i);
@@ -80,8 +86,12 @@ public class SequencerLayer extends Layer {
             encoder.getButton().bindLight(this, () -> getPadColorState(index));
             encoder.getButton().bindPressed(this, () -> drumPad.selectInEditor());
             encoder.bindLight(this, () -> getPadColorState(index));
-            encoder.bind(this, inc -> this.modifySteps(index, inc));
+            final IntValueObject value = new IntValueObject(0, 0, 127);
+            encoder.bind(this, inc -> this.modifySteps(index, inc), value);
         }
+    }
+    
+    private void bindClipLaunching(final SeqArpHardwareElements hwElements, final CursorTrack cursorTrack) {
         final ClipLauncherSlotBank slotBank = cursorTrack.clipLauncherSlotBank();
         for (int i = 0; i < slotBank.getSizeOfBank(); i++) {
             final int index = i;
@@ -92,6 +102,9 @@ public class SequencerLayer extends Layer {
             encoder.getButton().bindLight(this, () -> getSlotColor(index, slot));
             encoder.getButton().bindIsPressed(this, pressed -> handleSlot(pressed, index, slot));
         }
+    }
+    
+    private void bindStepSequencer(final SeqArpHardwareElements hwElements) {
         for (int i = 0; i < 32; i++) {
             final int index = i;
             final RgbButton button = hwElements.getStepButton(i);
@@ -99,6 +112,34 @@ public class SequencerLayer extends Layer {
             button.bindIsPressed(this, pressed -> handleSeqSelection(index, pressed));
         }
     }
+    
+    private void bindOperators(final SeqArpHardwareElements hwElements) {
+        int index = 24;
+        final RingEncoder velocityEncoder = hwElements.getEncoder(index++);
+        velocityEncoder.getButton().bindLight(this, () -> lightState(YaeltexButtonLedState.RED));
+        velocityEncoder.bindLight(this, () -> lightState(YaeltexButtonLedState.RED));
+        velocityEncoder.bind(this, operatorNoteState::modifyVelocity, operatorNoteState.getVelocityValue());
+        
+        final RingEncoder timbreEncoder = hwElements.getEncoder(index++);
+        timbreEncoder.getButton().bindLight(this, () -> lightState(YaeltexButtonLedState.ORANGE));
+        timbreEncoder.bindLight(this, () -> lightState(YaeltexButtonLedState.ORANGE));
+        timbreEncoder.bind(this, operatorNoteState::modifyTimbre, operatorNoteState.getTimbreValue());
+        
+        final RingEncoder chanceEncoder = hwElements.getEncoder(index++);
+        chanceEncoder.getButton().bindLight(this, () -> lightState(YaeltexButtonLedState.BLUE));
+        chanceEncoder.bindLight(this, () -> lightState(YaeltexButtonLedState.BLUE));
+        chanceEncoder.bind(this, operatorNoteState::modifyRandom, operatorNoteState.getRandomValue());
+        
+        final RingEncoder ratchetEncoder = hwElements.getEncoder(index++);
+        ratchetEncoder.getButton().bindLight(this, () -> lightState(YaeltexButtonLedState.BLUE));
+        ratchetEncoder.bindLight(this, () -> lightState(YaeltexButtonLedState.BLUE));
+        ratchetEncoder.bind(this, operatorNoteState::modifyRatchet, operatorNoteState.getRatchetValue());
+    }
+    
+    private YaeltexButtonLedState lightState(final YaeltexButtonLedState color) {
+        return operatorNoteState.editMode() ? color : YaeltexButtonLedState.OFF;
+    }
+    
     
     private void modifySteps(final int index, final int inc) {
         if (index != selectedIndex) {
@@ -121,7 +162,7 @@ public class SequencerLayer extends Layer {
             } else if (pos >= availableSteps) {
                 pos = 0;
             }
-            expectedNoteChanges.put(pos, noteStep);
+            operatorNoteState.registerChanges(pos, noteStep);
             clip.setStep(pos, 0, (int) Math.round(noteStep.velocity() * 127), noteStep.duration());
         }
     }
@@ -170,11 +211,7 @@ public class SequencerLayer extends Layer {
     private void handNoteSteps(final NoteStep noteStep) {
         final int newStep = noteStep.x();
         assignments[newStep] = noteStep;
-        if (expectedNoteChanges.containsKey(newStep)) {
-            final NoteStep previousStep = expectedNoteChanges.get(newStep);
-            expectedNoteChanges.remove(newStep);
-            //applyValues(noteStep, previousStep);
-        }
+        operatorNoteState.handleNewStep(noteStep);
     }
     
     private void handlePlayingStep(final int playingStep) {
@@ -240,22 +277,29 @@ public class SequencerLayer extends Layer {
     private void handleSeqSelection(final int index, final boolean pressed) {
         final NoteStep note = assignments[index];
         if (!pressed) {
-            heldSteps.remove(index);
-            if (note != null && note.state() == NoteStep.State.NoteOn && !addedSteps.contains(index)) {
-                if (!modifiedSteps.contains(index)) {
-                    this.clip.toggleStep(index, 0, inputVelocity);
-                } else {
-                    modifiedSteps.remove(index);
-                }
+            final boolean hasBeenModified = operatorNoteState.editingOccured();
+            operatorNoteState.removeStep(index);
+            if (!hasBeenModified) {
+                removeNote(index, note);
             }
-            addedSteps.remove(index);
         } else {
-            heldSteps.add(index);
+            operatorNoteState.addStep(index);
             if (note == null || note.state() == NoteStep.State.Empty || note.state() == NoteStep.State.NoteSustain) {
                 clip.setStep(index, 0, inputVelocity, positionHandler.getGridResolution() * gatePercent);
                 addedSteps.add(index);
             }
         }
+    }
+    
+    private void removeNote(final int index, final NoteStep note) {
+        if (note != null && note.state() == NoteStep.State.NoteOn && !addedSteps.contains(index)) {
+            if (!modifiedSteps.contains(index)) {
+                this.clip.toggleStep(index, 0, inputVelocity);
+            } else {
+                modifiedSteps.remove(index);
+            }
+        }
+        addedSteps.remove(index);
     }
     
 }

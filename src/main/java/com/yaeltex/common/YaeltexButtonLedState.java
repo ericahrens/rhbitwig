@@ -6,26 +6,26 @@ import com.bitwig.extension.controller.api.InternalHardwareLightState;
 
 public class YaeltexButtonLedState extends InternalHardwareLightState {
     
+    private static final YaeltexButtonLedState[] colorMap = new YaeltexButtonLedState[128];
+    private final int colorCode;
+    private final Color color;
     public static final YaeltexButtonLedState OFF = new YaeltexButtonLedState(YaelTexColors.OFF);
     public static final YaeltexButtonLedState RED = new YaeltexButtonLedState(YaelTexColors.RED);
     public static final YaeltexButtonLedState RED_DIM = new YaeltexButtonLedState(YaelTexColors.RED, 2);
     public static final YaeltexButtonLedState BLUE = new YaeltexButtonLedState(YaelTexColors.BLUE);
     public static final YaeltexButtonLedState BLUE_ACTIVE = new YaeltexButtonLedState(YaelTexColors.BLUE, 2);
     public static final YaeltexButtonLedState AQUA = new YaeltexButtonLedState(YaelTexColors.AQUA);
+    public static final YaeltexButtonLedState AQUA_SEL = new YaeltexButtonLedState(YaelTexColors.NAVY_BLUE, 2);
     public static final YaeltexButtonLedState PURPLE = new YaeltexButtonLedState(YaelTexColors.PURPLE);
     public static final YaeltexButtonLedState ORANGE = new YaeltexButtonLedState(YaelTexColors.ORANGE);
     public static final YaeltexButtonLedState ORANGE_DIM = new YaeltexButtonLedState(YaelTexColors.ORANGE, 1);
     public static final YaeltexButtonLedState YELLOW = new YaeltexButtonLedState(YaelTexColors.YELLOW);
+    public static final YaeltexButtonLedState YELLOW_BRIGHT = new YaeltexButtonLedState(YaelTexColors.BRIGHT_YELLOW, 2);
     public static final YaeltexButtonLedState YELLOW_DIM = new YaeltexButtonLedState(YaelTexColors.BRIGHT_YELLOW, 2);
     public static final YaeltexButtonLedState GREEN = new YaeltexButtonLedState(YaelTexColors.GREEN, 0);
     public static final YaeltexButtonLedState GREEN_DIM = new YaeltexButtonLedState(YaelTexColors.GREEN, 2);
     public static final YaeltexButtonLedState DEEP_GREEN = new YaeltexButtonLedState(YaelTexColors.DEEP_GREEN, 0);
     public static final YaeltexButtonLedState WHITE = new YaeltexButtonLedState(YaelTexColors.WHITE, 0);
-    
-    private final int colorCode;
-    private final Color color;
-    
-    private static final YaeltexButtonLedState[] colorMap = new YaeltexButtonLedState[128];
     
     public static YaeltexButtonLedState of(final int index) {
         assert index < 128;

@@ -14,11 +14,13 @@ import com.bitwig.extension.controller.api.RelativeHardwarControlBindable;
 import com.bitwig.extension.controller.api.RelativeHardwareKnob;
 import com.bitwig.extension.controller.api.SettableRangedValue;
 import com.bitwig.extensions.framework.Layer;
+import com.bitwig.extensions.framework.values.IntValueObject;
 import com.bitwig.extensions.framework.values.Midi;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
 import com.yaeltex.seqarp168mk2.bindings.EncoderBaseValueBinding;
+import com.yaeltex.seqarp168mk2.bindings.EncoderIncrementBinding;
 import com.yaeltex.seqarp168mk2.bindings.EncoderOffsetValueBinding;
 import com.yaeltex.seqarp168mk2.bindings.EncoderParameterValueBinding;
 import com.yaeltex.seqarp168mk2.device.NoteControlValue;
@@ -101,6 +103,10 @@ public class RingEncoder {
     
     public void bind(final Layer layer, final IntConsumer incHandler) {
         layer.bind(encoder, midiProcessor.createIncrementBinder(incHandler::accept));
+    }
+    
+    public void bind(final Layer layer, final IntConsumer incHandler, final IntValueObject value) {
+        layer.addBinding(new EncoderIncrementBinding(this, value, incHandler));
     }
     
     public void bind(final Layer layer, final Parameter parameter, final YaelTexColors color) {
