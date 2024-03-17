@@ -16,6 +16,7 @@ public class EncoderIncrementBinding extends Binding<RingEncoder, IntValueObject
         final IntConsumer intConsumer) {
         super(encoder, value);
         value.addValueObserver(this::handleValueChanged);
+        lastValue = value.get();
         incBinder = encoder.createIncrementBinder(intConsumer);
     }
     

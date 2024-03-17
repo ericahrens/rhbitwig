@@ -17,6 +17,7 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
     public static final YaeltexButtonLedState AQUA = new YaeltexButtonLedState(YaelTexColors.AQUA);
     public static final YaeltexButtonLedState AQUA_SEL = new YaeltexButtonLedState(YaelTexColors.NAVY_BLUE, 2);
     public static final YaeltexButtonLedState PURPLE = new YaeltexButtonLedState(YaelTexColors.PURPLE);
+    public static final YaeltexButtonLedState DARK_ORANGE = new YaeltexButtonLedState(YaelTexColors.DARK_ORANGE);
     public static final YaeltexButtonLedState ORANGE = new YaeltexButtonLedState(YaelTexColors.ORANGE);
     public static final YaeltexButtonLedState ORANGE_DIM = new YaeltexButtonLedState(YaelTexColors.ORANGE, 1);
     public static final YaeltexButtonLedState YELLOW = new YaeltexButtonLedState(YaelTexColors.YELLOW);
@@ -48,6 +49,10 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
             colorMap[index] = color;
         }
         return color;
+    }
+    
+    public YaeltexButtonLedState offset(final int offset) {
+        return of(this.colorCode + offset);
     }
     
     public static YaeltexButtonLedState of(final YaelTexColors colorType) {

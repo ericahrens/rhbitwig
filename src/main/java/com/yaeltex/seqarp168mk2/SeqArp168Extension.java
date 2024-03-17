@@ -60,35 +60,9 @@ public class SeqArp168Extension extends ControllerExtension {
     
     private void initModeButton(final Context diContext) {
         final SeqArpHardwareElements hwElements = diContext.getService(SeqArpHardwareElements.class);
-        final RgbButton modeButton = hwElements.getControlButton(7);
-        
         currentLayer = arpLayer;
-        
-        //        modeButton.bindPressed(mainLayer, () -> {
-        //            this.mode = this.mode.next();
-        //            if (currentLayer != null) {
-        //                currentLayer.setIsActive(false);
-        //            }
-        //            if (this.mode == Mode.ARP) {
-        //                currentLayer = arpLayer;
-        //            } else {
-        //                currentLayer = null;
-        //            }
-        //            if (currentLayer != null) {
-        //                currentLayer.setIsActive(true);
-        //            }
-        //        });
-        //modeButton.bindLight(mainLayer, () -> getModeLight());
         bindArpModeButtons(hwElements, mainLayer);
     }
-    
-    //    private YaeltexButtonLedState getModeLight() {
-    //        return switch (mode) {
-    //            case ARP -> YaeltexButtonLedState.BLUE;
-    //            case SEQUENCER -> YaeltexButtonLedState.ORANGE;
-    //            case REMOTES -> YaeltexButtonLedState.PURPLE;
-    //        };
-    //    }
     
     private void bindArpModeButtons(final SeqArpHardwareElements hwElements, final Layer layer) {
         final RgbButton optButton = hwElements.getControlButton(6);
@@ -109,18 +83,29 @@ public class SeqArp168Extension extends ControllerExtension {
         velMuteButton.bindPressed(layer, this::handleVelMute);
         
         final RgbButton stepGlobalVelButton = hwElements.getControlButton(4);
-        stepGlobalVelButton.bindLight(
-            layer, () -> arpLayer.getButtonMode() == ArpButtonMode.STEP_VEL_GLOBAL
-                ? YaeltexButtonLedState.GREEN
-                : YaeltexButtonLedState.OFF);
-        stepGlobalVelButton.bindPressed(layer, this::handleVelGlobal);
+        stepGlobalVelButton.bindLight(layer, this::getStepVelLight);
+        stepGlobalVelButton.bindPressed(layer, this::handleStepVel);
         
         final RgbButton stepGlobalGateButton = hwElements.getControlButton(5);
-        stepGlobalGateButton.bindLight(
-            layer, () -> arpLayer.getButtonMode() == ArpButtonMode.STEP_GATE_GLOBAL
-                ? YaeltexButtonLedState.GREEN
-                : YaeltexButtonLedState.OFF);
+        stepGlobalGateButton.bindLight(layer, this::getStepGlobalGateLight);
         stepGlobalGateButton.bindPressed(layer, this::handleStepGlobal);
+    }
+    
+    private YaeltexButtonLedState getStepGlobalGateLight() {
+        if (mode == Mode.ARP) {
+            return arpLayer.getButtonMode() == ArpButtonMode.STEP_GATE_GLOBAL
+                ? YaeltexButtonLedState.GREEN
+                : YaeltexButtonLedState.OFF;
+        } else if (mode == Mode.SEQUENCER) {
+            return sequencerLayer.isShuffleActive()
+                ? YaeltexButtonLedState.DARK_ORANGE
+                : YaeltexButtonLedState.ORANGE_DIM;
+        } else if (mode == Mode.REMOTES) {
+            return remotesLayer.getMode() == RemotesLayer.RemoteMode.DEVICE
+                ? YaeltexButtonLedState.ORANGE
+                : YaeltexButtonLedState.OFF;
+        }
+        return YaeltexButtonLedState.OFF;
     }
     
     private void handleTimeWarpPressed(final boolean pressed) {
@@ -130,19 +115,14 @@ public class SeqArp168Extension extends ControllerExtension {
         arpLayer.setTimeWarpActive(pressed);
     }
     
-    private void handleVelGlobal() {
-        if (mode != Mode.ARP) {
-            setMode(Mode.ARP);
-        }
-        arpLayer.setMode(ArpButtonMode.STEP_VEL_GLOBAL);
-    }
-    
-    
     private void handleStepGlobal() {
-        if (mode != Mode.ARP) {
-            setMode(Mode.ARP);
+        if (mode == Mode.ARP) {
+            arpLayer.setMode(ArpButtonMode.STEP_GATE_GLOBAL);
+        } else if (mode == Mode.SEQUENCER) {
+            sequencerLayer.toggleShuffle();
+        } else if (mode == Mode.REMOTES) {
+            remotesLayer.setMode(RemotesLayer.RemoteMode.DEVICE);
         }
-        arpLayer.setMode(ArpButtonMode.STEP_GATE_GLOBAL);
     }
     
     private void handleOptButtonPressed(final boolean pressed) {
@@ -161,11 +141,16 @@ public class SeqArp168Extension extends ControllerExtension {
             buttonCombinationOccurred = true;
             setMode(Mode.SEQUENCER);
         } else {
-            if (mode != Mode.ARP) {
-                setMode(Mode.ARP);
+            if (mode == Mode.ARP) {
+                arpLayer.setMode(ArpButtonMode.STEP_MUTE);
+            } else if (mode == Mode.REMOTES) {
+                remotesLayer.setMode(RemotesLayer.RemoteMode.TRACK);
             }
-            arpLayer.setMode(ArpButtonMode.STEP_MUTE);
         }
+    }
+    
+    public Mode getMode() {
+        return mode;
     }
     
     private void setMode(final Mode mode) {
@@ -194,6 +179,10 @@ public class SeqArp168Extension extends ControllerExtension {
                 : YaeltexButtonLedState.OFF;
         } else if (mode == Mode.SEQUENCER) {
             return YaeltexButtonLedState.PURPLE;
+        } else if (mode == Mode.REMOTES) {
+            return remotesLayer.getMode() == RemotesLayer.RemoteMode.TRACK
+                ? YaeltexButtonLedState.ORANGE
+                : YaeltexButtonLedState.OFF;
         }
         return YaeltexButtonLedState.OFF;
     }
@@ -205,6 +194,21 @@ public class SeqArp168Extension extends ControllerExtension {
                 : YaeltexButtonLedState.OFF;
         } else if (mode == Mode.SENDS) {
             return YaeltexButtonLedState.PURPLE;
+        } else if (mode == Mode.REMOTES) {
+            return remotesLayer.getMode() == RemotesLayer.RemoteMode.PROJECT
+                ? YaeltexButtonLedState.ORANGE
+                : YaeltexButtonLedState.OFF;
+        }
+        return YaeltexButtonLedState.OFF;
+    }
+    
+    private YaeltexButtonLedState getStepVelLight() {
+        if (mode == Mode.ARP) {
+            return arpLayer.getButtonMode() == ArpButtonMode.STEP_VEL_GLOBAL
+                ? YaeltexButtonLedState.GREEN
+                : YaeltexButtonLedState.OFF;
+        } else if (mode == Mode.REMOTES) {
+            return YaeltexButtonLedState.PURPLE;
         }
         return YaeltexButtonLedState.OFF;
     }
@@ -215,10 +219,22 @@ public class SeqArp168Extension extends ControllerExtension {
             buttonCombinationOccurred = true;
             setMode(Mode.SENDS);
         } else {
-            if (mode != Mode.ARP) {
-                setMode(Mode.ARP);
+            if (mode == Mode.ARP) {
+                arpLayer.setMode(ArpButtonMode.VEL_MUTE);
+            } else if (mode == Mode.REMOTES) {
+                remotesLayer.setMode(RemotesLayer.RemoteMode.PROJECT);
             }
-            arpLayer.setMode(ArpButtonMode.VEL_MUTE);
+        }
+    }
+    
+    private void handleStepVel() {
+        if (optHeld) {
+            buttonCombinationOccurred = true;
+            setMode(Mode.REMOTES);
+        } else {
+            if (mode == Mode.ARP) {
+                arpLayer.setMode(ArpButtonMode.STEP_VEL_GLOBAL);
+            }
         }
     }
     

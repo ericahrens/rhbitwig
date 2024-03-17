@@ -8,6 +8,7 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Component;
 import com.yaeltex.common.YaeltexButtonLedState;
+import com.yaeltex.common.YaeltexMidiProcessor;
 import com.yaeltex.controls.RgbButton;
 import com.yaeltex.controls.RingEncoder;
 import com.yaeltex.fuse.SendMode;
@@ -21,10 +22,12 @@ public class SendsLayer extends Layer {
     private final boolean[][] sendExists = new boolean[8][4];
     private final boolean[] trackExists = new boolean[8];
     private int selectTrackIndex = -1;
+    private final YaeltexMidiProcessor midiProcessor;
     
-    public SendsLayer(final Layers layers, final SeqArpHardwareElements hwElements,
-        final BitwigViewControl viewControl) {
+    public SendsLayer(final Layers layers, final SeqArpHardwareElements hwElements, final BitwigViewControl viewControl,
+        final YaeltexMidiProcessor midiProcessor) {
         super(layers, "SENDS_LAYER");
+        this.midiProcessor = midiProcessor;
         final TrackBank trackBank = viewControl.getTrackBank();
         final CursorTrack cursorTrack = viewControl.getCursorTrack();
         
@@ -57,7 +60,11 @@ public class SendsLayer extends Layer {
             : YaeltexButtonLedState.OFF);
         encoder.bindValue(this, send.value(), track.exists(), 100);
         final RgbButton button = encoder.getButton();
-        button.bindLight(this, () -> getSendSate(trackIndex, sendIndex));
+        if (sendIndex == 0) {
+            button.bindLight(this, () -> getSendStateFlash(trackIndex, sendIndex));
+        } else {
+            button.bindLight(this, () -> getSendSate(trackIndex, sendIndex));
+        }
         button.bindPressed(this, () -> changeSendState(send, trackIndex, sendIndex));
     }
     
@@ -65,6 +72,20 @@ public class SendsLayer extends Layer {
         final SendMode newState = modeStates[trackIndex][sendIndex].toggle();
         send.sendMode().set(newState.getEnumRaw());
     }
+    
+    private YaeltexButtonLedState getSendStateFlash(final int trackIndex, final int sendIndex) {
+        if (!sendExists[trackIndex][sendIndex] || !trackExists[trackIndex]) {
+            return YaeltexButtonLedState.OFF;
+        }
+        if (trackIndex == selectTrackIndex) {
+            final YaeltexButtonLedState color = preFaderStates[trackIndex][sendIndex]
+                ? YaeltexButtonLedState.AQUA_SEL
+                : YaeltexButtonLedState.YELLOW_BRIGHT;
+            return midiProcessor.blinkSlow(color);
+        }
+        return preFaderStates[trackIndex][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
+    }
+    
     
     private YaeltexButtonLedState getSendSate(final int trackIndex, final int sendIndex) {
         if (!sendExists[trackIndex][sendIndex] || !trackExists[trackIndex]) {

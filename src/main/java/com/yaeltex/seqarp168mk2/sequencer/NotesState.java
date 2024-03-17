@@ -8,9 +8,10 @@ import java.util.Set;
 
 import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extensions.framework.values.IntValueObject;
+import com.bitwig.extensions.framework.values.StepViewPosition;
 import com.yaeltex.common.YaeltexMidiProcessor;
 
-public class OperatorNoteState {
+public class NotesState {
     private static final int[] LINE_MARKINGS = {10, 20, 30, 40, 45, 50, 58, 64, 73, 83, 94, 100, 112, 127};
     private final NoteStep[] assignments;
     private final Set<Integer> heldSteps = new HashSet<>();
@@ -30,10 +31,12 @@ public class OperatorNoteState {
     private final IntValueObject ratchetValue = new IntValueObject(0, 0, 127);
     private final IntValueObject noteLength = new IntValueObject(0, 0, 127);
     
+    private final StepViewPosition positionHandler;
+    private final YaeltexMidiProcessor midiProcessor;
+    
     private boolean modified = false;
     private final HashMap<Integer, NoteStep> expectedNoteChanges = new HashMap<>();
     private long firstHoldTime = -1;
-    private final YaeltexMidiProcessor midiProcessor;
     private boolean editMode = false;
     private boolean pendingEditMode = true;
     
@@ -48,9 +51,9 @@ public class OperatorNoteState {
     }
     
     private static class NoteValueHandler {
-        protected final IntValueObject valueObject = new IntValueObject(0, 0, 127);
         private final NoteGetDouble accessor;
         private final NoteSetDouble setter;
+        protected final IntValueObject valueObject = new IntValueObject(0, 0, 127);
         
         public NoteValueHandler(final NoteGetDouble accessor, final NoteSetDouble setter) {
             this.accessor = accessor;
@@ -61,6 +64,17 @@ public class OperatorNoteState {
             for (final NoteStep step : notes) {
                 int value = (int) (accessor.get(step) * 127);
                 value = value + inc;
+                if (value >= 0 && value < 128) {
+                    final double newValue = (double) value / 127.0;
+                    setter.set(step, newValue);
+                    step.setChance(newValue);
+                }
+            }
+            apply(notes);
+        }
+        
+        public void set(final List<NoteStep> notes, final int value) {
+            for (final NoteStep step : notes) {
                 if (value >= 0 && value < 128) {
                     final double newValue = (double) value / 127.0;
                     setter.set(step, newValue);
@@ -89,9 +103,11 @@ public class OperatorNoteState {
         
     }
     
-    public OperatorNoteState(final NoteStep[] assignments, final YaeltexMidiProcessor host) {
+    public NotesState(final NoteStep[] assignments, final StepViewPosition positionHandler,
+        final YaeltexMidiProcessor host) {
         this.assignments = assignments;
         this.midiProcessor = host;
+        this.positionHandler = positionHandler;
     }
     
     public void addStep(final int index) {
@@ -138,11 +154,17 @@ public class OperatorNoteState {
             velocityValue.apply(selectedNotes);
             velcurveValue.apply(selectedNotes);
             panValue.apply(selectedNotes);
-            ratchetValue.set(toRatchetValue(selectedNotes.get(0).repeatCount()));
+            final NoteStep first = selectedNotes.get(0);
+            ratchetValue.set(toRatchetValue(first.repeatCount()));
+            final int len = (int) Math.round(first.duration() / positionHandler.getGridResolution());
+            noteLength.set(toRatchetValue(len - 1));
         }
     }
     
     private static int toRatchetValue(final int value) {
+        if (value < 0) {
+            return 0;
+        }
         if (value < LINE_MARKINGS.length - 1) {
             return LINE_MARKINGS[value];
         }
@@ -188,6 +210,14 @@ public class OperatorNoteState {
         return noteLength;
     }
     
+    public void applyRadomFixed() {
+        if (heldSteps.isEmpty()) {
+            return;
+        }
+        randomValue.set(getSelectedNoteSteps(), 90);
+        modified = true;
+    }
+    
     public void modifyRandom(final int inc) {
         if (heldSteps.isEmpty()) {
             return;
@@ -229,6 +259,23 @@ public class OperatorNoteState {
         modified = true;
     }
     
+    public void modifyNoteLength(final int inc) {
+        if (heldSteps.isEmpty()) {
+            return;
+        }
+        final List<NoteStep> selected = getSelectedNoteSteps();
+        for (final NoteStep step : selected) {
+            int len = (int) Math.round(step.duration() / positionHandler.getGridResolution());
+            len += inc;
+            if (len > 0 && len < 33) {
+                final double newLen = len * positionHandler.getGridResolution() * 0.98;
+                step.setDuration(newLen);
+                noteLength.set(toRatchetValue(len - 1));
+            }
+        }
+        modified = true;
+    }
+    
     public void modifyRatchet(final int inc) {
         if (heldSteps.isEmpty()) {
             return;
@@ -264,14 +311,14 @@ public class OperatorNoteState {
     private void applyValues(final NoteStep dest, final NoteStep src) {
         dest.setChance(src.chance());  // ************
         dest.setTimbre(src.timbre()); // ************
-        dest.setPressure(src.pressure());  // TODO
+        dest.setPressure(src.pressure());
         dest.setRepeatCount(src.repeatCount());  // ************
         dest.setRepeatVelocityCurve(src.repeatVelocityCurve());
         dest.setRepeatVelocityEnd(src.repeatVelocityEnd());
-        dest.setPan(src.pan());  // TODO
+        dest.setPan(src.pan());
         dest.setRecurrence(src.recurrenceLength(), src.recurrenceMask());
         dest.setOccurrence(src.occurrence());
-        // TODO NOTE Length
     }
+    
     
 }
