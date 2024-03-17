@@ -1,10 +1,11 @@
 package com.yaeltex.seqarp168mk2.sequencer;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-import com.akai.fire.sequence.IntSetValue;
 import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extensions.framework.values.IntValueObject;
 import com.yaeltex.common.YaeltexMidiProcessor;
@@ -12,19 +13,19 @@ import com.yaeltex.common.YaeltexMidiProcessor;
 public class OperatorNoteState {
     private static final int[] LINE_MARKINGS = {10, 20, 30, 40, 45, 50, 58, 64, 73, 83, 94, 100, 112, 127};
     private final NoteStep[] assignments;
-    private final IntSetValue heldSteps = new IntSetValue();
-    private final NoteDoubleValueHandler panValue =
-        new NoteDoubleValueHandler(note -> (note.pan() + 1) / 2, (note, value) -> note.setPan(value));
-    private final NoteDoubleValueHandler randomValue =
-        new NoteDoubleValueHandler(note -> note.chance(), (note, value) -> note.setChance(value));
-    private final NoteDoubleValueHandler velocityValue =
-        new NoteDoubleValueHandler(note -> note.velocity(), (note, value) -> note.setVelocity(value));
-    private final NoteDoubleValueHandler velcurveValue = new NoteDoubleValueHandler(note -> note.repeatVelocityCurve(),
-        (note, value) -> note.setRepeatVelocityCurve(value));
-    private final NoteDoubleValueHandler pressureValue =
-        new NoteDoubleValueHandler(note -> note.pressure(), (note, value) -> note.setPressure(value));
-    private final NoteDoubleValueHandler timbreValue =
-        new NoteDoubleValueHandler(note -> note.timbre(), (note, value) -> note.setTimbre(value));
+    private final Set<Integer> heldSteps = new HashSet<>();
+    private final NoteValueHandler panValue =
+        new NoteValueHandler(note -> (note.pan() + 1) / 2, (note, value) -> note.setPan(value));
+    private final NoteValueHandler randomValue =
+        new NoteValueHandler(note -> note.chance(), (note, value) -> note.setChance(value));
+    private final NoteValueHandler velocityValue =
+        new NoteValueHandler(note -> note.velocity(), (note, value) -> note.setVelocity(value));
+    private final NoteValueHandler velcurveValue =
+        new NoteValueHandler(note -> note.repeatVelocityCurve(), (note, value) -> note.setRepeatVelocityCurve(value));
+    private final NoteValueHandler pressureValue =
+        new NoteValueHandler(note -> note.pressure(), (note, value) -> note.setPressure(value));
+    private final NoteValueHandler timbreValue =
+        new NoteValueHandler(note -> note.timbre(), (note, value) -> note.setTimbre(value));
     
     private final IntValueObject ratchetValue = new IntValueObject(0, 0, 127);
     private final IntValueObject noteLength = new IntValueObject(0, 0, 127);
@@ -46,25 +47,12 @@ public class OperatorNoteState {
         void set(NoteStep note, double value);
     }
     
-    private abstract static class NoteValueHandler {
+    private static class NoteValueHandler {
         protected final IntValueObject valueObject = new IntValueObject(0, 0, 127);
-        
-        public abstract void modify(List<NoteStep> notes, int inc);
-        
-        public void set(final int value) {
-            valueObject.set(0);
-        }
-        
-        public IntValueObject getValueObject() {
-            return valueObject;
-        }
-    }
-    
-    private static class NoteDoubleValueHandler extends NoteValueHandler {
         private final NoteGetDouble accessor;
         private final NoteSetDouble setter;
         
-        public NoteDoubleValueHandler(final NoteGetDouble accessor, final NoteSetDouble setter) {
+        public NoteValueHandler(final NoteGetDouble accessor, final NoteSetDouble setter) {
             this.accessor = accessor;
             this.setter = setter;
         }
@@ -77,18 +65,28 @@ public class OperatorNoteState {
                     final double newValue = (double) value / 127.0;
                     setter.set(step, newValue);
                     step.setChance(newValue);
-                    valueObject.set((int) (newValue * 127));
                 }
             }
+            apply(notes);
         }
         
         public IntValueObject getValueObject() {
             return valueObject;
         }
         
-        public void apply(final NoteStep step) {
-            valueObject.set((int) (accessor.get(step) * 127));
+        public void apply(final List<NoteStep> steps) {
+            if (steps.size() == 1) {
+                final NoteStep step = steps.get(0);
+                valueObject.set((int) (accessor.get(step) * 127));
+            } else {
+                valueObject.set(64);
+            }
         }
+        
+        public void set(final int value) {
+            valueObject.set(0);
+        }
+        
     }
     
     public OperatorNoteState(final NoteStep[] assignments, final YaeltexMidiProcessor host) {
@@ -133,15 +131,14 @@ public class OperatorNoteState {
             pressureValue.set(0);
             panValue.set(0);
             modified = false;
-        } else if (selectedNotes.size() == 1) {
-            final NoteStep step = selectedNotes.get(0);
-            randomValue.apply(step);
-            pressureValue.apply(step);
-            timbreValue.apply(step);
-            velocityValue.apply(step);
-            velcurveValue.apply(step);
-            panValue.apply(step);
-            ratchetValue.set(toRatchetValue(step.repeatCount()));
+        } else {
+            randomValue.apply(selectedNotes);
+            pressureValue.apply(selectedNotes);
+            timbreValue.apply(selectedNotes);
+            velocityValue.apply(selectedNotes);
+            velcurveValue.apply(selectedNotes);
+            panValue.apply(selectedNotes);
+            ratchetValue.set(toRatchetValue(selectedNotes.get(0).repeatCount()));
         }
     }
     
@@ -192,7 +189,7 @@ public class OperatorNoteState {
     }
     
     public void modifyRandom(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         randomValue.modify(getSelectedNoteSteps(), inc);
@@ -200,7 +197,7 @@ public class OperatorNoteState {
     }
     
     public void modifyVelcurve(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         velcurveValue.modify(getSelectedNoteSteps(), inc);
@@ -209,7 +206,7 @@ public class OperatorNoteState {
     }
     
     public void modifyVelocity(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         velocityValue.modify(getSelectedNoteSteps(), inc);
@@ -217,7 +214,7 @@ public class OperatorNoteState {
     }
     
     public void modifyTimbre(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         timbreValue.modify(getSelectedNoteSteps(), inc);
@@ -225,7 +222,7 @@ public class OperatorNoteState {
     }
     
     public void modifyPressure(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         pressureValue.modify(getSelectedNoteSteps(), inc);
@@ -233,7 +230,7 @@ public class OperatorNoteState {
     }
     
     public void modifyRatchet(final int inc) {
-        if (!heldSteps.hasValues()) {
+        if (heldSteps.isEmpty()) {
             return;
         }
         final List<NoteStep> selected = getSelectedNoteSteps();
