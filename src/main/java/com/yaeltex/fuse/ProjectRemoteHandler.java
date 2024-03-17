@@ -10,7 +10,7 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.di.Component;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RgbButton;
+import com.yaeltex.common.controls.RgbButton;
 
 @Component
 public class ProjectRemoteHandler {

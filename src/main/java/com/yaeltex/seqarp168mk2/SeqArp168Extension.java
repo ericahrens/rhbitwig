@@ -8,7 +8,7 @@ import com.bitwig.extensions.framework.di.Context;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexIntensityColorState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.controls.RgbButton;
+import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.seqarp168mk2.arpcontrol.ArpButtonMode;
 import com.yaeltex.seqarp168mk2.arpcontrol.ArpControlLayer;
 import com.yaeltex.seqarp168mk2.sequencer.SequencerLayer;

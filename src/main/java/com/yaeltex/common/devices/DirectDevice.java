@@ -1,4 +1,4 @@
-package com.yaeltex.devices;
+package com.yaeltex.common.devices;
 
 import java.util.HashMap;
 import java.util.List;
@@ -40,17 +40,17 @@ public enum DirectDevice {
         //
     }
     
-    DirectDevice(final String id, boolean isBitwig, List<TypePairings> paringsList) {
+    DirectDevice(final String id, final boolean isBitwig, final List<TypePairings> paringsList) {
         this.id = id;
         this.uuid = isBitwig ? UUID.fromString(id) : null;
-        for (TypePairings pairing : paringsList) {
-            String paramName = "CONTENTS/" + pairing.paramName;
+        for (final TypePairings pairing : paringsList) {
+            final String paramName = "CONTENTS/" + pairing.paramName;
             typeToParamName.put(pairing.type, paramName);
             paramNameToType.put(paramName, pairing.type);
         }
     }
     
-    public DeviceMatcher createMatcher(ControllerHost host) {
+    public DeviceMatcher createMatcher(final ControllerHost host) {
         if (uuid == null) {
             return host.createVST3DeviceMatcher(id);
         }
@@ -61,7 +61,7 @@ public enum DirectDevice {
         return typeToParamName.get(type);
     }
     
-    public Optional<ParameterType> getParamType(String parameterName) {
+    public Optional<ParameterType> getParamType(final String parameterName) {
         return Optional.ofNullable(paramNameToType.get(parameterName));
     }
     

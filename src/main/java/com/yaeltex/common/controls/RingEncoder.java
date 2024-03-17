@@ -1,4 +1,4 @@
-package com.yaeltex.controls;
+package com.yaeltex.common.controls;
 
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;

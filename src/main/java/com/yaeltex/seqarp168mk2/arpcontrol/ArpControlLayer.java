@@ -8,7 +8,7 @@ import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Component;
 import com.bitwig.extensions.framework.values.ValueObject;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RgbButton;
+import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.seqarp168mk2.BitwigViewControl;
 import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 import com.yaeltex.seqarp168mk2.device.DeviceSlotState;

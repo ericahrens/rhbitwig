@@ -6,7 +6,7 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RgbButton;
+import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 import com.yaeltex.seqarp168mk2.device.FocusDevice;
 

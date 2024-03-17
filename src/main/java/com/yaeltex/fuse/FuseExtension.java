@@ -20,10 +20,10 @@ import com.bitwig.extensions.framework.di.Context;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.controls.RgbButton;
-import com.yaeltex.controls.RingEncoder;
-import com.yaeltex.devices.DirectDevice;
-import com.yaeltex.devices.DirectDeviceControl;
+import com.yaeltex.common.controls.RgbButton;
+import com.yaeltex.common.controls.RingEncoder;
+import com.yaeltex.common.devices.DirectDevice;
+import com.yaeltex.common.devices.DirectDeviceControl;
 
 public class FuseExtension extends ControllerExtension {
     

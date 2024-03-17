@@ -16,7 +16,7 @@ import com.bitwig.extension.controller.api.PinnableCursorDevice;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extensions.framework.di.Component;
-import com.yaeltex.devices.SpecialDevices;
+import com.yaeltex.common.devices.SpecialDevices;
 import com.yaeltex.seqarp168.QuantizeMode;
 import com.yaeltex.seqarp168mk2.device.ArpInstance;
 import com.yaeltex.seqarp168mk2.device.DeviceSlotState;

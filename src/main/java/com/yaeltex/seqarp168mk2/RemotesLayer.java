@@ -9,7 +9,7 @@ import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Component;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RingEncoder;
 
 @Component
 public class RemotesLayer extends Layer {

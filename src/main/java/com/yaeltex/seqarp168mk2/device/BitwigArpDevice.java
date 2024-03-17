@@ -7,7 +7,7 @@ import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.IntegerValue;
 import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extension.controller.api.SpecificBitwigDevice;
-import com.yaeltex.devices.SpecialDevices;
+import com.yaeltex.common.devices.SpecialDevices;
 
 public class BitwigArpDevice {
     private static final int NUMBER_OF_STEPS = 16;

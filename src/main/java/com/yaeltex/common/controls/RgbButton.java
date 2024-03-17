@@ -1,4 +1,4 @@
-package com.yaeltex.controls;
+package com.yaeltex.common.controls;
 
 import java.util.function.Consumer;
 import java.util.function.Function;

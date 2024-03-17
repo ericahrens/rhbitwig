@@ -3,7 +3,7 @@ package com.yaeltex.seqarp168mk2.arpcontrol;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RingEncoder;
 import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 import com.yaeltex.seqarp168mk2.device.BitwigArpDevice;
 import com.yaeltex.seqarp168mk2.device.FocusDevice;

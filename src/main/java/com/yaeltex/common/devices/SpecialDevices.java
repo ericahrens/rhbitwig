@@ -1,4 +1,4 @@
-package com.yaeltex.devices;
+package com.yaeltex.common.devices;
 
 import java.util.UUID;
 

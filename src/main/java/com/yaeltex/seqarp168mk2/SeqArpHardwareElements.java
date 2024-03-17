@@ -4,8 +4,8 @@ import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extensions.framework.di.Component;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.controls.RgbButton;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RgbButton;
+import com.yaeltex.common.controls.RingEncoder;
 
 @Component
 public class SeqArpHardwareElements {

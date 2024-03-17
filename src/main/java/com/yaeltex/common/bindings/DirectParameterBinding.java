@@ -1,9 +1,9 @@
-package com.yaeltex.bindings;
+package com.yaeltex.common.bindings;
 
 import com.bitwig.extension.controller.api.AbsoluteHardwareControl;
 import com.bitwig.extensions.framework.Binding;
-import com.yaeltex.devices.DirectDeviceControl;
-import com.yaeltex.devices.ParameterType;
+import com.yaeltex.common.devices.DirectDeviceControl;
+import com.yaeltex.common.devices.ParameterType;
 
 public class DirectParameterBinding extends Binding<AbsoluteHardwareControl, ParameterType> {
     private final DirectDeviceControl device;

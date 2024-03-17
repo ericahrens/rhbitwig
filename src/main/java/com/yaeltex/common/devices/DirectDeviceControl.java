@@ -1,11 +1,11 @@
-package com.yaeltex.devices;
+package com.yaeltex.common.devices;
 
 import com.bitwig.extension.controller.api.CursorRemoteControlsPage;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.yaeltex.common.YaeltexButtonLedState;
-import com.yaeltex.controls.RgbButton;
+import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.fuse.StripControl;
 import com.yaeltex.fuse.SynthControl1;
 import com.yaeltex.fuse.SynthControl2;

@@ -13,8 +13,8 @@ import com.bitwig.extension.controller.api.RelativePosition;
 import com.bitwig.extensions.framework.di.Component;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.controls.RgbButton;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RgbButton;
+import com.yaeltex.common.controls.RingEncoder;
 
 @Component
 public class HwElements {

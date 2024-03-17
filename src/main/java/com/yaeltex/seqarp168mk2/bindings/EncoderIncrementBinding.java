@@ -5,7 +5,7 @@ import java.util.function.IntConsumer;
 import com.bitwig.extension.controller.api.RelativeHardwarControlBindable;
 import com.bitwig.extensions.framework.Binding;
 import com.bitwig.extensions.framework.values.IntValueObject;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RingEncoder;
 
 public class EncoderIncrementBinding extends Binding<RingEncoder, IntValueObject> {
     

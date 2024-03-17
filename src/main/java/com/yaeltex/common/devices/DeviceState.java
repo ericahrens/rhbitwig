@@ -1,4 +1,4 @@
-package com.yaeltex.devices;
+package com.yaeltex.common.devices;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,13 +10,13 @@ public class DeviceState {
     private final Device device;
     private final DirectDevice deviceDefinition;
     
-    public DeviceState(DirectDevice deviceDefinition, final Device device) {
+    public DeviceState(final DirectDevice deviceDefinition, final Device device) {
         this.device = device;
         this.deviceDefinition = deviceDefinition;
         Arrays.stream(ParameterType.values()).forEach(param -> state.put(param, 0.0));
     }
     
-    public void applyValue(ParameterType type, double v) {
+    public void applyValue(final ParameterType type, final double v) {
         final String name = deviceDefinition.getParamName(type);
         if (name != null) {
             device.setDirectParameterValueNormalized(name, v, 1.0);

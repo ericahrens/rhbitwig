@@ -3,7 +3,7 @@ package com.yaeltex.seqarp168mk2.bindings;
 import com.bitwig.extension.controller.api.BooleanValue;
 import com.bitwig.extension.controller.api.RelativeHardwarControlBindable;
 import com.bitwig.extensions.framework.Binding;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RingEncoder;
 import com.yaeltex.seqarp168mk2.device.NoteControlValue;
 
 public class EncoderOffsetValueBinding extends Binding<RingEncoder, NoteControlValue> {

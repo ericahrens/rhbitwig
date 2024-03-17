@@ -23,8 +23,8 @@ import com.bitwig.extensions.framework.values.StepViewPosition;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.controls.RgbButton;
-import com.yaeltex.controls.RingEncoder;
+import com.yaeltex.common.controls.RgbButton;
+import com.yaeltex.common.controls.RingEncoder;
 import com.yaeltex.seqarp168mk2.BitwigViewControl;
 import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 
