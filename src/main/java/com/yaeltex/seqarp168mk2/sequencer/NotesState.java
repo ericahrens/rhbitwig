@@ -1,10 +1,12 @@
 package com.yaeltex.seqarp168mk2.sequencer;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extensions.framework.values.IntValueObject;
@@ -120,6 +122,17 @@ public class NotesState {
         updateStateValues();
     }
     
+    public void applyMute() {
+        final List<NoteStep> steps = getNoteSteps().toList();
+        if (steps.isEmpty()) {
+        } else if (steps.stream().anyMatch(NoteStep::isMuted)) {
+            steps.forEach(noteStep -> noteStep.setIsMuted(false));
+        } else {
+            steps.forEach(noteStep -> noteStep.setIsMuted(true));
+        }
+    }
+    
+    
     public void removeStep(final int index) {
         heldSteps.remove(index);
         if (heldSteps.size() == 0) {
@@ -177,6 +190,12 @@ public class NotesState {
             .filter(Objects::nonNull) //
             .toList();
     }
+    
+    private Stream<NoteStep> getNoteSteps() {
+        return Arrays.stream(assignments).filter(Objects::nonNull)
+            .filter(assignment -> assignment.state() == NoteStep.State.NoteOn);
+    }
+    
     
     public IntValueObject getRandomValue() {
         return randomValue.getValueObject();

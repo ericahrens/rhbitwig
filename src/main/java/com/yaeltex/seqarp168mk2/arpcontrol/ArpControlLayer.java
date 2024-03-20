@@ -94,29 +94,32 @@ public class ArpControlLayer extends Layer {
         final RgbButton stepMuteButton = hwElements.getControlButton(0);
         stepMuteButton.bindLight(this,
             () -> buttonMode == ArpButtonMode.STEP_MUTE ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.OFF);
-        stepMuteButton.bindPressed(this, () -> setMode(ArpButtonMode.STEP_MUTE));
+        stepMuteButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_MUTE));
         
         final RgbButton velMuteButton = hwElements.getControlButton(1);
         velMuteButton.bindLight(this,
             () -> buttonMode == ArpButtonMode.VEL_MUTE ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.OFF);
-        velMuteButton.bindPressed(this, () -> setMode(ArpButtonMode.VEL_MUTE));
+        velMuteButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.VEL_MUTE));
         
         final RgbButton stepGlobalVelButton = hwElements.getControlButton(4);
         stepGlobalVelButton.bindLight(
             this, () -> buttonMode == ArpButtonMode.STEP_VEL_GLOBAL
                 ? YaeltexButtonLedState.GREEN
                 : YaeltexButtonLedState.OFF);
-        stepGlobalVelButton.bindPressed(this, () -> setMode(ArpButtonMode.STEP_VEL_GLOBAL));
+        stepGlobalVelButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_VEL_GLOBAL));
         
         final RgbButton stepGlobalGateButton = hwElements.getControlButton(5);
         stepGlobalGateButton.bindLight(
             this, () -> buttonMode == ArpButtonMode.STEP_GATE_GLOBAL
                 ? YaeltexButtonLedState.GREEN
                 : YaeltexButtonLedState.OFF);
-        stepGlobalGateButton.bindPressed(this, () -> setMode(ArpButtonMode.STEP_GATE_GLOBAL));
+        stepGlobalGateButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_GATE_GLOBAL));
     }
     
-    public void setMode(final ArpButtonMode mode) {
+    public void setMode(final boolean pressed, final ArpButtonMode mode) {
+        if (!pressed) {
+            return;
+        }
         if (this.buttonMode != mode) {
             this.buttonMode = mode;
             updateButtonMode();

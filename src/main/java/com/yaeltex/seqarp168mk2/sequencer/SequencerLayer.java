@@ -32,11 +32,17 @@ import com.yaeltex.seqarp168mk2.SeqArpHardwareElements;
 public class SequencerLayer extends Layer {
     
     private static final YaeltexButtonLedState playColor = YaeltexButtonLedState.of(YaelTexColors.VIOLET_RED, 2);
+    private static final YaeltexButtonLedState muteColor = YaeltexButtonLedState.of(120);
+    private static final double STD_CHANCE = 0.5;
+    
     private final BitwigViewControl viewControl;
+    
     private final boolean[] notesPlaying = new boolean[16];
+    
     private final YaeltexButtonLedState[] padColors = new YaeltexButtonLedState[16];
     private final YaeltexButtonLedState[] padColorsAlt = new YaeltexButtonLedState[16];
     private final YaeltexButtonLedState[] slotColors = new YaeltexButtonLedState[8];
+    
     private YaeltexButtonLedState trackColor;
     private int noteOffset = 0;
     private int selectedPadIndex = -1;
@@ -58,6 +64,8 @@ public class SequencerLayer extends Layer {
     private boolean copyHeld;
     private NoteStep copyNote;
     private boolean randomHeld;
+    private boolean muteState;
+    private final CursorTrack cursorTrack;
     
     public SequencerLayer(final Layers layers, final SeqArpHardwareElements hwElements,
         final BitwigViewControl viewControl, final YaeltexMidiProcessor midiProcessor) {
@@ -67,6 +75,7 @@ public class SequencerLayer extends Layer {
         this.clip = viewControl.getCursorClip();
         positionHandler = new StepViewPosition(clip, 32, "YAELTEX");
         this.operatorNoteState = new NotesState(assignments, positionHandler, midiProcessor);
+        cursorTrack = viewControl.getCursorTrack();
         
         this.seqButtonLayer = new Layer(layers, "SEQ_BUTTON_LAYER");
         this.seqLengthLayer = new Layer(layers, "SEQ_LENGTH_LAYER");
@@ -115,11 +124,27 @@ public class SequencerLayer extends Layer {
             });
             drumPad.addIsSelectedInEditorObserver(selected -> handlePadSelection(index, selected));
             encoder.getButton().bindLight(this, () -> getPadColorState(index));
-            encoder.getButton().bindPressed(this, () -> drumPad.selectInEditor());
+            encoder.getButton().bindPressed(this, () -> handlePadSelection(index, drumPad));
             encoder.bindLight(this, () -> getPadColor(index));
             final IntValueObject level = new IntValueObject(0, 0, 127);
             drumPad.addVuMeterObserver(127, -1, false, newValue -> level.set(newValue));
             encoder.bind(this, inc -> this.modifySteps(index, inc), level);
+        }
+    }
+    
+    private void handlePadSelection(final int index, final DrumPad drumPad) {
+        if (muteState) {
+            final int previous = selectedPadIndex + noteOffset;
+            clip.scrollToKey(noteOffset + index);
+            midiProcessor.delayAction(() -> {
+                operatorNoteState.applyMute();
+                if (previous != noteOffset + index) {
+                    clip.scrollToKey(previous);
+                }
+            }, 20);
+            
+        } else {
+            drumPad.selectInEditor();
         }
     }
     
@@ -242,6 +267,7 @@ public class SequencerLayer extends Layer {
         }
     }
     
+    
     private void movePattern(final int dir) {
         final List<NoteStep> notes = getOnNotes();
         final int availableSteps = positionHandler.getAvailableSteps();
@@ -282,7 +308,10 @@ public class SequencerLayer extends Layer {
             if (state == NoteStep.State.Empty) {
                 return YaeltexButtonLedState.OFF;
             } else if (state == NoteStep.State.NoteOn) {
-                if (assignments[index].chance() <= 0.73) {
+                if (assignments[index].isMuted()) {
+                    return muteColor;
+                }
+                if (assignments[index].chance() <= STD_CHANCE) {
                     return selectedPadIndex >= 0 ? padColorsAlt[selectedPadIndex] : YaeltexButtonLedState.GREEN_DIM;
                 }
                 return selectedPadIndex >= 0 ? padColors[selectedPadIndex] : YaeltexButtonLedState.GREEN;
@@ -417,7 +446,7 @@ public class SequencerLayer extends Layer {
         if (note.chance() < 1.0) {
             note.setChance(1.0);
         } else {
-            note.setChance(0.7);
+            note.setChance(STD_CHANCE);
         }
     }
     
@@ -465,5 +494,30 @@ public class SequencerLayer extends Layer {
     protected void onDeactivate() {
         seqButtonLayer.setIsActive(false);
         seqLengthLayer.setIsActive(false);
+    }
+    
+    public boolean inMuteState() {
+        return muteState;
+    }
+    
+    public void setMuteState(final boolean active) {
+        muteState = active;
+    }
+    
+    public void togglePin(final boolean pressed) {
+        if (!pressed) {
+            return;
+        }
+        if (this.clip.isPinned().get()) {
+            this.clip.isPinned().set(false);
+            this.cursorTrack.isPinned().set(false);
+        } else {
+            this.clip.isPinned().set(true);
+            this.cursorTrack.isPinned().set(true);
+        }
+    }
+    
+    public boolean isPinned() {
+        return this.clip.isPinned().get();
     }
 }

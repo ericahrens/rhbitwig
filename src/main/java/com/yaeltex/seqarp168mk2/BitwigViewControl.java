@@ -51,7 +51,9 @@ public class BitwigViewControl {
         cursorTrack.exists().markInterested();
         cursorTrack.name().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
+        
         cursorClip = cursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
+        
         arpDeviceMatcher = host.createBitwigDeviceMatcher(SpecialDevices.ARPEGGIATOR.getUuid());
         drumFollowDevice =
             cursorTrack.createCursorDevice("drumdetection", "Pad Device", 4, CursorDeviceFollowMode.FIRST_INSTRUMENT);

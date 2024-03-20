@@ -16,11 +16,22 @@ public class RemotesLayer extends Layer {
     
     private final BitwigViewControl viewControl;
     private final CursorTrack cursorTrack;
-    private RemoteMode mode = RemoteMode.TRACK;
+    private RemoteMode mode = RemoteMode.DEVICE;
     private final Layer trackRemoteLayer;
     private Layer currentLayer;
     private final Layer deviceRemoteLayer;
     private final Layer projectRemoteLayer;
+    
+    private final YaeltexButtonLedState[] PARAM_COLORS = {
+        YaeltexButtonLedState.RED,
+        YaeltexButtonLedState.ORANGE,
+        YaeltexButtonLedState.YELLOW,
+        YaeltexButtonLedState.GREEN,
+        YaeltexButtonLedState.AQUA,
+        YaeltexButtonLedState.BLUE,
+        YaeltexButtonLedState.PURPLE,
+        YaeltexButtonLedState.WHITE,
+    };
     
     enum RemoteMode {
         DEVICE,
@@ -47,21 +58,22 @@ public class RemotesLayer extends Layer {
         this.projectRemoteLayer = new Layer(layers, "PROJECT_REMOTES");
         
         this.currentLayer = deviceRemoteLayer;
-        assignRemotes(hwElements, trackGroup, trackRemoteLayer, YaeltexButtonLedState.ORANGE);
-        assignRemotes(hwElements, deviceGroup, deviceRemoteLayer, YaeltexButtonLedState.BLUE);
-        assignRemotes(hwElements, projectGroup, projectRemoteLayer, YaeltexButtonLedState.RED);
+        assignRemotes(hwElements, trackGroup, trackRemoteLayer);
+        assignRemotes(hwElements, deviceGroup, deviceRemoteLayer);
+        assignRemotes(hwElements, projectGroup, projectRemoteLayer);
     }
     
     private void assignRemotes(final SeqArpHardwareElements hwElements, final RemotesGroup trackGroup,
-        final Layer layer, final YaeltexButtonLedState color) {
+        final Layer layer) {
         for (int i = 0; i < 4; i++) {
             final CursorRemoteControlsPage remotes = trackGroup.getRemotes(i);
             for (int j = 0; j < 8; j++) {
                 final RingEncoder encoder = hwElements.getEncoder(j + (3 - i) * 8);
                 final RemoteControl parameter = remotes.getParameter(j);
+                final YaeltexButtonLedState paramColor = PARAM_COLORS[j];
                 parameter.exists().markInterested();
                 encoder.bind(layer, parameter);
-                encoder.bindLight(layer, () -> parameter.exists().get() ? color : YaeltexButtonLedState.OFF);
+                encoder.bindLight(layer, () -> parameter.exists().get() ? paramColor : YaeltexButtonLedState.OFF);
             }
         }
     }
@@ -70,8 +82,8 @@ public class RemotesLayer extends Layer {
         return mode;
     }
     
-    public void setMode(final RemoteMode mode) {
-        if (this.mode == mode) {
+    public void setMode(final boolean pressed, final RemoteMode mode) {
+        if (!pressed || this.mode == mode) {
             return;
         }
         this.mode = mode;
