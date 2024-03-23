@@ -37,10 +37,12 @@ public class BitwigViewControl {
     private final DeviceMatcher arpDeviceMatcher;
     private final List<ArpInstance> arpInstances = new ArrayList<>();
     private final Device focusArpDevice;
-    private final DeviceBank drumBank;
-    private final PinnableCursorDevice drumFollowDevice;
     private final DrumPadBank drumPadBank;
     private final PinnableCursorClip cursorClip;
+    private final CursorTrack drumCursorTrack;
+    private int cursorTrackPosition = -1;
+    private final PinnableCursorDevice drumDevice;
+    private boolean onDrumTrack;
     
     
     public BitwigViewControl(final ControllerHost host) {
@@ -52,19 +54,37 @@ public class BitwigViewControl {
         cursorTrack.name().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
         
-        cursorClip = cursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
+        drumCursorTrack = host.createCursorTrack("drum", "drumtrack", 1, 8, false);
+        drumCursorTrack.position().addValueObserver(pos -> {
+            SeqArp168Extension.println("Drum POS = %d", pos);
+        });
+        drumDevice = drumCursorTrack.createCursorDevice("drumdetection", "Pad Device", 4,
+            CursorDeviceFollowMode.FIRST_INSTRUMENT);
+        
+        //cursorClip = cursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
+        cursorClip = drumCursorTrack.createLauncherCursorClip("SQClip", "SQClip", 32, 1);
         
         arpDeviceMatcher = host.createBitwigDeviceMatcher(SpecialDevices.ARPEGGIATOR.getUuid());
-        drumFollowDevice =
-            cursorTrack.createCursorDevice("drumdetection", "Pad Device", 4, CursorDeviceFollowMode.FIRST_INSTRUMENT);
-        drumFollowDevice.hasDrumPads().markInterested();
-        drumFollowDevice.exists().markInterested();
         final DeviceMatcher drumMatcher =
             host.createBitwigDeviceMatcher(com.bitwig.extensions.framework.values.SpecialDevices.DRUM.getUuid());
-        drumBank = cursorTrack.createDeviceBank(1);
+        
+        final DeviceBank drumBank = cursorTrack.createDeviceBank(1);
         drumBank.setDeviceMatcher(drumMatcher);
-        //drumDevice = drumBank.getItemAt(0);
-        drumPadBank = drumFollowDevice.createDrumPadBank(16);
+        final Device drumDeviceFollow = drumBank.getDevice(0);
+        drumDeviceFollow.exists().addValueObserver(onDrumDevice -> {
+            this.onDrumTrack = onDrumDevice;
+            if (cursorTrackPosition != -1 && onDrumDevice) {
+                drumCursorTrack.selectChannel(cursorTrack);
+            }
+        });
+        cursorTrack.position().addValueObserver(position -> {
+            this.cursorTrackPosition = position;
+            if (cursorTrackPosition != -1 && onDrumTrack) {
+                drumCursorTrack.selectChannel(cursorTrack);
+            }
+        });
+        
+        drumPadBank = drumDevice.createDrumPadBank(16);
         
         final DeviceBank deviceBank = cursorTrack.createDeviceBank(1);
         deviceBank.setDeviceMatcher(arpDeviceMatcher);
@@ -139,5 +159,9 @@ public class BitwigViewControl {
     
     public TrackBank getTrackBank() {
         return trackBank;
+    }
+    
+    public CursorTrack getDrumCursorTrack() {
+        return drumCursorTrack;
     }
 }

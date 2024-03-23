@@ -19,10 +19,12 @@ import com.bitwig.extensions.framework.values.Midi;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
+import com.yaeltex.common.bindings.EncoderIncrementBinding;
+import com.yaeltex.common.bindings.EncoderParameterBinding;
+import com.yaeltex.common.bindings.EncoderParameterValueBinding;
+import com.yaeltex.seqarp168mk2.SeqArp168Extension;
 import com.yaeltex.seqarp168mk2.bindings.EncoderBaseValueBinding;
-import com.yaeltex.seqarp168mk2.bindings.EncoderIncrementBinding;
 import com.yaeltex.seqarp168mk2.bindings.EncoderOffsetValueBinding;
-import com.yaeltex.seqarp168mk2.bindings.EncoderParameterValueBinding;
 import com.yaeltex.seqarp168mk2.device.NoteControlValue;
 
 public class RingEncoder {
@@ -34,6 +36,7 @@ public class RingEncoder {
     private final int midiValue;
     private final RgbButton button;
     private final MultiStateHardwareLight light;
+    private boolean boundToTarget = false;
     
     public enum Mode {
         SIGNED_BIT,
@@ -72,8 +75,18 @@ public class RingEncoder {
         encoder.setStepSize(0.0075);
         light = surface.createMultiStateHardwareLight(name + "_LIGHT");
         light.state().onUpdateHardware(this::handleColor);
-        encoder.targetValue().addValueObserver(v -> updateValue(v));
+        encoder.targetValue().addValueObserver(this::handleTargetUpdating);
         button = new RgbButton(channel, midiValue, name + "_BUTTON", surface, midiProcessor);
+    }
+    
+    public void setBoundToTarget(final boolean boundToTarget) {
+        this.boundToTarget = boundToTarget;
+    }
+    
+    private void handleTargetUpdating(final double v) {
+        if (boundToTarget) {
+            updateValue(v);
+        }
     }
     
     private void handleColor(final InternalHardwareLightState internalHardwareLightState) {
@@ -84,14 +97,11 @@ public class RingEncoder {
         }
     }
     
-    //    public void bind(final Layer layer, final IntValueObject value) {
-    //        layer.addBinding(new EncoderIntBinding(this, value));
-    //    }
-    //
-    //    public void bind(final Layer layer, final IntValueObject value) {
-    //        layer.addBinding(new EncoderIntBinding(this, value));
-    //    }
-    //
+    
+    public int getMidiValue() {
+        return midiValue;
+    }
+    
     public RelativeHardwarControlBindable createIncrementBinder(final IntConsumer incHandler) {
         return midiProcessor.createIncrementBinder(incHandler::accept);
     }
@@ -122,7 +132,7 @@ public class RingEncoder {
     }
     
     public void bind(final Layer layer, final SettableRangedValue value) {
-        layer.bind(encoder, value);
+        layer.addBinding(new EncoderParameterBinding(this, value));
     }
     
     public void bindValue(final Layer layer, final SettableRangedValue value, final BooleanValue existsSource,
@@ -178,6 +188,9 @@ public class RingEncoder {
     }
     
     public void clear() {
+        if (midiValue == 4) {
+            SeqArp168Extension.println("Target=> <%d> clear", midiValue);
+        }
         midiProcessor.sendMidi(Midi.CC, midiValue, 0);
     }
     

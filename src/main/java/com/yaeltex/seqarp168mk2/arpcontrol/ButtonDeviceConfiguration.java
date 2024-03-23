@@ -12,7 +12,7 @@ public class ButtonDeviceConfiguration extends DeviceConfig {
     
     public ButtonDeviceConfiguration(final Layers layers, final String name, final BitwigViewControl viewControl,
         final ValueObject<FocusDeviceMode> deviceFocus) {
-        super(deviceFocus);
+        super(null, deviceFocus);
         layer1 = new ButtonDeviceLayer(layers, "%s_BUTTON_1".formatted(name), viewControl.getArpDevice1());
         layer2 = new ButtonDeviceLayer(layers, "%s_BUTTON_2".formatted(name), viewControl.getArpDevice2());
         

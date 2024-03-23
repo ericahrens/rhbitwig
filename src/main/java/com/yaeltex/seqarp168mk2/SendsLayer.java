@@ -99,4 +99,9 @@ public class SendsLayer extends Layer {
         return preFaderStates[trackIndex][sendIndex] ? YaeltexButtonLedState.AQUA : YaeltexButtonLedState.YELLOW;
     }
     
+    @Override
+    protected void onActivate() {
+        super.onActivate();
+        SeqArp168Extension.println(" Activated SENDS");
+    }
 }

@@ -1,4 +1,4 @@
-package com.yaeltex.seqarp168mk2.bindings;
+package com.yaeltex.common.bindings;
 
 import java.util.function.IntConsumer;
 

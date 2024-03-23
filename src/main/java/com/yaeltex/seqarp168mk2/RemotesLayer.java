@@ -8,7 +8,9 @@ import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Component;
+import com.bitwig.extensions.framework.values.BooleanValueObject;
 import com.yaeltex.common.YaeltexButtonLedState;
+import com.yaeltex.common.bindings.EncoderParameterBankBinding;
 import com.yaeltex.common.controls.RingEncoder;
 
 @Component
@@ -67,12 +69,13 @@ public class RemotesLayer extends Layer {
         final Layer layer) {
         for (int i = 0; i < 4; i++) {
             final CursorRemoteControlsPage remotes = trackGroup.getRemotes(i);
+            final BooleanValueObject pageInfo = trackGroup.getPageExists(i);
             for (int j = 0; j < 8; j++) {
                 final RingEncoder encoder = hwElements.getEncoder(j + (3 - i) * 8);
                 final RemoteControl parameter = remotes.getParameter(j);
                 final YaeltexButtonLedState paramColor = PARAM_COLORS[j];
                 parameter.exists().markInterested();
-                encoder.bind(layer, parameter);
+                layer.addBinding(new EncoderParameterBankBinding(encoder, parameter.value(), pageInfo));
                 encoder.bindLight(layer, () -> parameter.exists().get() ? paramColor : YaeltexButtonLedState.OFF);
             }
         }

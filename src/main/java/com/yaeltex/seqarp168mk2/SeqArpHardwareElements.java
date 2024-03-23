@@ -33,7 +33,8 @@ public class SeqArpHardwareElements {
                 new RingEncoder(ENCODER_INDEX[index], "ENCODER_%d".formatted(index + 1), surface, midiProcessor,
                     RingEncoder.Mode.SIGNED_BIT);
             final int note = BUTTON_OFFSET[index / 8] * 8 + index % 8;
-            stepButtons[index] = new RgbButton(40 + note, "STEP", surface, midiProcessor);
+            final int midiId = 40 + note;
+            stepButtons[index] = new RgbButton(midiId, "STEP", surface, midiProcessor);
         }
         for (int index = 0; index < controlButtons.length; index++) {
             final int note = 32 + index;

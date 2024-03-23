@@ -75,7 +75,7 @@ public class SequencerLayer extends Layer {
         this.clip = viewControl.getCursorClip();
         positionHandler = new StepViewPosition(clip, 32, "YAELTEX");
         this.operatorNoteState = new NotesState(assignments, positionHandler, midiProcessor);
-        cursorTrack = viewControl.getCursorTrack();
+        cursorTrack = viewControl.getDrumCursorTrack();
         
         this.seqButtonLayer = new Layer(layers, "SEQ_BUTTON_LAYER");
         this.seqLengthLayer = new Layer(layers, "SEQ_LENGTH_LAYER");
@@ -88,7 +88,7 @@ public class SequencerLayer extends Layer {
                 this.clip.scrollToKey(this.noteOffset + selectedPadIndex);
             }
         });
-        final CursorTrack cursorTrack = this.viewControl.getCursorTrack();
+        final CursorTrack cursorTrack = this.viewControl.getDrumCursorTrack();
         cursorTrack.color().addValueObserver((r, g, b) -> trackColor = YaeltexButtonLedState.of(r, g, b));
         cursorTrack.playingNotes().addValueObserver(notes -> handleNotesPlaying(notes));
         bindPadSelection(hwElements, drumPadBank);
@@ -156,6 +156,7 @@ public class SequencerLayer extends Layer {
             
             prepareSlot(index, slot);
             final RingEncoder encoder = hwElements.getEncoder(i + 16);
+            encoder.bindLight(this, () -> YaeltexButtonLedState.OFF);
             encoder.getButton().bindLight(this, () -> getSlotColor(index, slot));
             encoder.getButton().bindIsPressed(this, pressed -> handleSlot(pressed, index, slot));
         }
@@ -209,7 +210,10 @@ public class SequencerLayer extends Layer {
         ratchetEncoder.getButton().bindLight(this, () -> lightState(ratchetColor));
         ratchetEncoder.bindLight(this, () -> lightState(ratchetColor));
         ratchetEncoder.bind(this, operatorNoteState::modifyRatchet, operatorNoteState.getRatchetValue());
-        index++;
+        
+        final RingEncoder todoEncoder = hwElements.getEncoder(index++);
+        todoEncoder.bindLight(this, () -> YaeltexButtonLedState.OFF);
+        
         final RingEncoder noteLengthEncoder = hwElements.getEncoder(index++);
         noteLengthEncoder.getButton().bindLight(this, () -> lightState(YaeltexButtonLedState.DEEP_GREEN));
         noteLengthEncoder.bindLight(this, () -> lightState(YaeltexButtonLedState.DEEP_GREEN));
@@ -506,15 +510,8 @@ public class SequencerLayer extends Layer {
     
     public void togglePin(final boolean pressed) {
         if (!pressed) {
-            return;
         }
-        if (this.clip.isPinned().get()) {
-            this.clip.isPinned().set(false);
-            this.cursorTrack.isPinned().set(false);
-        } else {
-            this.clip.isPinned().set(true);
-            this.cursorTrack.isPinned().set(true);
-        }
+        //this.clip.isPinned().toggle();
     }
     
     public boolean isPinned() {

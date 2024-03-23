@@ -20,7 +20,7 @@ public class ArpControlLayer extends Layer {
     // TODO 2 Time Warp is momentary RATE bothLayers
     
     private final BitwigViewControl viewControl;
-    private final Encoder8StepConfig currentEncoderMode;
+    private DeviceConfig currentEncoderMode;
     private final ButtonDeviceConfiguration defaultButtonConfiguration;
     private final ButtonDeviceConfiguration optConfiguration;
     private final ButtonDeviceConfiguration stepsGateGlobalConfiguration;
@@ -30,8 +30,7 @@ public class ArpControlLayer extends Layer {
     private final ButtonDeviceConfiguration retrigConfiguration;
     private final ButtonDeviceConfiguration timeWarpConfiguration;
     
-    private final Map<ControlMode, Encoder8StepConfig> encoderConfigMap = new HashMap<>();
-    private final ControlMode controlMode = ControlMode.MODE8x1;
+    private final Map<ControlMode, DeviceConfig> encoderConfigMap = new HashMap<>();
     private ArpButtonMode buttonMode = ArpButtonMode.DEFAULT;
     private ButtonDeviceConfiguration buttonConfig = null;
     
@@ -45,6 +44,13 @@ public class ArpControlLayer extends Layer {
         bindGlobalButtons(hwElements);
         
         encoderConfigMap.put(ControlMode.MODE8x1, new Encoder8StepConfig(layers, hwElements, viewControl, deviceFocus));
+        encoderConfigMap.put(ControlMode.MODE8x2,
+            new Encoder2x8StepConfig(layers, hwElements, viewControl, deviceFocus));
+        encoderConfigMap.put(ControlMode.MODE16x1,
+            new Encoder16StepConfig(layers, hwElements, viewControl, deviceFocus));
+        encoderConfigMap.put(ControlMode.MODE16x2,
+            new Encoder2x16StepConfig(layers, hwElements, viewControl, deviceFocus));
+        
         this.defaultButtonConfiguration =
             new ButtonDeviceConfiguration(layers, "DEFAULT_ARP", viewControl, deviceFocus);
         this.defaultButtonConfiguration.bind(layer -> layer.bindDefaultValues(hwElements));
@@ -72,48 +78,8 @@ public class ArpControlLayer extends Layer {
         timeWarpConfiguration = new ButtonDeviceConfiguration(layers, "TIMEWARP_ARP", viewControl, deviceFocus);
         timeWarpConfiguration.bind(layer -> layer.bindTimeWarp(hwElements));
         
-        currentEncoderMode = encoderConfigMap.get(controlMode);
+        currentEncoderMode = encoderConfigMap.get(ControlMode.MODE8x1);
         this.buttonConfig = this.defaultButtonConfiguration;
-    }
-    
-    private void bindArpModeButtons(final SeqArpHardwareElements hwElements) {
-        final RgbButton optButton = hwElements.getControlButton(6);
-        optButton.bindLight(
-            this, () -> buttonMode == ArpButtonMode.DEFAULT
-                ? YaeltexButtonLedState.GREEN
-                : buttonMode == ArpButtonMode.PAT ? YaeltexButtonLedState.BLUE : YaeltexButtonLedState.OFF);
-        optButton.bindPressed(this, () -> handleOptMode());
-        
-        final RgbButton timeWarpButton = hwElements.getControlButton(3);
-        timeWarpButton.bindIsPressed(this, pressed -> {
-            timeWarpConfiguration.setIsActive(pressed);
-        });
-        timeWarpButton.bindLightPressed(
-            this, pressed -> pressed ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.WHITE);
-        
-        final RgbButton stepMuteButton = hwElements.getControlButton(0);
-        stepMuteButton.bindLight(this,
-            () -> buttonMode == ArpButtonMode.STEP_MUTE ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.OFF);
-        stepMuteButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_MUTE));
-        
-        final RgbButton velMuteButton = hwElements.getControlButton(1);
-        velMuteButton.bindLight(this,
-            () -> buttonMode == ArpButtonMode.VEL_MUTE ? YaeltexButtonLedState.GREEN : YaeltexButtonLedState.OFF);
-        velMuteButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.VEL_MUTE));
-        
-        final RgbButton stepGlobalVelButton = hwElements.getControlButton(4);
-        stepGlobalVelButton.bindLight(
-            this, () -> buttonMode == ArpButtonMode.STEP_VEL_GLOBAL
-                ? YaeltexButtonLedState.GREEN
-                : YaeltexButtonLedState.OFF);
-        stepGlobalVelButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_VEL_GLOBAL));
-        
-        final RgbButton stepGlobalGateButton = hwElements.getControlButton(5);
-        stepGlobalGateButton.bindLight(
-            this, () -> buttonMode == ArpButtonMode.STEP_GATE_GLOBAL
-                ? YaeltexButtonLedState.GREEN
-                : YaeltexButtonLedState.OFF);
-        stepGlobalGateButton.bindIsPressed(this, pressed -> setMode(pressed, ArpButtonMode.STEP_GATE_GLOBAL));
     }
     
     public void setMode(final boolean pressed, final ArpButtonMode mode) {
@@ -167,18 +133,45 @@ public class ArpControlLayer extends Layer {
         focusButton.bindLight(this, () -> this.focusState());
         focusButton.bindPressed(this, this::toggleDeviceFocus);
         
+        final RgbButton encoderModeButton = hwElements.getControlButton(7);
+        encoderModeButton.bindLight(this, this::toEncoderModeState);
+        encoderModeButton.bindIsPressed(this, this::handleEncoderModeButton);
+        
         bindModeButton(hwElements.getStepButton(3), ControlMode.MODE8x1);
         bindModeButton(hwElements.getStepButton(4), ControlMode.MODE8x2);
         bindModeButton(hwElements.getStepButton(5), ControlMode.MODE16x1);
         bindModeButton(hwElements.getStepButton(6), ControlMode.MODE16x2);
     }
     
+    private void handleEncoderModeButton(final boolean pressed) {
+        if (currentEncoderMode != null) {
+            currentEncoderMode.changeEncoderMode(pressed);
+        }
+    }
+    
+    private YaeltexButtonLedState toEncoderModeState() {
+        return switch (currentEncoderMode.getStepEncoderMode()) {
+            case DEFAULT -> YaeltexButtonLedState.WHITE;
+            case MODE_1 -> currentEncoderMode.getMode() == ControlMode.MODE16x2
+                ? YaeltexButtonLedState.YELLOW
+                : YaeltexButtonLedState.BLUE;
+            case MODE_2 -> YaeltexButtonLedState.ORANGE;
+            case MODE_3 -> YaeltexButtonLedState.BLUE;
+        };
+    }
+    
     private void bindModeButton(final RgbButton button, final ControlMode mode) {
         button.bindPressed(this, () -> selectMode(mode));
-        button.bindLight(this, () -> controlMode == mode ? YaeltexButtonLedState.BLUE : YaeltexButtonLedState.WHITE);
+        button.bindLight(this,
+            () -> currentEncoderMode.getMode() == mode ? YaeltexButtonLedState.BLUE : YaeltexButtonLedState.WHITE);
     }
     
     private void selectMode(final ControlMode mode) {
+        if (currentEncoderMode.getMode() != mode && encoderConfigMap.containsKey(mode)) {
+            currentEncoderMode.setIsActive(false);
+            currentEncoderMode = encoderConfigMap.get(mode);
+            currentEncoderMode.setIsActive(true);
+        }
     }
     
     private void toggleDeviceFocus() {

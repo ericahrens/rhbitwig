@@ -1,4 +1,4 @@
-package com.yaeltex.seqarp168mk2.bindings;
+package com.yaeltex.common.bindings;
 
 import com.bitwig.extension.controller.api.BooleanValue;
 import com.bitwig.extension.controller.api.RelativeHardwarControlBindable;
