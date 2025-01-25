@@ -42,7 +42,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
         noteInput.setShouldConsumeEvents(false);
 
-        delayControl = new DirectParameterControl(SpecialVstDevices.LEXICON_PSP, SpecialParam.PSP_REPEAT_INF);
+        delayControl = new DirectParameterControl(SpecialVst3Devices.LEXICON_PSP, SpecialParam.PSP_REPEAT_INF); //Switching to the new updated Lexicon_PSP42x 2.0.2
         reverbControl = new DirectParameterControl(SpecialVst3Devices.MEAGAVERB3, SpecialParam.MEGA_VERB_GATE);
 
         final List<DirectParameterControl> controlList = new ArrayList<>();
