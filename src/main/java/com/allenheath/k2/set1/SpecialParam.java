@@ -1,7 +1,7 @@
 package com.allenheath.k2.set1;
 
 public enum SpecialParam {
-    PSP_REPEAT_INF(SpecialVstDevices.LEXICON_PSP, 13),
+    PSP_REPEAT_INF(SpecialVstDevices.LEXICON_PSP, 25), // Parameter ID from 13 to 25 - required from the updated plugin to work (Lexicon PSP42x 2.0.2)
     MEGA_VERB_GATE(SpecialVst3Devices.MEAGAVERB3, 1569);
 
     private final int paramId;
