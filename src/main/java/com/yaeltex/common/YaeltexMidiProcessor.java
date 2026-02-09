@@ -13,7 +13,7 @@ import com.bitwig.extensions.framework.values.Midi;
 
 public class YaeltexMidiProcessor {
     private final Queue<TimedEvent> timedEvents = new ConcurrentLinkedQueue<>();
-    private final ControllerHost host;
+    protected final ControllerHost host;
     private int blinkCounter;
     
     public YaeltexMidiProcessor(final ControllerHost host, final int ports) {
@@ -26,9 +26,24 @@ public class YaeltexMidiProcessor {
         }
     }
     
+    public void sendCcValue(final int port, final int channel, final int ccNr, final int value) {
+        final MidiOut midiOut = host.getMidiOutPort(port);
+        midiOut.sendMidi(Midi.CC | channel, ccNr, value);
+    }
+    
     public void sendCcValue(final int port, final int ccNr, final int value) {
         final MidiOut midiOut = host.getMidiOutPort(port);
         midiOut.sendMidi(Midi.CC, ccNr, value);
+    }
+    
+    public void sendMidiNote(final int port, final int data1, final int data2) {
+        final MidiOut midiOut = host.getMidiOutPort(port);
+        midiOut.sendMidi(Midi.NOTE_ON, data1, data1);
+    }
+    
+    public void sendMidi(final int port, final int status, final int data1, final int data2) {
+        final MidiOut midiOut = host.getMidiOutPort(port);
+        midiOut.sendMidi(status, data1, data1);
     }
     
     public void sendCcColor(final int port, final int ccNr, final int color, final int intensity) {
@@ -73,7 +88,7 @@ public class YaeltexMidiProcessor {
         return host.getMidiInPort(port);
     }
     
-    private void handleMidiIn(final int status, final int data1, final int data2) {
+    protected void handleMidiIn(final int status, final int data1, final int data2) {
         host.println("MIDI 1 => %02X %02X %02X".formatted(status, data1, data2));
     }
     

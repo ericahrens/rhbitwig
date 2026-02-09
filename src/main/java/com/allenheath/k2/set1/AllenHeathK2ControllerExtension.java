@@ -108,16 +108,28 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         sequencerLayer = new SequencerLayer(layers, hwElements, viewControl, padGrouping);
         mainLayer.activate();
         initTestButtonsInDocumentState(host);
+        initGeneralPreferences();
         initServers();
         host.showPopupNotification("Intialize Xone:K2 DJ Set");
         initGuiSurface(surface);
     }
     
+    private void initGeneralPreferences() {
+        final SettableBooleanValue sequencerActive =
+            getHost().getPreferences().getBooleanSetting("Active", "Sequencer", true);
+        sequencerActive.addValueObserver(seqActive -> {
+            println(" SEQUENCER = %s", seqActive);
+            if (sequencerLayer != null) {
+                sequencerLayer.setIsActive(seqActive);
+            }
+        });
+    }
+    
     private void initSliderSection() {
         final DocumentState documentState = getHost().getDocumentState();
         final SettableEnumValue arpSliderMode =
-            documentState.getEnumSetting("Slider Control", "Slider", new String[] {"No Mapping", ARP_CONTROL_OPTION},
-                ARP_CONTROL_OPTION);
+            documentState.getEnumSetting(
+                "Slider Control", "Slider", new String[] {"No Mapping", ARP_CONTROL_OPTION}, ARP_CONTROL_OPTION);
         
         for (int i = 0; i < 8; i++) {
             final int index = i;
@@ -262,11 +274,13 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
         
         final StateButton delRptButton = new StateButton("DLY_INF_BUTTON", 50, 13, surface, midiIn, midiOut);
         
-        delRptButton.bind(mainLayer, () -> delayControl.toggle(SpecialParam.PSP_REPEAT_INF),
+        delRptButton.bind(
+            mainLayer, () -> delayControl.toggle(SpecialParam.PSP_REPEAT_INF),
             () -> delayControl.getState(SpecialParam.PSP_REPEAT_INF));
         
         final StateButton revGateButton = new StateButton("RVB_GATE_BUTTON", 50, 14, surface, midiIn, midiOut);
-        revGateButton.bind(mainLayer, () -> reverbControl.toggle(SpecialParam.MEGA_VERB_GATE),
+        revGateButton.bind(
+            mainLayer, () -> reverbControl.toggle(SpecialParam.MEGA_VERB_GATE),
             () -> reverbControl.getState(SpecialParam.MEGA_VERB_GATE));
     }
     

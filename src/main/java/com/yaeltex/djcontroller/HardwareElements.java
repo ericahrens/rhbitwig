@@ -15,6 +15,7 @@ import com.yaeltex.common.controls.RingEncoder;
 @Component
 public class HardwareElements {
     
+    public static final double ENCODER_STEP_SIZE = 0.0075;
     public static final int LEFT_OFFSET = 10;
     public static final int C2_OFFSET = 150;
     private static final String[] MAIN_LABELS = {"COPY", "MUTE/SOLO", "%", "LASTSTEP", "PAT1", "PAT2", "PAT3", "PAT4"};
@@ -40,12 +41,16 @@ public class HardwareElements {
         surface.setPhysicalSize(300, 400);
         
         for (int i = 0; i < 4; i++) {
-            topRingEncoders2[i] = new RingEncoder(0, i, 0, "TENC_1_%d".formatted(i + 1), surface, midiProcessor,
-                RingEncoder.Mode.SIGNED_BIT);
-            bottomEncoders1[i] = new RingEncoder(0, 0x4 + i, 0, "ENC_1_%d".formatted(i + 1), surface, midiProcessor,
-                RingEncoder.Mode.SIGNED_BIT);
-            bottomEncoders2[i] = new RingEncoder(0, 0x4 + i, 1, "ENC_2_%d".formatted(i + 1), surface, midiProcessor,
-                RingEncoder.Mode.SIGNED_BIT);
+            topRingEncoders2[i] =
+                new RingEncoder(
+                    0, i, 0, "TENC_1_%d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
+                    ENCODER_STEP_SIZE);
+            bottomEncoders1[i] = new RingEncoder(
+                0, 0x4 + i, 0, "ENC_1_%d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
+                ENCODER_STEP_SIZE);
+            bottomEncoders2[i] = new RingEncoder(
+                0, 0x4 + i, 1, "ENC_2_%d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
+                ENCODER_STEP_SIZE);
             bottomEncoders1[i].setBounds(LEFT_OFFSET + i * 34.0, 320, 28);
             bottomEncoders1[i].getButton().setLabel(" ");
             bottomEncoders2[i].setBounds(C2_OFFSET + i * 34.0, 320, 28);

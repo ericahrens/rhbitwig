@@ -12,7 +12,7 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
     private static final Map<Integer, YaeltexButtonLedState> cache = new HashMap<>();
     
     private static final YaeltexButtonLedState[] colorMap = new YaeltexButtonLedState[128];
-    public static final YaeltexButtonLedState OFF = new YaeltexButtonLedState(YaelTexColors.OFF);
+    public static final YaeltexButtonLedState OFF = new YaeltexButtonLedState(0, 0);
     public static final YaeltexButtonLedState RED = new YaeltexButtonLedState(YaelTexColors.RED);
     public static final YaeltexButtonLedState RED_DIM = new YaeltexButtonLedState(YaelTexColors.RED, 2);
     public static final YaeltexButtonLedState BLUE = new YaeltexButtonLedState(YaelTexColors.BLUE);

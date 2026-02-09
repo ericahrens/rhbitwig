@@ -294,12 +294,13 @@ public class SequencerLayer extends AbstractSequencerLayer {
         if (muteState) {
             final int previous = selectedPadIndex + noteOffset;
             clip.scrollToKey(noteOffset + index);
-            midiProcessor.delayAction(() -> {
-                operatorNoteState.applyMute();
-                if (previous != noteOffset + index) {
-                    clip.scrollToKey(previous);
-                }
-            }, 20);
+            midiProcessor.delayAction(
+                () -> {
+                    operatorNoteState.applyMute();
+                    if (previous != noteOffset + index) {
+                        clip.scrollToKey(previous);
+                    }
+                }, 20);
             
         } else {
             drumPad.selectInEditor();
@@ -430,7 +431,7 @@ public class SequencerLayer extends AbstractSequencerLayer {
             }
         } else {
             copyBufferIndex = selectedPadIndex;
-            DjControllerExtension.println(" copy => %d", copyBufferIndex);
+            
             for (int i = 0; i < this.copyNotes.length; i++) {
                 final NoteStep orig = this.assignments[i];
                 this.copyNotes[i] = orig != null ? new NoteStepStore(orig) : null;

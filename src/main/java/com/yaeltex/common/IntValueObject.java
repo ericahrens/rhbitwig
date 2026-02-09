@@ -3,44 +3,45 @@ package com.yaeltex.common;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
-public class IntValueObject {
-
+public class IntValueObject implements IntSupplier {
+    
     @FunctionalInterface
     public interface Converter {
         String convert(int value);
     }
-
+    
     private final List<IntConsumer> callbacks = new ArrayList<>();
     private int value;
     private final int min;
     private final int max;
     private final Converter converter;
-
+    
     public IntValueObject(final int initValue, final int min, final int max) {
         this.value = initValue;
         this.min = min;
         this.max = max;
         this.converter = null;
     }
-
+    
     public IntValueObject(final int initValue, final int min, final int max, final Converter converter) {
         this.value = initValue;
         this.min = min;
         this.max = max;
         this.converter = converter;
     }
-
+    
     public int getMax() {
         return max;
     }
-
+    
     public void addValueObserver(final IntConsumer callback) {
         if (!callbacks.contains(callback)) {
             callbacks.add(callback);
         }
     }
-
+    
     public void set(final int value) {
         final int newValue = Math.max(min, Math.min(max, value));
         if (this.value == newValue) {
@@ -51,18 +52,22 @@ public class IntValueObject {
             listener.accept(value);
         }
     }
-
+    
     public void increment(final int amount) {
         final int newValue = Math.max(min, Math.min(max, value + amount));
         this.set(newValue);
     }
-
+    
     public int getValue() {
         return value;
     }
-
+    
     public double get() {
         return (value - min) / (double) (max - min);
     }
-
+    
+    @Override
+    public int getAsInt() {
+        return value;
+    }
 }

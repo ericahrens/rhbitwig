@@ -1,6 +1,7 @@
 package com.yaeltex.common.controls;
 
 import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import com.bitwig.extension.controller.api.AbsoluteHardwareValueMatcher;
@@ -15,6 +16,7 @@ import com.bitwig.extension.controller.api.RelativeHardwareKnob;
 import com.bitwig.extension.controller.api.SettableRangedValue;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.values.IntValueObject;
+import com.yaeltex.common.RingValueState;
 import com.yaeltex.common.YaelTexColors;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
@@ -36,6 +38,7 @@ public class RingEncoder {
     private final RgbButton button;
     private final MultiStateHardwareLight light;
     private boolean boundToTarget = false;
+    private final MultiStateHardwareLight valueLight;
     
     public enum Mode {
         SIGNED_BIT,
@@ -45,16 +48,27 @@ public class RingEncoder {
     
     public RingEncoder(final int channel, final int midiValue, final String name, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor) {
-        this(channel, midiValue, 0, name, surface, midiProcessor, Mode.SIGNED_BIT);
+        this(channel, midiValue, 0, name, surface, midiProcessor, Mode.SIGNED_BIT, 0.0075);
     }
     
     public RingEncoder(final int midiValue, final String name, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor, final Mode mode) {
-        this(0, midiValue, 0, name, surface, midiProcessor, mode);
+        this(0, midiValue, 0, name, surface, midiProcessor, mode, 0.0075);
+    }
+    
+    public RingEncoder(final int midiValue, final String name, final HardwareSurface surface,
+        final YaeltexMidiProcessor midiProcessor, final Mode mode, final double stepSize) {
+        this(0, midiValue, 0, name, surface, midiProcessor, mode, stepSize);
+    }
+    
+    public RingEncoder(final int port, final int midiValue, final String name, final HardwareSurface surface,
+        final YaeltexMidiProcessor midiProcessor, final Mode mode, final double stepSize) {
+        this(0, midiValue, port, name, surface, midiProcessor, mode, stepSize);
     }
     
     public RingEncoder(final int channel, final int midiValue, final int port, final String name,
-        final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor, final Mode mode) {
+        final HardwareSurface surface, final YaeltexMidiProcessor midiProcessor, final Mode mode,
+        final double stepSize) {
         super();
         this.midiPort = port;
         this.midiProcessor = midiProcessor;
@@ -72,9 +86,11 @@ public class RingEncoder {
                 encoder.setAdjustValueMatcher(midiIn.createRelativeSignedBitCCValueMatcher(channel, midiValue, -100));
         }
         
-        encoder.setStepSize(0.0075);
+        encoder.setStepSize(stepSize);
         light = surface.createMultiStateHardwareLight(name + "_LIGHT");
         light.state().onUpdateHardware(this::handleColor);
+        valueLight = surface.createMultiStateHardwareLight(name + "_VALUE_LIGHT");
+        valueLight.state().onUpdateHardware(this::handleValue);
         encoder.targetValue().addValueObserver(this::handleTargetUpdating);
         button = new RgbButton(port, channel, midiValue, name + "_BUTTON", surface, midiProcessor);
     }
@@ -89,8 +105,15 @@ public class RingEncoder {
         }
     }
     
+    private void handleValue(final InternalHardwareLightState internalHardwareLightState) {
+        if (internalHardwareLightState instanceof final RingValueState value) {
+            midiProcessor.sendCcValue(midiPort, midiValue, value.getValue());
+        }
+    }
+    
+    
     private void handleColor(final InternalHardwareLightState internalHardwareLightState) {
-        if (internalHardwareLightState instanceof YaeltexButtonLedState color) {
+        if (internalHardwareLightState instanceof final YaeltexButtonLedState color) {
             setColor(color.getColorCode());
         } else {
             setColor(1);
@@ -111,6 +134,15 @@ public class RingEncoder {
         return midiProcessor.createAccelIncrementBinder(incHandler::accept, resolution);
     }
     
+    public void bindAccelerated(final Layer layer, final IntConsumer incHandler, final int resolution) {
+        layer.bind(encoder, createAccelIncrementBinder(incHandler, resolution));
+    }
+    
+    public void bindAccelerated(final Layer layer, final IntConsumer incHandler) {
+        layer.bind(encoder, createAccelIncrementBinder(incHandler, 100));
+    }
+    
+    
     public void bind(final Layer layer, final IntConsumer incHandler) {
         layer.bind(encoder, midiProcessor.createIncrementBinder(incHandler::accept));
     }
@@ -122,7 +154,8 @@ public class RingEncoder {
     public void bind(final Layer layer, final Parameter parameter, final YaelTexColors color) {
         layer.bind(encoder, parameter);
         parameter.exists().markInterested();
-        bindLight(layer,
+        bindLight(
+            layer,
             () -> parameter.exists().get() ? YaeltexButtonLedState.of(color, 0) : YaeltexButtonLedState.OFF);
     }
     
@@ -150,6 +183,9 @@ public class RingEncoder {
         layer.addBinding(new EncoderOffsetValueBinding(this, noteValue, existsReference));
     }
     
+    public void bindValueLight(final Layer layer, final IntSupplier valueSource) {
+        layer.bindLightState(() -> RingValueState.of(valueSource.getAsInt()), valueLight);
+    }
     
     public void bindLight(final Layer layer, final Supplier<InternalHardwareLightState> supplier) {
         layer.bindLightState(supplier, light);
