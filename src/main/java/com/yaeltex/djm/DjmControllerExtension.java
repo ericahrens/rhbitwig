@@ -19,7 +19,7 @@ public class DjmControllerExtension extends ControllerExtension {
         }
     }
     
-    protected DjmControllerExtension(final DjmExtensionDefinition definition, final ControllerHost host) {
+    public DjmControllerExtension(final DjmExtensionDefinition definition, final ControllerHost host) {
         super(definition, host);
     }
     
