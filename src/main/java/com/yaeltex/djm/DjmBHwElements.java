@@ -33,6 +33,7 @@ public class DjmBHwElements {
     private final List<AbsoluteHardwareKnob> largeKnobs = new ArrayList<>();
     
     int layoutLeftOffset = 0;
+    int topOffset = 10;
     
     private enum KnobMapping {
         MST1("MST1", 0);
@@ -133,7 +134,7 @@ public class DjmBHwElements {
     
     private void layoutMainKnob(final int index, final AbsoluteHardwareKnob knob, final String label) {
         final int size = 23;
-        knob.setBounds(layoutLeftOffset + 15, 100 + (size + 10) * index, size * 0.9, size * 0.9);
+        knob.setBounds(layoutLeftOffset + 15, topOffset + 50 + (size + 10) * index, size * 0.9, size * 0.9);
         knob.setLabel(label);
         knob.setLabelPosition(RelativePosition.BELOW);
     }
@@ -142,7 +143,7 @@ public class DjmBHwElements {
         final int xIndex = index % 4;
         final int yIndex = index / 4;
         final int size = 15;
-        knob.setBounds(layoutLeftOffset + 50 + size * xIndex, 50 + (size + 5) * yIndex, size * 0.9, size * 0.9);
+        knob.setBounds(layoutLeftOffset + 50 + size * xIndex, topOffset + (size + 5) * yIndex, size * 0.9, size * 0.9);
         knob.setLabel(label);
         knob.setLabelPosition(RelativePosition.BELOW);
     }
@@ -150,25 +151,27 @@ public class DjmBHwElements {
     private void layoutTopButton(final int index, final RgbButton button, final int size) {
         final int xIndex = index % 4;
         final int yIndex = index / 4;
-        button.setBounds(layoutLeftOffset + 110 + size * xIndex, 50 + (size + 5) * yIndex, size * 0.9, size * 0.9);
+        button.setBounds(
+            layoutLeftOffset + 110 + size * xIndex, topOffset + (size + 5) * yIndex, size * 0.9, size * 0.9);
         button.setLabel(yIndex == 0 ? "FLG %d".formatted(xIndex + 1) : "FLT %d".formatted(xIndex + 1));
     }
     
     private void layoutTrackButton(final int index, final MappingButton button, final int size, final String name) {
         final int xIndex = index % 8;
         final int yIndex = index / 8;
-        button.setBounds(layoutLeftOffset + 50 + size * xIndex, 185 + (size + 5) * yIndex, size * 0.9, size * 0.9);
+        button.setBounds(
+            layoutLeftOffset + 50 + size * xIndex, topOffset + 135 + (size + 5) * yIndex, size * 0.9, size * 0.9);
         button.setLabel(name);
     }
     
     private void layoutDeckSlider(final int index, final HardwareSlider slider) {
-        slider.setBounds(layoutLeftOffset + 50 + 30 * index, 230, 30 * 0.9, 120);
+        slider.setBounds(layoutLeftOffset + 50 + 30 * index, topOffset + 180, 30 * 0.9, 120);
         slider.setLabel("Deck %s".formatted(DECKS[index]));
         slider.setLabelPosition(RelativePosition.BELOW);
     }
     
     private void layoutChannelSlider(final int index, final HardwareSlider slider) {
-        slider.setBounds(layoutLeftOffset + 50 + 15 * index, 100, 15 * 0.9, 60);
+        slider.setBounds(layoutLeftOffset + 50 + 15 * index, 50, 15 * 0.9, 60);
         slider.setLabel(TRACK_SLIDERS[index]);
         slider.setLabelPosition(RelativePosition.BELOW);
     }

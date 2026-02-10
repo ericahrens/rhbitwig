@@ -32,7 +32,7 @@ public class RgbButton extends AbstractYaeltexButton {
         super(port, channel, midiId, name, surface, midiProcessor);
         light = surface.createMultiStateHardwareLight(name + "_LIGHT_" + midiId);
         hwButton.setBackgroundLight(light);
-        light.state().setValue(YaeltexButtonLedState.RED);
+        light.state().setValue(YaeltexButtonLedState.OFF);
         light.state().onUpdateHardware(this::updateState);
         light.setColorToStateFunction(this::handleStateToColor);
     }

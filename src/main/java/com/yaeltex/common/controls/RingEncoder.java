@@ -236,4 +236,7 @@ public class RingEncoder {
     }
     
     
+    public void setLabel(final String name) {
+        button.setLabel(name);
+    }
 }

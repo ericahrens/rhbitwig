@@ -29,7 +29,7 @@ public class DjmControllerExtension extends ControllerExtension {
         final Context diContext = new Context(this);
         final DjmMidiProcessor midiProcessor = new DjmMidiProcessor(getHost(), 2);
         surface = diContext.getService(HardwareSurface.class);
-        surface.setPhysicalSize(380, 360);
+        surface.setPhysicalSize(380, 320);
         final DjmAHwElements hwElementsA = new DjmAHwElements(getHost(), surface, midiProcessor, 0);
         final DjmBHwElements hwElementsB = new DjmBHwElements(getHost(), surface, midiProcessor, 1);
     }

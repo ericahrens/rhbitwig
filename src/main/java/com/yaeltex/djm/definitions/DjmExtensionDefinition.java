@@ -9,7 +9,7 @@ import com.bitwig.extension.controller.api.ControllerHost;
 import com.yaeltex.djm.DjmControllerExtension;
 
 public class DjmExtensionDefinition extends ControllerExtensionDefinition {
-    private static final UUID DRIVER_ID = UUID.fromString("e69c13a1-34d0-f3c7-1bb3-260e83d8ac02");
+    private static final UUID DRIVER_ID = UUID.fromString("e69c13a1-34d0-dfe1-1bb3-260e83d8ac02");
     
     public DjmExtensionDefinition() {
     }
@@ -56,7 +56,7 @@ public class DjmExtensionDefinition extends ControllerExtensionDefinition {
     
     @Override
     public int getRequiredAPIVersion() {
-        return 23;
+        return 24;
     }
     
     @Override
