@@ -3,13 +3,13 @@ package com.yaeltex.djm;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bitwig.extension.api.Color;
+import com.bitwig.extension.api.graphics.GraphicsOutput;
 import com.bitwig.extension.controller.api.AbsoluteHardwareKnob;
-import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.HardwareSlider;
 import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.RelativePosition;
-import com.yaeltex.common.controls.MappingButton;
 import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.common.controls.VuMeter;
 
@@ -27,7 +27,7 @@ public class DjmBHwElements {
     private final List<HardwareSlider> trackSliders = new ArrayList<>();
     private final List<VuMeter> trackMeters = new ArrayList<>();
     private final List<RgbButton> masterButtons = new ArrayList<>();
-    private final List<MappingButton> trackButtons = new ArrayList<>();
+    private final List<RgbButton> trackButtons = new ArrayList<>();
     
     private final List<AbsoluteHardwareKnob> masterGainKnobs = new ArrayList<>();
     private final List<AbsoluteHardwareKnob> largeKnobs = new ArrayList<>();
@@ -46,12 +46,18 @@ public class DjmBHwElements {
         }
     }
     
-    public DjmBHwElements(final ControllerHost host, final HardwareSurface surface,
-        final DjmMidiProcessor midiProcessor, final int port) {
+    public DjmBHwElements(final HardwareSurface surface, final DjmMidiProcessor midiProcessor, final int port) {
         final MidiIn midiIn = midiProcessor.getMidiIn(port);
         layoutLeftOffset = port * 190;
         vuLeft = new VuMeter(0, port, surface, midiProcessor);
         vuRight = new VuMeter(1, port, surface, midiProcessor);
+        
+        //        final Bitmap meterBitmap = host.createBitmap(20, 100, BitmapFormat.ARGB32);
+        //        meterBitmap.render(this::render);
+        //        final HardwarePixelDisplay pixelDisplay = surface.createHardwarePixelDisplay("VU1", meterBitmap);
+        //        pixelDisplay.setBounds(10, 10, 20, 20);
+        
+        // Sculpt FQ Button => Frequency 
         
         for (int i = 0; i < 8; i++) {
             deckMeters.add(new VuMeter(2 + i, port, surface, midiProcessor));
@@ -68,15 +74,14 @@ public class DjmBHwElements {
             layoutTopButton(i, masterButton, 15);
             
             final AbsoluteHardwareKnob masterSectionKnob =
-                surface.createAbsoluteHardwareKnob("DJMB %s".formatted(MASTER_KNOBS[i]));
+                surface.createAbsoluteHardwareKnob("%s".formatted(MASTER_KNOBS[i]));
             masterSectionKnob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, i));
             masterGainKnobs.add(masterSectionKnob);
             layoutMasterKnob(i, masterSectionKnob, MASTER_KNOBS[i]);
             
             
-            final AbsoluteHardwareKnob mainKnob =
-                surface.createAbsoluteHardwareKnob("DJMB %s".formatted(MAIN_KNOBS[i]));
-            mainKnob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, i));
+            final AbsoluteHardwareKnob mainKnob = surface.createAbsoluteHardwareKnob("%s".formatted(MAIN_KNOBS[i]));
+            mainKnob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, i + 8));
             largeKnobs.add(mainKnob);
             layoutMainKnob(i, mainKnob, MAIN_KNOBS[i]);
             
@@ -86,8 +91,8 @@ public class DjmBHwElements {
             final int channelIndex = i % 8 / 2;
             final int typeIndex = (i % 8) % 2 + rowIndex * 2;
             
-            final MappingButton button =
-                new MappingButton(
+            final RgbButton button =
+                new RgbButton(
                     port, 0x8 + i, "DJMB %s %d".formatted(EFX_NAMES[typeIndex], channelIndex + 1), surface,
                     midiProcessor);
             trackButtons.add(button);
@@ -96,11 +101,17 @@ public class DjmBHwElements {
         for (int i = 0; i < 4; i++) {
             trackMeters.add(new VuMeter(10 + i, port, surface, midiProcessor));
             final HardwareSlider slider = surface.createHardwareSlider("DJMB DECK %s".formatted(DECKS[i]));
-            slider.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, 0x18 + i));
-            //slider.setAdjustValueMatcher(midiIn.createAbsolutePitchBendValueMatcher(i));
+            //slider.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, 0x18 + i));
+            slider.setAdjustValueMatcher(midiIn.createAbsolutePitchBendValueMatcher(i));
             trackSliders.add(slider);
             layoutDeckSlider(i, slider);
         }
+    }
+    
+    private void render(final GraphicsOutput graphicsOutput) {
+        graphicsOutput.rectangle(0, 0, 20, 20);
+        graphicsOutput.setColor(Color.whiteColor());
+        graphicsOutput.fill();
     }
     
     public List<HardwareSlider> getTrackSliders() {
@@ -131,6 +142,17 @@ public class DjmBHwElements {
         return vuRight;
     }
     
+    public List<AbsoluteHardwareKnob> getLargeKnobs() {
+        return largeKnobs;
+    }
+    
+    public List<AbsoluteHardwareKnob> getMasterGainKnobs() {
+        return masterGainKnobs;
+    }
+    
+    public List<RgbButton> getTrackButtons() {
+        return trackButtons;
+    }
     
     private void layoutMainKnob(final int index, final AbsoluteHardwareKnob knob, final String label) {
         final int size = 23;
@@ -156,7 +178,7 @@ public class DjmBHwElements {
         button.setLabel(yIndex == 0 ? "FLG %d".formatted(xIndex + 1) : "FLT %d".formatted(xIndex + 1));
     }
     
-    private void layoutTrackButton(final int index, final MappingButton button, final int size, final String name) {
+    private void layoutTrackButton(final int index, final RgbButton button, final int size, final String name) {
         final int xIndex = index % 8;
         final int yIndex = index / 8;
         button.setBounds(

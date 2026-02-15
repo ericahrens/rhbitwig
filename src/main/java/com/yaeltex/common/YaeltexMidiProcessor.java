@@ -36,11 +36,6 @@ public class YaeltexMidiProcessor {
         midiOut.sendMidi(Midi.CC, ccNr, value);
     }
     
-    public void sendMidiNote(final int port, final int data1, final int data2) {
-        final MidiOut midiOut = host.getMidiOutPort(port);
-        midiOut.sendMidi(Midi.NOTE_ON, data1, data1);
-    }
-    
     public void sendMidi(final int port, final int status, final int data1, final int data2) {
         final MidiOut midiOut = host.getMidiOutPort(port);
         midiOut.sendMidi(status, data1, data1);
@@ -52,10 +47,21 @@ public class YaeltexMidiProcessor {
         midiOut.sendMidi(Midi.CC | 0xE, ccNr, intensity);
     }
     
+    public void sendCcColor(final int port, final int ccNr, final int color) {
+        final MidiOut midiOut = host.getMidiOutPort(port);
+        midiOut.sendMidi(Midi.CC | 0xF, ccNr, color);
+    }
+    
     public void sendNoteColor(final int port, final int channel, final int noteNr, final YaeltexButtonLedState color) {
         final MidiOut midiOut = host.getMidiOutPort(port);
         midiOut.sendMidi(Midi.NOTE_ON | channel, noteNr, color.getColorCode());
         midiOut.sendMidi(Midi.NOTE_ON | 0xE, noteNr, color.getIntensity());
+    }
+    
+    public void sendColorReset(final int port, final int channel, final int noteNr) {
+        final MidiOut midiOut = host.getMidiOutPort(port);
+        midiOut.sendMidi(Midi.NOTE_ON | channel, noteNr, 0);
+        midiOut.sendMidi(Midi.NOTE_ON | 0xE, noteNr, 0);
     }
     
     public void sendColorOff(final int midiPort, final int channel, final int midiId) {

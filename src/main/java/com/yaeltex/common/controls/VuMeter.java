@@ -14,10 +14,12 @@ public class VuMeter {
     private final MultiStateHardwareLight light;
     private final int midiValue;
     private final YaeltexMidiProcessor midiProcessor;
+    private final int portIndex;
     
     public VuMeter(final int index, final int portIndex, final HardwareSurface surface,
         final YaeltexMidiProcessor midiProcessor) {
         this.midiValue = index;
+        this.portIndex = portIndex;
         this.midiProcessor = midiProcessor;
         light = surface.createMultiStateHardwareLight("VU_LIGHT_%d_%d".formatted(portIndex, index));
         light.state().onUpdateHardware(this::handleValue);
@@ -25,16 +27,16 @@ public class VuMeter {
     
     private void handleValue(final InternalHardwareLightState internalHardwareLightState) {
         if (internalHardwareLightState instanceof final RingValueState value) {
-            midiProcessor.sendCcValue(0, 2, midiValue, value.getValue());
+            midiProcessor.sendCcValue(portIndex, 2, midiValue, value.getValue());
         }
     }
     
     public void sendVuValue(final int value) {
-        midiProcessor.sendCcValue(0, 2, midiValue, value);
+        midiProcessor.sendCcValue(portIndex, 2, midiValue, value);
     }
     
     public void sendEncoderValue(final int value) {
-        midiProcessor.sendCcValue(0, 1, midiValue, value);
+        midiProcessor.sendCcValue(portIndex, 1, midiValue, value);
     }
     
     public void bindValueLight(final Layer layer, final IntSupplier valueSource) {

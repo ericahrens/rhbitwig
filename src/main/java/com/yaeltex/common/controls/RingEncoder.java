@@ -4,7 +4,6 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import com.bitwig.extension.controller.api.AbsoluteHardwareValueMatcher;
 import com.bitwig.extension.controller.api.BooleanValue;
 import com.bitwig.extension.controller.api.HardwareSurface;
 import com.bitwig.extension.controller.api.InternalHardwareLightState;
@@ -75,7 +74,6 @@ public class RingEncoder {
         final MidiIn midiIn = midiProcessor.getMidiIn(port);
         this.midiValue = midiValue;
         
-        final AbsoluteHardwareValueMatcher absoluteMatcher = midiIn.createAbsoluteCCValueMatcher(channel, midiValue);
         encoder = surface.createRelativeHardwareKnob(name);
         switch (mode) {
             case SIGNED_BIT ->
@@ -91,11 +89,19 @@ public class RingEncoder {
         light.state().onUpdateHardware(this::handleColor);
         valueLight = surface.createMultiStateHardwareLight(name + "_VALUE_LIGHT");
         valueLight.state().onUpdateHardware(this::handleValue);
-        encoder.targetValue().addValueObserver(this::handleTargetUpdating);
+        //        encoder.targetValue().addValueObserver(this::handleTargetUpdating);
+        //        encoder.hasTargetValue().addValueObserver(this::setBoundToTarget);
         button = new RgbButton(port, channel, midiValue, name + "_BUTTON", surface, midiProcessor);
     }
     
+    
     public void setBoundToTarget(final boolean boundToTarget) {
+        //        if (boundToTarget) {
+        //            light.state().setValue(YaeltexButtonLedState.GREEN);
+        //            encoder.setSensitivity(0.5);
+        //        } else {
+        //            light.state().setValue(YaeltexButtonLedState.OFF);
+        //        }
         this.boundToTarget = boundToTarget;
     }
     
@@ -111,12 +117,11 @@ public class RingEncoder {
         }
     }
     
-    
     private void handleColor(final InternalHardwareLightState internalHardwareLightState) {
         if (internalHardwareLightState instanceof final YaeltexButtonLedState color) {
             setColor(color.getColorCode());
         } else {
-            setColor(1);
+            setColor(0);
         }
     }
     
@@ -154,9 +159,8 @@ public class RingEncoder {
     public void bind(final Layer layer, final Parameter parameter, final YaelTexColors color) {
         layer.bind(encoder, parameter);
         parameter.exists().markInterested();
-        bindLight(
-            layer,
-            () -> parameter.exists().get() ? YaeltexButtonLedState.of(color, 0) : YaeltexButtonLedState.OFF);
+        final YaeltexButtonLedState colorState = YaeltexButtonLedState.of(color, 0);
+        bindLight(layer, () -> parameter.exists().get() ? colorState : YaeltexButtonLedState.OFF);
     }
     
     public void bind(final Layer layer, final SettableRangedValue value, final YaelTexColors color) {
@@ -166,6 +170,12 @@ public class RingEncoder {
     
     public void bind(final Layer layer, final SettableRangedValue value) {
         layer.addBinding(new EncoderParameterBinding(this, value));
+    }
+    
+    public void bindParameter(final Layer layer, final Parameter parameter) {
+        parameter.exists().markInterested();
+        final EncoderParameterBinding binding = new EncoderParameterBinding(this, parameter.value());
+        layer.addBinding(binding);
     }
     
     public void bindValue(final Layer layer, final SettableRangedValue value, final BooleanValue existsSource,
@@ -213,14 +223,19 @@ public class RingEncoder {
     
     public void setColor(final int value) {
         if (value != lastColorSent) {
-            midiProcessor.sendCcColor(midiPort, midiValue, value, 127);
+            midiProcessor.sendCcColor(midiPort, midiValue, value);
             lastColorSent = value;
         }
     }
     
     public void refresh() {
-        midiProcessor.sendCcValue(midiPort, midiValue, lastValueSent);
-        midiProcessor.sendCcColor(midiPort, midiValue, lastColorSent, 127);
+        if (lastValueSent != -1) {
+            midiProcessor.sendCcValue(midiPort, midiValue, lastValueSent);
+        }
+        if (lastColorSent != -1) {
+            midiProcessor.sendCcColor(midiPort, midiValue, lastColorSent);
+        }
+        button.refresh();
     }
     
     public void clear() {

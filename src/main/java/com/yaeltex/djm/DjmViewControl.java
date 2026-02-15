@@ -15,12 +15,13 @@ public class DjmViewControl {
     private static final int NUM_TRACKS = 12;
     private static final int NUM_SENDS = 4;
     private final TrackBank trackBank;
-    private final TrackBank effectTrackBank;
     private final CursorTrack cursorTrack;
     private final Track rootTrack;
     private final PinnableCursorDevice cursorDevice;
     private final PinnableCursorDevice primaryDevice;
     private final int[] trackColors = new int[NUM_TRACKS];
+    private final TargetRemotes<ProjectPage> projectTargetRemotes;
+    private final FlexTrackBank flexBank;
     
     public DjmViewControl(final ControllerHost host) {
         rootTrack = host.getProject().getRootTrackGroup();
@@ -29,7 +30,9 @@ public class DjmViewControl {
         cursorTrack.exists().markInterested();
         cursorDevice = cursorTrack.createCursorDevice();
         
-        effectTrackBank = host.createEffectTrackBank(NUM_SENDS, NUM_SENDS, NUM_SCENES);
+        projectTargetRemotes = new TargetRemotes<ProjectPage>(rootTrack, ProjectPage.class);
+        
+        flexBank = new FlexTrackBank(host, 64, 3, 1);
         
         primaryDevice =
             cursorTrack.createCursorDevice("drumdetection", "Pad Device", 8, CursorDeviceFollowMode.FIRST_INSTRUMENT);
@@ -49,12 +52,12 @@ public class DjmViewControl {
         });
     }
     
-    public TrackBank getEffectTrackBank() {
-        return effectTrackBank;
-    }
-    
     public TrackBank getTrackBank() {
         return trackBank;
+    }
+    
+    public FlexTrackBank getFlexBank() {
+        return flexBank;
     }
     
     public CursorTrack getCursorTrack() {
@@ -65,4 +68,7 @@ public class DjmViewControl {
         return rootTrack;
     }
     
+    public TargetRemotes<ProjectPage> getProjectTargetRemotes() {
+        return projectTargetRemotes;
+    }
 }

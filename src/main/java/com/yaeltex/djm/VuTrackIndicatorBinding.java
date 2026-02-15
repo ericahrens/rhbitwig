@@ -4,16 +4,26 @@ import com.bitwig.extension.controller.api.Channel;
 import com.bitwig.extensions.framework.Binding;
 import com.yaeltex.common.controls.VuMeter;
 
-public class VuTrackBinding extends Binding<Channel, VuMeter> {
+public class VuTrackIndicatorBinding extends Binding<Channel, VuMeter> {
     
-    public VuTrackBinding(final Channel track, final VuMeter target) {
+    private int value;
+    
+    public VuTrackIndicatorBinding(final Channel track, final VuMeter target) {
         super(track, track, target);
+        track.volume().value().addValueObserver(128, this::handleValueChanged);
         track.addVuMeterObserver(128, -1, true, this::handleVu);
     }
     
     private void handleVu(final int vu) {
         if (isActive()) {
             getTarget().sendVuValue(vu);
+        }
+    }
+    
+    private void handleValueChanged(final int value) {
+        this.value = value;
+        if (isActive()) {
+            getTarget().sendEncoderValue(value);
         }
     }
     
@@ -24,6 +34,6 @@ public class VuTrackBinding extends Binding<Channel, VuMeter> {
     
     @Override
     protected void activate() {
-        getTarget().sendVuValue(0);
+        getTarget().sendEncoderValue(value);
     }
 }

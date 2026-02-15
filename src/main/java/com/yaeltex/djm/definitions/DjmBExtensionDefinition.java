@@ -6,7 +6,7 @@ import com.bitwig.extension.api.PlatformType;
 import com.bitwig.extension.controller.AutoDetectionMidiPortNamesList;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.ControllerHost;
-import com.yaeltex.djm.DjmBControllerExtension;
+import com.yaeltex.djm.extensions.DjmBControllerExtension;
 
 public class DjmBExtensionDefinition extends ControllerExtensionDefinition {
     private static final UUID DRIVER_ID = UUID.fromString("e69c13a1-34d0-f3c9-1bb3-260e83d8ac03");

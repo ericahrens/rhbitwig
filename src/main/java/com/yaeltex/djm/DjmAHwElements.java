@@ -63,16 +63,18 @@ public class DjmAHwElements {
         for (int i = 0; i < 16; i++) {
             final RgbButton sideButton =
                 new RgbButton(
-                    port, 0x14 + i, "DJM %s %d".formatted(BUTTONS[BUTTON_LAYOUT[i]], i + 1), surface, midiProcessor);
+                    port, 0x14 + i, "DJM %s %d".formatted(BUTTONS[BUTTON_LAYOUT[i]], i + 1), surface,
+                    midiProcessor);
             sideButtons.add(sideButton);
             layoutButton(BUTTON_LAYOUT[i], sideButton, BUTTONS[i]);
         }
         for (int i = 0; i < 4; i++) {
-            final RingEncoder scupltEncoder =
+            final RingEncoder sculptEncoder =
                 new RingEncoder(
-                    port, i, "SCULPT %d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT, 0.01);
-            sculptEncoders.add(scupltEncoder);
-            layoutEncoder(i, 3, scupltEncoder, "SCULPT %d".formatted(i + 1));
+                    port, i, "SCULPT %d".formatted(i + 1), surface, midiProcessor,
+                    RingEncoder.Mode.SIGNED_BIT, 0.01);
+            sculptEncoders.add(sculptEncoder);
+            layoutEncoder(i, 3, sculptEncoder, "SCULPT %d".formatted(i + 1));
             
             final RingEncoder vocalEncoder =
                 new RingEncoder(
@@ -111,7 +113,22 @@ public class DjmAHwElements {
         encoder.setBounds(
             layoutLeftOffset + 10 + (KNOB_SIZE + 2) * index, topOffset + (KNOB_SIZE + VERT_GAP) * row, KNOB_SIZE);
         encoder.setLabel(name);
-        
+    }
+    
+    public List<AbsoluteHardwareKnob> getAux1Knobs() {
+        return aux1Knobs;
+    }
+    
+    public List<AbsoluteHardwareKnob> getAux2Knobs() {
+        return aux2Knobs;
+    }
+    
+    public List<AbsoluteHardwareKnob> getLpfKnobs() {
+        return lpfKnobs;
+    }
+    
+    public List<AbsoluteHardwareKnob> getHpfKnobs() {
+        return hpfKnobs;
     }
     
     private void layoutMainKnob(final int index, final int row, final AbsoluteHardwareKnob knob, final String name) {
@@ -132,6 +149,13 @@ public class DjmAHwElements {
             width * 0.9, height * 0.9);
         button.setLabel(name);
     }
+    
+    public void refreshHardware() {
+        for (final RingEncoder encoder : sculptEncoders) {
+            encoder.refresh();
+        }
+    }
+    
     
     public VuMeter getVuLeft() {
         return vuLeft;
@@ -164,4 +188,5 @@ public class DjmAHwElements {
     public List<RingEncoder> getMelodyEncoders() {
         return melodyEncoders;
     }
+    
 }

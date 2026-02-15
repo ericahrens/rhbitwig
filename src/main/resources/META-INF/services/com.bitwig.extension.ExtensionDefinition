@@ -3,8 +3,8 @@ com.yaeltex.seqarp168.YaeltexArpControlExtensionDefinition
 com.yaeltex.seqarp168mk2.SeqArp168ExtensionDefinition
 com.yaeltex.fuse.FuseControlExtensionDefinition
 com.yaeltex.djcontroller.DjControllerExtensionDefinition
-com.yaeltex.djm.definitions.DjmAExtensionDefinition
-com.yaeltex.djm.definitions.DjmBExtensionDefinition
+#com.yaeltex.djm.definitions.DjmAExtensionDefinition
+#com.yaeltex.djm.definitions.DjmBExtensionDefinition
 com.yaeltex.djm.definitions.DjmExtensionDefinition
 com.novation.launchpadProMk3.LaunchPadProMk3ExtensionDefinition
 com.novation.launchcontrol.arp.LpcArpControlExtensionDefinition

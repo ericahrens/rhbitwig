@@ -1,51 +1,67 @@
 package com.yaeltex.djm;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.bitwig.extension.controller.api.Channel;
 import com.bitwig.extension.controller.api.ControllerHost;
+import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extension.controller.api.TrackBank;
 
 public class FlexTrackBank {
     
     private final TrackBank overviewTrackBank;
-    private final List<SingleTrackBank> tracks = new ArrayList<>();
     
     private static class SingleTrackBank {
         
-        private final TrackBank trackBank;
-        private final Track track;
-        private final int index;
+        private final FixedTracks ident;
+        private final CursorTrack followTrack;
         
-        public SingleTrackBank(final ControllerHost host, final int index, final int sends, final int scenes) {
-            trackBank = host.createTrackBank(1, sends, scenes);
-            track = trackBank.getItemAt(0);
-            this.index = index;
+        public SingleTrackBank(final ControllerHost host, final FixedTracks ident, final int sends, final int scenes) {
+            followTrack = host.createCursorTrack(ident.getName(), ident.getName(), sends, scenes, false);
+            this.ident = ident;
         }
         
-        public int getIndex() {
-            return index;
+        public void moveTo(final Channel channel) {
+            followTrack.selectChannel(channel);
+        }
+        
+        public FixedTracks getIdent() {
+            return ident;
         }
         
         public Track getTrack() {
-            return track;
+            return followTrack;
         }
     }
     
-    public FlexTrackBank(final ControllerHost host, final int overviewSize, final int size, final int sends,
-        final int scenes) {
+    private final Map<FixedTracks, SingleTrackBank> lookup = new HashMap<>();
+    private final Map<String, SingleTrackBank> nameLookup = new HashMap<>();
+    
+    public FlexTrackBank(final ControllerHost host, final int overviewSize, final int sends, final int scenes) {
         overviewTrackBank = host.createTrackBank(overviewSize, 1, 1);
         for (int i = 0; i < overviewSize; i++) {
-        
+            final int index = i;
+            final Track track = overviewTrackBank.getItemAt(index);
+            track.name().addValueObserver(name -> trackNameChanged(index, name, track));
         }
-        for (int i = 0; i < size; i++) {
-            tracks.add(new SingleTrackBank(host, i, sends, scenes));
+        final FixedTracks[] fixedTracks = FixedTracks.values();
+        for (int i = 0; i < fixedTracks.length; i++) {
+            lookup.put(fixedTracks[i], new SingleTrackBank(host, fixedTracks[i], sends, scenes));
+            nameLookup.put(fixedTracks[i].getName(), new SingleTrackBank(host, fixedTracks[i], sends, scenes));
         }
     }
     
-    public Track getTrack(final int index) {
-        return tracks.get(index).getTrack();
+    private void trackNameChanged(final int index, final String name, final Channel track) {
+        final SingleTrackBank fixedTrack = nameLookup.get(name);
+        if (fixedTrack != null) {
+            fixedTrack.moveTo(track);
+        }
+    }
+    
+    public Track getTrack(final FixedTracks ident) {
+        return lookup.get(ident).getTrack();
     }
     
 }

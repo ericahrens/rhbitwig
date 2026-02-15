@@ -11,7 +11,7 @@ import com.bitwig.extension.controller.api.Parameter;
 import com.bitwig.extensions.framework.Layer;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.djm.DjmBControllerExtension;
+import com.yaeltex.djm.DjmControllerExtension;
 
 public class RgbButton extends AbstractYaeltexButton {
     
@@ -38,11 +38,14 @@ public class RgbButton extends AbstractYaeltexButton {
     }
     
     private InternalHardwareLightState handleStateToColor(final Color color) {
-        DjmBControllerExtension.println(" => %d %d %d", color.getRed255(), color.getGreen255(), color.getBlue255());
-        return YaeltexButtonLedState.GREEN;
+        DjmControllerExtension.println("HST => %d %d %d", color.getRed255(), color.getGreen255(), color.getBlue255());
+        return YaeltexButtonLedState.OFF;
     }
     
     private void updateState(final InternalHardwareLightState internalHardwareLightState) {
+        //        if (midiPort == 0 && midiId < 4) {
+        //            DjmControllerExtension.println(" UD %d %s", midiId, internalHardwareLightState);
+        //        }
         if (internalHardwareLightState instanceof final YaeltexButtonLedState state) {
             midiProcessor.sendNoteColor(midiPort, channel, midiId, state);
         } else {
@@ -51,7 +54,9 @@ public class RgbButton extends AbstractYaeltexButton {
     }
     
     public void refresh() {
-        light.state().setValue(null);
+        //DjmControllerExtension.println(" REFRESH %d %d %d %s", midiPort, channel, midiId, light.state()
+        // .currentValue());
+        updateState(light.state().currentValue());
     }
     
     public void bindLight(final Layer layer, final Supplier<InternalHardwareLightState> supplier) {
@@ -69,6 +74,12 @@ public class RgbButton extends AbstractYaeltexButton {
     public void bindToggleValue(final Layer layer, final Parameter parameter, final YaeltexButtonLedState color) {
         bindToggleValue(layer, parameter);
         layer.bindLightState(() -> parameter.value().get() == 0 ? YaeltexButtonLedState.OFF : color, light);
+    }
+    
+    public void bindToggleValueDimmed(final Layer layer, final Parameter parameter, final YaeltexButtonLedState color) {
+        bindToggleValue(layer, parameter);
+        final YaeltexButtonLedState dimmed = color.intensity(1);
+        layer.bindLightState(() -> parameter.value().get() == 0 ? dimmed : color, light);
     }
     
     public void bindToggleValue(final Layer layer, final Parameter parameter, final YaeltexButtonLedState onColor,

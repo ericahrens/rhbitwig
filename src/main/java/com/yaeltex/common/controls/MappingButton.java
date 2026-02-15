@@ -6,7 +6,7 @@ import com.bitwig.extension.controller.api.MidiIn;
 import com.bitwig.extension.controller.api.OnOffHardwareLight;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.YaeltexMidiProcessor;
-import com.yaeltex.djm.DjmBControllerExtension;
+import com.yaeltex.djm.extensions.DjmBControllerExtension;
 
 public class MappingButton extends AbstractYaeltexButton {
     private final YaeltexButtonLedState onColor;

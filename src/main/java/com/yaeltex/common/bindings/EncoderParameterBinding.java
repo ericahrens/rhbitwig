@@ -18,19 +18,22 @@ public class EncoderParameterBinding extends Binding<SettableRangedValue, RingEn
     
     private void handleValueChanged(final int value) {
         this.value = value;
+        if (isActive()) {
+            getTarget().updateValue(this.value);
+        }
     }
     
     @Override
     protected void activate() {
         hardwareBinding = getTarget().getEncoder().addBinding(getSource());
-        getTarget().setBoundToTarget(true);
+        //getTarget().setBoundToTarget(true);
         getTarget().updateValue(this.value);
     }
     
     @Override
     protected void deactivate() {
         if (hardwareBinding != null) {
-            getTarget().setBoundToTarget(false);
+            //getTarget().setBoundToTarget(false);
             hardwareBinding.removeBinding();
         }
         hardwareBinding = null;

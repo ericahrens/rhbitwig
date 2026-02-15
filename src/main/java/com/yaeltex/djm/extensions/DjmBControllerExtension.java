@@ -1,4 +1,4 @@
-package com.yaeltex.djm;
+package com.yaeltex.djm.extensions;
 
 import java.util.List;
 
@@ -14,6 +14,10 @@ import com.bitwig.extensions.framework.di.Context;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.controls.RingEncoder;
 import com.yaeltex.common.controls.VuMeter;
+import com.yaeltex.djm.DjmBHwElements;
+import com.yaeltex.djm.DjmMidiProcessor;
+import com.yaeltex.djm.DjmViewControl;
+import com.yaeltex.djm.VuTrackIndicatorBinding;
 import com.yaeltex.djm.definitions.DjmBExtensionDefinition;
 
 public class DjmBControllerExtension extends ControllerExtension {
@@ -42,8 +46,12 @@ public class DjmBControllerExtension extends ControllerExtension {
         surface = diContext.getService(HardwareSurface.class);
         surface.setPhysicalSize(190, 360);
         mainLayer = new Layer(diContext.getService(Layers.class), "MAIN_LAYER");
-        final DjmBHwElements hwElements = new DjmBHwElements(getHost(), surface, midiProcessor, 0);
+        final DjmBHwElements hwElements = new DjmBHwElements(surface, midiProcessor, 0);
         diContext.registerService(DjmBHwElements.class, hwElements);
+        
+        for (int i = 0; i < 14; i++) {
+            midiProcessor.sendText(0, i, "");
+        }
         
         final DjmViewControl viewControl = diContext.getService(DjmViewControl.class);
         final Track rootTrack = viewControl.getRootTrack();
@@ -57,14 +65,14 @@ public class DjmBControllerExtension extends ControllerExtension {
             final Track track = trackBank.getItemAt(i);
             final VuMeter vuMeter = hwElements.getTrackMeters().get(i);
             final HardwareSlider slider = hwElements.getTrackSliders().get(i);
-            mainLayer.addBinding(new VuTrackBinding(track, vuMeter));
+            mainLayer.addBinding(new VuTrackIndicatorBinding(track, vuMeter));
             mainLayer.bind(slider, track.volume());
         }
         for (int i = 0; i < 8; i++) {
             final Track track = trackBank.getItemAt(i + 4);
             final VuMeter vuMeter = hwElements.getDeckMeters().get(i);
             final HardwareSlider slider = hwElements.getDeckSliders().get(i);
-            mainLayer.addBinding(new VuTrackBinding(track, vuMeter));
+            mainLayer.addBinding(new VuTrackIndicatorBinding(track, vuMeter));
             mainLayer.bind(slider, track.volume());
         }
         

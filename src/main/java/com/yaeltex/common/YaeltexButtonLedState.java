@@ -13,6 +13,7 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
     
     private static final YaeltexButtonLedState[] colorMap = new YaeltexButtonLedState[128];
     public static final YaeltexButtonLedState OFF = new YaeltexButtonLedState(0, 0);
+    public static final YaeltexButtonLedState OFF_INTENSE = new YaeltexButtonLedState(0, 1);
     public static final YaeltexButtonLedState RED = new YaeltexButtonLedState(YaelTexColors.RED);
     public static final YaeltexButtonLedState RED_DIM = new YaeltexButtonLedState(YaelTexColors.RED, 2);
     public static final YaeltexButtonLedState BLUE = new YaeltexButtonLedState(YaelTexColors.BLUE);
@@ -135,4 +136,8 @@ public class YaeltexButtonLedState extends InternalHardwareLightState {
         return colorCode == obj.colorCode && intensity == obj.intensity;
     }
     
+    @Override
+    public String toString() {
+        return "YT Color %d %d".formatted(colorCode, intensity);
+    }
 }

@@ -1,4 +1,4 @@
-package com.yaeltex.djm;
+package com.yaeltex.djm.extensions;
 
 import java.util.List;
 
@@ -14,6 +14,9 @@ import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.common.controls.RingEncoder;
 import com.yaeltex.common.controls.VuMeter;
+import com.yaeltex.djm.DjmAHwElements;
+import com.yaeltex.djm.DjmMidiProcessor;
+import com.yaeltex.djm.DjmViewControl;
 import com.yaeltex.djm.definitions.DjmAExtensionDefinition;
 
 public class DjmAControllerExtension extends ControllerExtension {
@@ -44,16 +47,18 @@ public class DjmAControllerExtension extends ControllerExtension {
         diContext.registerService(DjmAHwElements.class, hwElements);
         diContext.registerService(DjmMidiProcessor.class, midiProcessor);
         mainLayer = new Layer(diContext.getService(Layers.class), "MAIN_LAYER");
+        for (int i = 0; i < 2; i++) {
+            midiProcessor.sendText(0, i, "");
+        }
         
         final RgbButton button1 = hwElements.getSideButtons().get(0);
         button1.bindLight(mainLayer, () -> YaeltexButtonLedState.YELLOW.intensity(10));
         final RgbButton button2 = hwElements.getSideButtons().get(1);
         button2.bindLight(mainLayer, () -> YaeltexButtonLedState.YELLOW.intensity(127));
-        
         final RingEncoder encoder1 = hwElements.getSculptEncoders().get(0);
         final RgbButton b1 = encoder1.getButton();
         encoder1.bindLight(mainLayer, () -> YaeltexButtonLedState.RED);
-        b1.bindLight(mainLayer, () -> YaeltexButtonLedState.BLUE);
+        b1.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE);
         
         encoder1.bindAccelerated(mainLayer, v -> println(" ENCODER %d", v), 100);
         
