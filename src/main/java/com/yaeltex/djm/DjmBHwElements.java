@@ -81,7 +81,8 @@ public class DjmBHwElements {
             
             
             final AbsoluteHardwareKnob mainKnob = surface.createAbsoluteHardwareKnob("%s".formatted(MAIN_KNOBS[i]));
-            mainKnob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, i + 8));
+            final int ccIndex = i < 4 ? i + 8 : 20 + (i % 4);
+            mainKnob.setAdjustValueMatcher(midiIn.createAbsoluteCCValueMatcher(0, ccIndex));
             largeKnobs.add(mainKnob);
             layoutMainKnob(i, mainKnob, MAIN_KNOBS[i]);
             

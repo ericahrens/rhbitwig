@@ -54,8 +54,6 @@ public class RgbButton extends AbstractYaeltexButton {
     }
     
     public void refresh() {
-        //DjmControllerExtension.println(" REFRESH %d %d %d %s", midiPort, channel, midiId, light.state()
-        // .currentValue());
         updateState(light.state().currentValue());
     }
     

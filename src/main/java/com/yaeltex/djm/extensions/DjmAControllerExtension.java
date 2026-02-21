@@ -9,7 +9,6 @@ import com.bitwig.extension.controller.api.Track;
 import com.bitwig.extensions.framework.Layer;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.framework.di.Context;
-import com.yaeltex.common.IntValueObject;
 import com.yaeltex.common.YaeltexButtonLedState;
 import com.yaeltex.common.controls.RgbButton;
 import com.yaeltex.common.controls.RingEncoder;
@@ -55,31 +54,31 @@ public class DjmAControllerExtension extends ControllerExtension {
         button1.bindLight(mainLayer, () -> YaeltexButtonLedState.YELLOW.intensity(10));
         final RgbButton button2 = hwElements.getSideButtons().get(1);
         button2.bindLight(mainLayer, () -> YaeltexButtonLedState.YELLOW.intensity(127));
-        final RingEncoder encoder1 = hwElements.getSculptEncoders().get(0);
-        final RgbButton b1 = encoder1.getButton();
-        encoder1.bindLight(mainLayer, () -> YaeltexButtonLedState.RED);
-        b1.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE);
-        
-        encoder1.bindAccelerated(mainLayer, v -> println(" ENCODER %d", v), 100);
-        
-        final RingEncoder encoder2 = hwElements.getSculptEncoders().get(1);
-        final RgbButton b2 = encoder2.getButton();
-        encoder2.bindLight(mainLayer, () -> YaeltexButtonLedState.RED.intensity(50));
-        b2.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE);
-        
-        final RingEncoder encoder3 = hwElements.getSculptEncoders().get(2);
-        final IntValueObject testValue = new IntValueObject(0, 0, 127);
-        final RgbButton b3 = encoder3.getButton();
-        encoder3.bindLight(mainLayer, () -> YaeltexButtonLedState.RED);
-        encoder3.bindValueLight(mainLayer, testValue);
-        encoder3.bindAccelerated(mainLayer, inc -> testValue.increment(inc), 169);
-        b3.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE.intensity(30));
-        
-        final RingEncoder encoder4 = hwElements.getSculptEncoders().get(3);
-        final RgbButton b4 = encoder4.getButton();
-        encoder4.bindLight(mainLayer, () -> YaeltexButtonLedState.GREEN);
-        encoder4.updateValue(0);
-        b4.bindLight(mainLayer, () -> YaeltexButtonLedState.PURPLE);
+        //        final RingEncoder encoder1 = hwElements.getSculptEncoders().get(0);
+        //        final RgbButton b1 = encoder1.getButton();
+        //        encoder1.bindLight(mainLayer, () -> YaeltexButtonLedState.RED);
+        //        b1.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE);
+        //
+        //        encoder1.bindAccelerated(mainLayer, v -> println(" ENCODER %d", v), 100);
+        //
+        //        final RingEncoder encoder2 = hwElements.getSculptEncoders().get(1);
+        //        final RgbButton b2 = encoder2.getButton();
+        //        encoder2.bindLight(mainLayer, () -> YaeltexButtonLedState.RED.intensity(50));
+        //        b2.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE);
+        //
+        //        final RingEncoder encoder3 = hwElements.getSculptEncoders().get(2);
+        //        final IntValueObject testValue = new IntValueObject(0, 0, 127);
+        //        final RgbButton b3 = encoder3.getButton();
+        //        encoder3.bindLight(mainLayer, () -> YaeltexButtonLedState.RED);
+        //        encoder3.bindValueLight(mainLayer, testValue);
+        //        encoder3.bindAccelerated(mainLayer, inc -> testValue.increment(inc), 169);
+        //        b3.bindLight(mainLayer, () -> YaeltexButtonLedState.ORANGE.intensity(30));
+        //
+        //        final RingEncoder encoder4 = hwElements.getSculptEncoders().get(3);
+        //        final RgbButton b4 = encoder4.getButton();
+        //        encoder4.bindLight(mainLayer, () -> YaeltexButtonLedState.GREEN);
+        //        encoder4.updateValue(0);
+        //        b4.bindLight(mainLayer, () -> YaeltexButtonLedState.PURPLE);
         
         final DjmViewControl viewControl = diContext.getService(DjmViewControl.class);
         final Track rootTrack = viewControl.getRootTrack();
@@ -88,13 +87,10 @@ public class DjmAControllerExtension extends ControllerExtension {
         rootTrack.addVuMeterObserver(128, 0, true, value -> vuLeft.sendVuValue(value));
         rootTrack.addVuMeterObserver(128, 1, true, value -> vuRight.sendVuValue(value));
         
-        testValue.addValueObserver(v -> {
-            vuRight.sendEncoderValue(v);
-        });
-        disableLights(mainLayer, hwElements.getMelodyEncoders());
-        disableLights(mainLayer, hwElements.getDrumEncoders());
-        disableLights(mainLayer, hwElements.getVocalEncoders());
-        disableLights(mainLayer, hwElements.getBaselineEncoders());
+        //        disableLights(mainLayer, hwElements.getMelodyEncoders());
+        //        disableLights(mainLayer, hwElements.getDrumEncoders());
+        //        disableLights(mainLayer, hwElements.getVocalEncoders());
+        //        disableLights(mainLayer, hwElements.getBaselineEncoders());
         
         midiProcessor.start();
         diContext.activate();

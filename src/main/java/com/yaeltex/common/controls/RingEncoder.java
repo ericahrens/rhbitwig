@@ -89,8 +89,8 @@ public class RingEncoder {
         light.state().onUpdateHardware(this::handleColor);
         valueLight = surface.createMultiStateHardwareLight(name + "_VALUE_LIGHT");
         valueLight.state().onUpdateHardware(this::handleValue);
-        //        encoder.targetValue().addValueObserver(this::handleTargetUpdating);
-        //        encoder.hasTargetValue().addValueObserver(this::setBoundToTarget);
+        encoder.targetValue().addValueObserver(this::handleTargetUpdating);
+        encoder.hasTargetValue().addValueObserver(this::setBoundToTarget);
         button = new RgbButton(port, channel, midiValue, name + "_BUTTON", surface, midiProcessor);
     }
     

@@ -20,11 +20,11 @@ public class DjmAHwElements {
     };
     private final int[] BUTTON_LAYOUT = {1, 3, 5, 7, 0, 2, 4, 6, 9, 11, 13, 15, 8, 10, 12, 14};
     private final List<RgbButton> sideButtons = new ArrayList<>();
-    private final List<RingEncoder> sculptEncoders = new ArrayList<>();
-    private final List<RingEncoder> vocalEncoders = new ArrayList<>();
-    private final List<RingEncoder> melodyEncoders = new ArrayList<>();
-    private final List<RingEncoder> baselineEncoders = new ArrayList<>();
-    private final List<RingEncoder> drumEncoders = new ArrayList<>();
+    private final List<DjmRingEncoder> sculptEncoders = new ArrayList<>();
+    private final List<DjmRingEncoder> vocalEncoders = new ArrayList<>();
+    private final List<DjmRingEncoder> melodyEncoders = new ArrayList<>();
+    private final List<DjmRingEncoder> baselineEncoders = new ArrayList<>();
+    private final List<DjmRingEncoder> drumEncoders = new ArrayList<>();
     private final List<AbsoluteHardwareKnob> aux1Knobs = new ArrayList<>();
     private final List<AbsoluteHardwareKnob> aux2Knobs = new ArrayList<>();
     private final List<AbsoluteHardwareKnob> lpfKnobs = new ArrayList<>();
@@ -69,39 +69,29 @@ public class DjmAHwElements {
             layoutButton(BUTTON_LAYOUT[i], sideButton, BUTTONS[i]);
         }
         for (int i = 0; i < 4; i++) {
-            final RingEncoder sculptEncoder =
-                new RingEncoder(
-                    port, i, "SCULPT %d".formatted(i + 1), surface, midiProcessor,
-                    RingEncoder.Mode.SIGNED_BIT, 0.01);
+            final DjmRingEncoder sculptEncoder =
+                new DjmRingEncoder(port, i, "SCULPT %d".formatted(i + 1), surface, midiProcessor);
             sculptEncoders.add(sculptEncoder);
             layoutEncoder(i, 3, sculptEncoder, "SCULPT %d".formatted(i + 1));
             
-            final RingEncoder vocalEncoder =
-                new RingEncoder(
-                    port, i + 4, "VOCAL %d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
-                    0.01);
+            final DjmRingEncoder vocalEncoder =
+                new DjmRingEncoder(port, i + 4, "VOCAL %d".formatted(i + 1), surface, midiProcessor);
             vocalEncoders.add(vocalEncoder);
             layoutEncoder(i, 5, vocalEncoder, "VOCAL %d".formatted(i + 1));
             
             
-            final RingEncoder melodyEncoder =
-                new RingEncoder(
-                    port, i + 8, "MELODY %d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
-                    0.01);
+            final DjmRingEncoder melodyEncoder =
+                new DjmRingEncoder(port, i + 8, "MELODY %d".formatted(i + 1), surface, midiProcessor);
             melodyEncoders.add(melodyEncoder);
             layoutEncoder(i, 6, melodyEncoder, "MELODY %d".formatted(i + 1));
             
-            final RingEncoder baseLineEncoder =
-                new RingEncoder(
-                    port, i + 12, "BASELINE %d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
-                    0.01);
+            final DjmRingEncoder baseLineEncoder =
+                new DjmRingEncoder(port, i + 12, "BASELINE %d".formatted(i + 1), surface, midiProcessor);
             baselineEncoders.add(baseLineEncoder);
             layoutEncoder(i, 7, baseLineEncoder, "BASELINE %d".formatted(i + 1));
             
-            final RingEncoder drumEncoder =
-                new RingEncoder(
-                    port, i + 16, "DRUM %d".formatted(i + 1), surface, midiProcessor, RingEncoder.Mode.SIGNED_BIT,
-                    0.01);
+            final DjmRingEncoder drumEncoder =
+                new DjmRingEncoder(port, i + 16, "DRUM %d".formatted(i + 1), surface, midiProcessor);
             drumEncoders.add(drumEncoder);
             layoutEncoder(i, 8, drumEncoder, "DRUM %d".formatted(i + 1));
         }
@@ -110,6 +100,12 @@ public class DjmAHwElements {
     }
     
     private void layoutEncoder(final int index, final int row, final RingEncoder encoder, final String name) {
+        encoder.setBounds(
+            layoutLeftOffset + 10 + (KNOB_SIZE + 2) * index, topOffset + (KNOB_SIZE + VERT_GAP) * row, KNOB_SIZE);
+        encoder.setLabel(name);
+    }
+    
+    private void layoutEncoder(final int index, final int row, final DjmRingEncoder encoder, final String name) {
         encoder.setBounds(
             layoutLeftOffset + 10 + (KNOB_SIZE + 2) * index, topOffset + (KNOB_SIZE + VERT_GAP) * row, KNOB_SIZE);
         encoder.setLabel(name);
@@ -151,7 +147,7 @@ public class DjmAHwElements {
     }
     
     public void refreshHardware() {
-        for (final RingEncoder encoder : sculptEncoders) {
+        for (final DjmRingEncoder encoder : sculptEncoders) {
             encoder.refresh();
         }
     }
@@ -169,23 +165,23 @@ public class DjmAHwElements {
         return sideButtons;
     }
     
-    public List<RingEncoder> getSculptEncoders() {
+    public List<DjmRingEncoder> getSculptEncoders() {
         return sculptEncoders;
     }
     
-    public List<RingEncoder> getVocalEncoders() {
+    public List<DjmRingEncoder> getVocalEncoders() {
         return vocalEncoders;
     }
     
-    public List<RingEncoder> getBaselineEncoders() {
+    public List<DjmRingEncoder> getBaselineEncoders() {
         return baselineEncoders;
     }
     
-    public List<RingEncoder> getDrumEncoders() {
+    public List<DjmRingEncoder> getDrumEncoders() {
         return drumEncoders;
     }
     
-    public List<RingEncoder> getMelodyEncoders() {
+    public List<DjmRingEncoder> getMelodyEncoders() {
         return melodyEncoders;
     }
     

@@ -14,7 +14,8 @@ public enum ProjectPage implements PageIdent {
     AUX2_PRE_POST("AUX2 PRE/POST & EQ-LF-EQ-CT Buttons"),
     STEMS_FX_BUTTON("STEMS FX / 2RED BT/ DIM/ FLT"),
     STEMS_A_B("STEMS ENCODERS A-B"),
-    STEMS_C_D("STEMS ENCODERS C-D");
+    STEMS_C_D("STEMS ENCODERS C-D"),
+    EQ_CT_BUTTONS("EQ / CT");
     
     private final String name;
     
