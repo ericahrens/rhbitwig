@@ -144,6 +144,13 @@ public class DjmControllerExtension extends ControllerExtension {
             final VuMeter vuMeter = hwElements.getTrackMeters().get(i);
             mainLayer.addBinding(new VuTrackBinding(track, vuMeter));
         }
+        
+        final List<VuMeter> meters = hwElements.getDeckMeters();
+        mainLayer.addBinding(new VuTrackBinding(flexBank.getTrack(FixedTracks.FLG), meters.get(3)));
+        mainLayer.addBinding(new VuTrackBinding(flexBank.getTrack(FixedTracks.REV), meters.get(4)));
+        mainLayer.addBinding(new VuTrackBinding(flexBank.getTrack(FixedTracks.DLY), meters.get(5)));
+        mainLayer.addBinding(new VuTrackBinding(flexBank.getTrack(FixedTracks.MEL), meters.get(6)));
+        mainLayer.addBinding(new VuTrackBinding(flexBank.getTrack(FixedTracks.DRUM), meters.get(7)));
     }
     
     private void bindStemButtons(final RemoteFixed remotes, final DjmAHwElements hwElements) {
