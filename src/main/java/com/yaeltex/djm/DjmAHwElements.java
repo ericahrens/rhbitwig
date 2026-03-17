@@ -34,6 +34,8 @@ public class DjmAHwElements {
     private final VuMeter vuRight;
     private final double topOffset = 10;
     
+    // ENCODERS Sculpt configured to SignedBit   Left =  01-07  Right = 41-47
+    
     public DjmAHwElements(final ControllerHost host, final HardwareSurface surface,
         final DjmMidiProcessor midiProcessor, final int port) {
         layoutLeftOffset = port * 190;
@@ -169,20 +171,20 @@ public class DjmAHwElements {
         return sculptEncoders;
     }
     
-    public List<DjmRingEncoder> getVocalEncoders() {
-        return vocalEncoders;
-    }
-    
-    public List<DjmRingEncoder> getBaselineEncoders() {
-        return baselineEncoders;
-    }
-    
-    public List<DjmRingEncoder> getDrumEncoders() {
-        return drumEncoders;
-    }
-    
-    public List<DjmRingEncoder> getMelodyEncoders() {
-        return melodyEncoders;
-    }
+//    public List<DjmRingEncoder> getVocalEncoders() {
+//        return vocalEncoders;
+//    }
+//
+//    public List<DjmRingEncoder> getBaselineEncoders() {
+//        return baselineEncoders;
+//    }
+//
+//    public List<DjmRingEncoder> getDrumEncoders() {
+//        return drumEncoders;
+//    }
+//
+//    public List<DjmRingEncoder> getMelodyEncoders() {
+//        return melodyEncoders;
+//    }
     
 }

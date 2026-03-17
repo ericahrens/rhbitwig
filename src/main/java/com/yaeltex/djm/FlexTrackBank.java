@@ -20,15 +20,19 @@ public class FlexTrackBank {
         
         public SingleTrackBank(final ControllerHost host, final FixedTracks ident, final int sends, final int scenes) {
             followTrack = host.createCursorTrack("cursor"+ident.getName(), ident.getName(), sends, scenes, false);
+            
             this.ident = ident;
+            followTrack.isPinned().markInterested();
+            followTrack.name().markInterested();
             followTrack.name().addValueObserver(name->{
                 DjmControllerExtension.println(" FC <%s> %s",ident,name);
             });
         }
         
         public void moveTo(final Channel channel) {
-            channel.name().get();
+            DjmControllerExtension.println(" MOV %s",channel.name().get());
             followTrack.selectChannel(channel);
+            followTrack.isPinned().set(true);
         }
         
         public FixedTracks getIdent() {

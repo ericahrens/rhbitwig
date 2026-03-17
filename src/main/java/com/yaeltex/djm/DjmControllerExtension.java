@@ -66,10 +66,11 @@ public class DjmControllerExtension extends ControllerExtension {
         
         bindButtonsB(remotes, hwElementsB);
         bindVuMeters(viewControl, hwElementsB);
+        bindVuMeterDjmA(viewControl, hwElementsA);
         binAuxSends(remotes.getRemotes(ProjectPage.AUX_SENDS), hwElementsA);
         bindAuxButtons(remotes.getRemotes(ProjectPage.AUX2_PRE_POST), hwElementsA);
         bindSculpt(remotes, hwElementsA);
-        bindLines(remotes, hwElementsA);
+        //bindLines(remotes, hwElementsA);
         bindStemButtons(remotes.getRemotes(ProjectPage.STEMS_FX_BUTTON), hwElementsA);
         clearTexts();
         
@@ -78,7 +79,7 @@ public class DjmControllerExtension extends ControllerExtension {
         //hwElementsA.refreshHardware();
     }
     
-    private void handleHwReady() {
+     private void handleHwReady() {
         for (int i = 0; i < 20; i++) {
             midiProcessor.sendNoteColor(0, 0, i, YaeltexButtonLedState.GREEN);
             midiProcessor.sendNoteColor(0, 0, i, YaeltexButtonLedState.OFF);
@@ -125,8 +126,14 @@ public class DjmControllerExtension extends ControllerExtension {
                         mainLayer, remoteEfx.getParameter(trackIndex + 4), YaeltexButtonLedState.BLUE);
                 }
             }
-            
         }
+    }
+    
+    private void bindVuMeterDjmA(final DjmViewControl viewControl, final DjmAHwElements hwElements) {
+        final VuMeter vuLeft = hwElements.getVuLeft();
+        final VuMeter vuRight = hwElements.getVuRight();
+        final FlexTrackBank flexBank = viewControl.getFlexBank();
+        mainLayer.addBinding(new VuStereoTrackBinding(flexBank.getTrack(FixedTracks.BOOTH), vuLeft, vuRight));
     }
     
     private void bindVuMeters(final DjmViewControl viewControl, final DjmBHwElements hwElements) {
@@ -155,13 +162,8 @@ public class DjmControllerExtension extends ControllerExtension {
     
     private void bindStemButtons(final RemoteFixed remotes, final DjmAHwElements hwElements) {
         final List<RgbButton> buttons = hwElements.getSideButtons();
-        
-        for (int i = 0; i < 4; i++) {
-            final RgbButton fxButton = buttons.get(i + 12);
-            fxButton.bindToggleValueDimmed(mainLayer, remotes.getParameter(i), YaeltexButtonLedState.YELLOW);
-            final RgbButton dmButton = buttons.get(i + 8);
-            dmButton.bindToggleValueDimmed(mainLayer, remotes.getParameter(i + 4), YaeltexButtonLedState.GREEN);
-        }
+        buttons.get(10).bindToggleValueDimmed(mainLayer, remotes.getParameter(6), YaeltexButtonLedState.PURPLE);
+        buttons.get(11).bindToggleValueDimmed(mainLayer, remotes.getParameter(7), YaeltexButtonLedState.RED);
     }
     
     private void bindSculpt(final TargetRemotes<ProjectPage> remotes, final DjmAHwElements hwElements) {
@@ -205,30 +207,30 @@ public class DjmControllerExtension extends ControllerExtension {
         }
     }
     
-    private void bindLines(final TargetRemotes<ProjectPage> remotes, final DjmAHwElements hwElements) {
-        final RemoteFixed abRemotes = remotes.getRemotes(ProjectPage.STEMS_A_B);
-        final RemoteFixed cdRemotes = remotes.getRemotes(ProjectPage.STEMS_C_D);
-        
-        for (int i = 0; i < 4; i++) {
-            final DjmRingEncoder vocalEncoder = hwElements.getVocalEncoders().get(i);
-            final DjmRingEncoder melodyEncoder = hwElements.getMelodyEncoders().get(i);
-            final DjmRingEncoder bassEncoder = hwElements.getBaselineEncoders().get(i);
-            final DjmRingEncoder drumEncoder = hwElements.getDrumEncoders().get(i);
-            final RemoteFixed remotePage = i < 2 ? abRemotes : cdRemotes;
-            final int paramOffset = (i % 2) * 4;
-            vocalEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset));
-            vocalEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.PURPLE);
-            
-            melodyEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 1));
-            melodyEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.BLUE);
-            
-            bassEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 2));
-            bassEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.DEEP_GREEN);
-            
-            drumEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 3));
-            drumEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.AQUA);
-        }
-    }
+//    private void bindLines(final TargetRemotes<ProjectPage> remotes, final DjmAHwElements hwElements) {
+//        final RemoteFixed abRemotes = remotes.getRemotes(ProjectPage.STEMS_A_B);
+//        final RemoteFixed cdRemotes = remotes.getRemotes(ProjectPage.STEMS_C_D);
+//
+//        for (int i = 0; i < 4; i++) {
+//            final DjmRingEncoder vocalEncoder = hwElements.getVocalEncoders().get(i);
+//            final DjmRingEncoder melodyEncoder = hwElements.getMelodyEncoders().get(i);
+//            final DjmRingEncoder bassEncoder = hwElements.getBaselineEncoders().get(i);
+//            final DjmRingEncoder drumEncoder = hwElements.getDrumEncoders().get(i);
+//            final RemoteFixed remotePage = i < 2 ? abRemotes : cdRemotes;
+//            final int paramOffset = (i % 2) * 4;
+//            vocalEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset));
+//            vocalEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.PURPLE);
+//
+//            melodyEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 1));
+//            melodyEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.BLUE);
+//
+//            bassEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 2));
+//            bassEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.DEEP_GREEN);
+//
+//            drumEncoder.bindParameter(mainLayer, remotePage.getParameter(paramOffset + 3));
+//            drumEncoder.bindRingLightColor(mainLayer, () -> YaeltexButtonLedState.AQUA);
+//        }
+//    }
     
     private void setMode(final SculptMode mode) {
         if (this.sculptMode != mode) {

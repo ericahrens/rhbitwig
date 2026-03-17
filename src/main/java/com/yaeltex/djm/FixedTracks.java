@@ -13,6 +13,7 @@ public enum FixedTracks implements PageIdent {
     DLY("Vdelay"),
     MEL("VMELODY (SYNTH)"),
     DRUM("VDRUMS ONLY"),
+    BOOTH("VBOOTH"),
     ;
     
     private final String name;
