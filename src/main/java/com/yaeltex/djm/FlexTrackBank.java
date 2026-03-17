@@ -19,18 +19,17 @@ public class FlexTrackBank {
         private final CursorTrack followTrack;
         
         public SingleTrackBank(final ControllerHost host, final FixedTracks ident, final int sends, final int scenes) {
-            followTrack = host.createCursorTrack("cursor"+ident.getName(), ident.getName(), sends, scenes, false);
+            followTrack = host.createCursorTrack("cursor" + ident.getName(), ident.getName(), sends, scenes, false);
             
             this.ident = ident;
             followTrack.isPinned().markInterested();
             followTrack.name().markInterested();
-            followTrack.name().addValueObserver(name->{
-                DjmControllerExtension.println(" FC <%s> %s",ident,name);
+            followTrack.name().addValueObserver(name -> {
+                DjmControllerExtension.println(" FC <%s> %s", ident, name);
             });
         }
         
         public void moveTo(final Channel channel) {
-            DjmControllerExtension.println(" MOV %s",channel.name().get());
             followTrack.selectChannel(channel);
             followTrack.isPinned().set(true);
         }
@@ -56,7 +55,7 @@ public class FlexTrackBank {
         }
         final FixedTracks[] fixedTracks = FixedTracks.values();
         for (int i = 0; i < fixedTracks.length; i++) {
-            if(!fixedTracks[i].getName().isEmpty()){
+            if (!fixedTracks[i].getName().isEmpty()) {
                 lookup.put(fixedTracks[i], new SingleTrackBank(host, fixedTracks[i], sends, scenes));
                 nameLookup.put(fixedTracks[i].getName(), new SingleTrackBank(host, fixedTracks[i], sends, scenes));
             }
@@ -66,7 +65,7 @@ public class FlexTrackBank {
     private void trackNameChanged(final int index, final String name, final Channel track) {
         final SingleTrackBank fixedTrack = nameLookup.get(name);
         if (fixedTrack != null) {
-            DjmControllerExtension.println(" MOVE TRACK %d %s <= %s",index,name, fixedTrack.ident);
+            DjmControllerExtension.println(" MOVE TRACK %d %s <= %s", index, name, fixedTrack.ident);
             fixedTrack.moveTo(track);
         }
     }
