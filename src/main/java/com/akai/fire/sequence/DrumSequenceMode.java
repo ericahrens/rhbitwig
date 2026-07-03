@@ -27,7 +27,8 @@ public class DrumSequenceMode extends Layer {
     private final IntSetValue heldSteps = new IntSetValue();
     private final Set<Integer> addedSteps = new HashSet<>();
     private final Set<Integer> modifiedSteps = new HashSet<>();
-    private final HashMap<Integer, NoteData> expectedNoteChanges = new HashMap<>();
+    private final HashMap<Integer, NoteStep> expectedNoteChanges = new HashMap<>();
+    private final HashMap<Integer, com.akai.fire.sequence.PadHandler.NoteData> expectedNoteDataChanges = new HashMap<>();
 
     private final NoteStep[] assignments = new NoteStep[32];
 
@@ -484,9 +485,14 @@ public class DrumSequenceMode extends Layer {
     
         assignments[newStep] = noteStep;
     
-        final NoteData data = expectedNoteChanges.remove(newStep);
-        if (data != null) {
-            data.applyTo(noteStep);
+        final NoteStep expected = expectedNoteChanges.remove(newStep);
+        if (expected != null) {
+            applyValues(noteStep, expected);
+        }
+        if (expectedNoteDataChanges.containsKey(newStep)) {
+            final com.akai.fire.sequence.PadHandler.NoteData data = expectedNoteDataChanges.get(newStep);
+            expectedNoteDataChanges.remove(newStep);
+            applyValuesFromData(noteStep, data);
         }
     }
 
@@ -500,6 +506,26 @@ public class DrumSequenceMode extends Layer {
         dest.setRepeatVelocityEnd(src.repeatVelocityEnd());
         dest.setRecurrence(src.recurrenceLength(), src.recurrenceMask());
         dest.setOccurrence(src.occurrence());
+    }
+
+    private void applyValuesFromData(final NoteStep dest, final com.akai.fire.sequence.PadHandler.NoteData src) {
+        try {
+            dest.setVelocity(src.velocity / 127.0);
+            dest.setTranspose(src.transpose);
+            dest.setDuration(src.duration);
+            dest.setChance(src.chance);
+            dest.setTimbre(src.timbre);
+            dest.setPressure(src.pressure);
+            dest.setVelocitySpread(src.velocitySpread);
+            dest.setRepeatCount(src.repeatCount);
+            dest.setRepeatCurve(src.repeatCurve);
+            dest.setRepeatVelocityCurve(src.repeatVelocityCurve);
+            dest.setRepeatVelocityEnd(src.repeatVelocityEnd);
+            dest.setRecurrence(src.recurrenceLength, src.recurrenceMask);
+            dest.setOccurrence(src.occurrence);
+        } catch (final Exception e) {
+            // ignore any failures applying data
+        }
     }
 
     private void handlePlayingStep(final int playingStep) {
@@ -573,8 +599,12 @@ public class DrumSequenceMode extends Layer {
         return padHandler.isPadBeingHeld();
     }
 
-    public void registerExpectedNoteChange(final int x, final NoteData data) {
-        expectedNoteChanges.put(x, data);
+    public void registerExpectedNoteChange(final int x, final NoteStep noteStep) {
+        expectedNoteChanges.put(x, noteStep);
+    }
+
+    public void registerExpectedNoteData(final int x, final com.akai.fire.sequence.PadHandler.NoteData data) {
+        expectedNoteDataChanges.put(x, data);
     }
 
     public BooleanValueObject getLengthDisplay() {

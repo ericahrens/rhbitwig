@@ -57,6 +57,7 @@ public class PadHandler {
         int x;
         int velocity;
         double duration;
+        double transpose;
         double chance;
         double timbre;
         double pressure;
@@ -71,6 +72,7 @@ public class PadHandler {
 
         NoteData(NoteStep note) {
             this.x = note.x();
+            this.transpose = note.transpose();
             this.velocity = (int) Math.round(note.velocity() * 127.0);
             if (this.velocity < 1) this.velocity = 1;
             if (this.velocity > 127) this.velocity = 127;
@@ -90,6 +92,7 @@ public class PadHandler {
 
         void applyTo(NoteStep note) {
             note.setVelocity(this.velocity / 127.0);
+            note.setTranspose(this.transpose);
             note.setDuration(this.duration);
             note.setChance(this.chance);
             note.setTimbre(this.timbre);
@@ -101,6 +104,24 @@ public class PadHandler {
             note.setRepeatVelocityEnd(this.repeatVelocityEnd);
             note.setRecurrence(this.recurrenceLength, this.recurrenceMask);
             note.setOccurrence(this.occurrence);
+        }
+    }
+
+    private void applyNoteDataToStep(final NoteData data) {
+        final List<NoteStep> notes = parent.getOnNotes();
+        if (notes == null || notes.isEmpty()) {
+            return;
+        }
+
+        for (final NoteStep step : notes) {
+            if (step != null && step.x() == data.x) {
+                try {
+                    data.applyTo(step);
+                } catch (Exception e) {
+                    // ignore
+                }
+                return;
+            }
         }
     }
 
@@ -280,7 +301,9 @@ public class PadHandler {
             if (data != null) {
                 try {
                     cursorClip.setStep(data.x, 0, data.velocity, data.duration);
-                    parent.registerExpectedNoteChange(data.x, data);
+                    parent.registerExpectedNoteData(data.x, data);
+                    // fallback: try to apply immediately as well
+                    applyNoteDataToStep(data);
                 } catch (Exception e) {
                     // Игнорираме
                 }
