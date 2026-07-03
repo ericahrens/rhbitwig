@@ -27,7 +27,7 @@ public class DrumSequenceMode extends Layer {
     private final IntSetValue heldSteps = new IntSetValue();
     private final Set<Integer> addedSteps = new HashSet<>();
     private final Set<Integer> modifiedSteps = new HashSet<>();
-    private final HashMap<Integer, NoteStep> expectedNoteChanges = new HashMap<>();
+    private final HashMap<Integer, NoteData> expectedNoteChanges = new HashMap<>();
 
     private final NoteStep[] assignments = new NoteStep[32];
 
@@ -481,12 +481,12 @@ public class DrumSequenceMode extends Layer {
 
     private void handleNoteStep(final NoteStep noteStep) {
         final int newStep = noteStep.x();
-
+    
         assignments[newStep] = noteStep;
-        if (expectedNoteChanges.containsKey(newStep)) {
-            final NoteStep previousStep = expectedNoteChanges.get(newStep);
-            expectedNoteChanges.remove(newStep);
-            applyValues(noteStep, previousStep);
+    
+        final NoteData data = expectedNoteChanges.remove(newStep);
+        if (data != null) {
+            data.applyTo(noteStep);
         }
     }
 
@@ -573,8 +573,8 @@ public class DrumSequenceMode extends Layer {
         return padHandler.isPadBeingHeld();
     }
 
-    public void registerExpectedNoteChange(final int x, final NoteStep noteStep) {
-        expectedNoteChanges.put(noteStep.x(), noteStep);
+    public void registerExpectedNoteChange(final int x, final NoteData data) {
+        expectedNoteChanges.put(x, data);
     }
 
     public BooleanValueObject getLengthDisplay() {
