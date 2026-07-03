@@ -53,7 +53,7 @@ public class PadHandler {
     private boolean isCopyHeld = false;
 
     // КЛАС ЗА СЪХРАНЕНИЕ НА ВСИЧКИ ДАННИ НА НОТА
-    private static class NoteData {
+    public static class NoteData{
         int x;
         int velocity;
         double duration;
@@ -280,7 +280,7 @@ public class PadHandler {
             if (data != null) {
                 try {
                     cursorClip.setStep(data.x, 0, data.velocity, data.duration);
-                    parent.registerExpectedNoteChange(data.x, null);
+                    parent.registerExpectedNoteChange(data.x, data);
                 } catch (Exception e) {
                     // Игнорираме
                 }
