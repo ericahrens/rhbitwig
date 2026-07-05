@@ -6,7 +6,7 @@
 * Allen & Heath Xone:K2 specialized DJ Setup
 * Akai Fire Drum Sequencer/Editor
 
-* - Akai Fire Copy & Paste + Ratchet operator - Correct Workflow First tap → tap a pad
+* Akai Fire Copy & Paste + Ratchet operator - Correct Workflow First tap → tap a pad
 to mark it as the source and copy its notes to the buffer (this loads the notes you want to paste)
 Hold COPY button → keeps the buffer locked and ready for pasting Tap any other pad 
 (while holding COPY) → pastes the copied notes to that pad 
