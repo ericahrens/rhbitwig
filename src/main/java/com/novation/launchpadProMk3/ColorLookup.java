@@ -7,8 +7,8 @@ import com.bitwig.extension.api.Color;
 import com.bitwig.extensions.rh.DawColor;
 
 public class ColorLookup {
-	private static Map<Integer, DawColor> lookupMap = new HashMap<>();
-	private static Map<Integer, LpColor> dc = new HashMap<>();
+	private static final Map<Integer, DawColor> lookupMap = new HashMap<>();
+	private static final Map<Integer, LpColor> dc = new HashMap<>();
 
 	static {
 		final DawColor[] colors = DawColor.values();
@@ -50,30 +50,69 @@ public class ColorLookup {
 		dc.put(dawColor.getLookupIndex(), lpColor);
 	}
 
-	public static LpColor getColor(Color color, LpColor black) {
-		final int rv = (int) Math.floor(color.getRed255());
-		final int gv = (int) Math.floor(color.getGreen255());
-		final int bv = (int) Math.floor(color.getBlue255());
-		return dc.get(rv << 16 | gv << 8 | bv);
+	public static LpColor getColor(final Color color, final LpColor defaultColor) {
+		return getColor(
+				color.getRed255() / 255.0,
+				color.getGreen255() / 255.0,
+				color.getBlue255() / 255.0,
+				defaultColor);
 	}
 
 	static LpColor getColor(final double red, final double green, final double blue) {
-		final int rv = (int) Math.floor(red * 255);
-		final int gv = (int) Math.floor(green * 255);
-		final int bv = (int) Math.floor(blue * 255);
-		return dc.get(rv << 16 | gv << 8 | bv);
+		return getColor(red, green, blue, LpColor.BLACK);
 	}
 
-	static LpColor getColor(final double red, final double green, final double blue, final LpColor defaultColor) {
-		final int rv = (int) Math.floor(red * 255);
-		final int gv = (int) Math.floor(green * 255);
-		final int bv = (int) Math.floor(blue * 255);
-		final LpColor color = dc.get(rv << 16 | gv << 8 | bv);
-		return color != null ? color : defaultColor;
+	static LpColor getColor(final double red,
+							final double green,
+							final double blue,
+							final LpColor defaultColor) {
+
+		final int rv = (int) Math.round(red * 255);
+		final int gv = (int) Math.round(green * 255);
+		final int bv = (int) Math.round(blue * 255);
+
+		final int key = (rv << 16) | (gv << 8) | bv;
+
+		final LpColor exact = dc.get(key);
+		if (exact != null) {
+			return exact;
+		}
+
+		return findClosestColor(rv, gv, bv, defaultColor);
+	}
+
+	private static LpColor findClosestColor(final int rv,
+											final int gv,
+											final int bv,
+											final LpColor defaultColor) {
+
+		LpColor best = defaultColor;
+		int bestDistance = Integer.MAX_VALUE;
+
+		for (Map.Entry<Integer, LpColor> entry : dc.entrySet()) {
+
+			final int rgb = entry.getKey();
+
+			final int r = (rgb >> 16) & 0xFF;
+			final int g = (rgb >> 8) & 0xFF;
+			final int b = rgb & 0xFF;
+
+			final int dr = rv - r;
+			final int dg = gv - g;
+			final int db = bv - b;
+
+			final int distance = dr * dr + dg * dg + db * db;
+
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				best = entry.getValue();
+			}
+		}
+
+		return best;
 	}
 
 	static DawColor get(final int index) {
 		return lookupMap.get(index);
 	}
-
 }

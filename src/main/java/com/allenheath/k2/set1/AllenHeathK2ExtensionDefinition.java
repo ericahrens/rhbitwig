@@ -15,12 +15,12 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public String getName() {
-        return "K2 DJSet 2022";
+        return "K2 DJSet 2025";
     }
 
     @Override
     public String getAuthor() {
-        return "E.Ahrens/R.Hawtin";
+        return "E.Ahrens/R.Hawtin/DPetkov";
     }
 
     @Override

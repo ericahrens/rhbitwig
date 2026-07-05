@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.yaeltex</groupId>
     <artifactId>yaeltexarpcontrol</artifactId>
     <packaging>jar</packaging>
     <name>YaeltexArpControl</name>
-    <version>0.1</version>
+    <version>0.2</version>
 
     <repositories>
         <repository>
@@ -21,29 +23,32 @@
         <dependency>
             <groupId>com.bitwig</groupId>
             <artifactId>extension-api</artifactId>
-            <version>17</version>
+            <version>25</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- компилатор с Java 17 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.12.1</version>
                 <configuration>
                     <optimize>true</optimize>
-                    <fork>true</fork>
-                    <source>11</source>
-                    <target>11</target>
+                    <fork>false</fork>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>UTF-8</encoding>
                     <maxmem>1024m</maxmem>
                 </configuration>
             </plugin>
+
+            <!-- копиране / преименуване -->
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
                 <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.0.1</version>
                 <executions>
                     <execution>
                         <id>rename-file</id>
@@ -52,18 +57,12 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>${project.build.directory}/${project.build.finalName}.jar
-                            </sourceFile>
-                            <destinationFile>
-                                ${bitwig.extension.directory}/HawtinExtensionsBw4.bwextension
-                            </destinationFile>
+                            <sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
+                            <destinationFile>${bitwig.extension.directory}/YaeltexArpControl.bwextension</destinationFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
-
 </project>
-

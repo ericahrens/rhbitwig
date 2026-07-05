@@ -48,6 +48,83 @@ public class PadHandler {
     private final DisplayTarget displayTarget;
     private final DisplayInfo padDisplayInfo;
 
+    // БУФЕР ЗА КОПИРАНИТЕ НОТИ
+    private List<NoteData> copyBuffer = null;
+    private boolean isCopyHeld = false;
+
+    // КЛАС ЗА СЪХРАНЕНИЕ НА ВСИЧКИ ДАННИ НА НОТА
+    public static class NoteData{
+        int x;
+        int velocity;
+        double duration;
+        double transpose;
+        double chance;
+        double timbre;
+        double pressure;
+        double velocitySpread;
+        int repeatCount;
+        double repeatCurve;
+        double repeatVelocityCurve;
+        double repeatVelocityEnd;
+        int recurrenceLength;
+        int recurrenceMask;
+        NoteOccurrence occurrence;
+
+        NoteData(NoteStep note) {
+            this.x = note.x();
+            this.transpose = note.transpose();
+            this.velocity = (int) Math.round(note.velocity() * 127.0);
+            if (this.velocity < 1) this.velocity = 1;
+            if (this.velocity > 127) this.velocity = 127;
+            this.duration = Math.max(note.duration(), 0.25);
+            this.chance = note.chance();
+            this.timbre = note.timbre();
+            this.pressure = note.pressure();
+            this.velocitySpread = note.velocitySpread();
+            this.repeatCount = note.repeatCount();
+            this.repeatCurve = note.repeatCurve();
+            this.repeatVelocityCurve = note.repeatVelocityCurve();
+            this.repeatVelocityEnd = note.repeatVelocityEnd();
+            this.recurrenceLength = note.recurrenceLength();
+            this.recurrenceMask = note.recurrenceMask();
+            this.occurrence = note.occurrence();
+        }
+
+        void applyTo(NoteStep note) {
+            note.setVelocity(this.velocity / 127.0);
+            note.setTranspose(this.transpose);
+            note.setDuration(this.duration);
+            note.setChance(this.chance);
+            note.setTimbre(this.timbre);
+            note.setPressure(this.pressure);
+            note.setVelocitySpread(this.velocitySpread);
+            note.setRepeatCount(this.repeatCount);
+            note.setRepeatCurve(this.repeatCurve);
+            note.setRepeatVelocityCurve(this.repeatVelocityCurve);
+            note.setRepeatVelocityEnd(this.repeatVelocityEnd);
+            note.setRecurrence(this.recurrenceLength, this.recurrenceMask);
+            note.setOccurrence(this.occurrence);
+        }
+    }
+
+    private void applyNoteDataToStep(final NoteData data) {
+        final List<NoteStep> notes = parent.getOnNotes();
+        if (notes == null || notes.isEmpty()) {
+            return;
+        }
+
+        for (final NoteStep step : notes) {
+            if (step != null && step.x() == data.x) {
+                try {
+                    data.applyTo(step);
+                } catch (Exception e) {
+                    // ignore
+                }
+                return;
+            }
+        }
+    }
+
     public PadHandler(final AkaiFireDrumSeqExtension driver, final DrumSequenceMode parent, final Layer mainLayer,
                       final Layer muteLayer, final Layer soloLayer) {
         this.parent = parent;
@@ -117,14 +194,36 @@ public class PadHandler {
         final BiColorButton downNavButon = driver.getButton(NoteAssign.PATTERN_DOWN);
         downNavButon.markPressedInteressed();
         downNavButon.bindPressed(mainLayer, this::scrollBackward, () -> canScrollDown(downNavButon));
+
+        // COPY БУТОН
+        final BiColorButton copyButton = driver.getButton(NoteAssign.MUTE_3);
+        copyButton.bindPressed(mainLayer, pressed -> {
+            if (!pressed) {
+                isCopyHeld = false;
+                parent.getOled().paramInfo("COPY", "Released");
+            } else {
+                isCopyHeld = true;
+                // АКО ИМА БУФЕР, ПОКАЗВАМЕ
+                if (copyBuffer != null && !copyBuffer.isEmpty()) {
+                    parent.getOled().paramInfo("COPY", "Buffer ready - " + copyBuffer.size() + " notes");
+                } else {
+                    parent.getOled().paramInfo("COPY", "Select source pad first");
+                }
+            }
+        }, () -> BiColorLightState.GREEN_FULL);
     }
 
     private void handlePadSelection(final PadContainer pad, final boolean pressed) {
         if (!pressed) {
             padsHeld.remove(pad.index);
         } else {
-            if (parent.isCopyHeld()) {
-                doNotesPadCopy(pad);
+            if (isCopyHeld) {
+                // COPY + PAD = PASTE
+                if (copyBuffer != null && !copyBuffer.isEmpty()) {
+                    doPaste(pad);
+                } else {
+                    parent.getOled().paramInfo("PASTE", "No buffer! Select source first");
+                }
             } else if (parent.isDeleteHeld()) {
                 if (pad.index == selectedPadIndex) {
                     cursorClip.clearStepsAtY(0, 0);
@@ -133,20 +232,91 @@ public class PadHandler {
                     pad.pad.selectInEditor();
                 }
             } else {
+                // НОРМАЛНО МАРКИРАНЕ НА ПАД - ТОВА КОПИРА В БУФЕРА
                 pad.pad.selectInEditor();
                 padsHeld.add(pad.index);
+                // АВТОМАТИЧНО КОПИРАНЕ В БУФЕРА ПРИ МАРКИРАНЕ
+                doAutoCopySelectedPad();
             }
         }
     }
 
-    void executeCopy(final List<NoteStep> notes, final boolean copyParams) {
-        cursorClip.clearStepsAtY(0, 0);
+    /**
+     * АВТОМАТИЧНО КОПИРАНЕ ПРИ МАРКИРАНЕ НА ПАД
+     */
+    private void doAutoCopySelectedPad() {
+        if (selectedPad == null) {
+            return;
+        }
+        
+        List<NoteStep> notes = parent.getOnNotes();
+        if (notes == null || notes.isEmpty()) {
+            copyBuffer = null;
+            parent.getOled().paramInfo("COPY", "No notes on this pad");
+            return;
+        }
+        
+        copyBuffer = new ArrayList<>();
         for (final NoteStep noteStep : notes) {
-            cursorClip.setStep(noteStep.x(), 0, (int) (noteStep.velocity() * 127), noteStep.duration());
-            if (copyParams) {
-                parent.registerExpectedNoteChange(noteStep.x(), noteStep);
+            if (noteStep != null) {
+                try {
+                    copyBuffer.add(new NoteData(noteStep));
+                } catch (Exception e) {
+                    // Игнорираме
+                }
             }
         }
+        
+        parent.getOled().paramInfo("COPIED", "Pad " + (selectedPadIndex + 1) + " - " + copyBuffer.size() + " notes");
+    }
+
+    /**
+     * PASTE - ИЗПЪЛНЯВА СЕ ДВА ПЪТИ
+     */
+    private void doPaste(final PadContainer pad) {
+        if (copyBuffer == null || copyBuffer.isEmpty()) {
+            parent.getOled().paramInfo("PASTE", "No buffer!");
+            return;
+        }
+        
+        pad.pad.selectInEditor();
+        cursorClip.scrollToKey(drumScrollOffset + pad.index);
+        
+        // ПЪРВО PASTE
+        doSinglePaste(copyBuffer);
+        
+        // ВТОРО PASTE - гарантира, че нотите ще звучат
+        doSinglePaste(copyBuffer);
+        
+        parent.getOled().paramInfo("PASTED", "Pad " + (pad.index + 1) + " - " + copyBuffer.size() + " notes");
+    }
+
+    /**
+     * ЕДИНСТВЕНО PASTE
+     */
+    private void doSinglePaste(final List<NoteData> notesData) {
+        cursorClip.clearStepsAtY(0, 0);
+        
+        for (final NoteData data : notesData) {
+            if (data != null) {
+                try {
+                    cursorClip.setStep(data.x, 0, data.velocity, data.duration);
+                    parent.registerExpectedNoteData(data.x, data);
+                    // fallback: try to apply immediately as well
+                    applyNoteDataToStep(data);
+                } catch (Exception e) {
+                    // Игнорираме
+                }
+            }
+        }
+    }
+
+    public void clearCopyBuffer() {
+        copyBuffer = null;
+    }
+
+    void executeCopy(final List<NoteStep> notes, final boolean copyParams) {
+        // Този метод вече не се използва
     }
 
     void executeClear(final int origIndex) {
@@ -156,12 +326,6 @@ public class PadHandler {
         }
     }
 
-    /**
-     * The Pad has to be another pad then the currently selected pad. Copies notes
-     * to that destination.
-     *
-     * @param pad destination pad of copy.
-     */
     private void doNotesPadCopy(final PadContainer pad) {
         if (pad.index != selectedPadIndex) {
             final List<NoteStep> notes = parent.getOnNotes();
@@ -188,7 +352,7 @@ public class PadHandler {
             if (pendingAction.getType() == Type.CLEAR) {
                 executeClear(pendingAction.getSrcPadIndex());
             } else if (pendingAction.getType() == Type.COPY_PAD) {
-                executeCopy(pendingAction.getCopyNotes(), !parent.isShiftHeld());
+                doPaste(pads.get(selectedPadIndex));
             }
             parent.clearPendingAction();
         }

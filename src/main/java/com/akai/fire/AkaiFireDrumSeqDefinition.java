@@ -25,7 +25,7 @@ public class AkaiFireDrumSeqDefinition extends ControllerExtensionDefinition {
 
     @Override
     public String getVersion() {
-        return "0.8";
+        return "0.81";
     }
 
     @Override
@@ -55,7 +55,7 @@ public class AkaiFireDrumSeqDefinition extends ControllerExtensionDefinition {
 
     @Override
     public int getRequiredAPIVersion() {
-        return 17;
+        return 18;
     }
 
     @Override

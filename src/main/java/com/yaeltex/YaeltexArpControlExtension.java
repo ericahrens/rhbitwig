@@ -5,7 +5,6 @@ import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.*;
-import com.bitwig.extensions.debug.RemoteConsole;
 import com.bitwig.extensions.framework.Layers;
 import com.bitwig.extensions.rh.Midi;
 import com.yaeltex.device.ArpInstance;
@@ -199,10 +198,10 @@ public class YaeltexArpControlExtension extends ControllerExtension {
             }
             final Parameter rate = getFocussedDevice().getRateParam();
             timeWarpEnterValue.setValue(rate.getAsDouble());
-            RemoteConsole.out.println(" TW PRESSED enter Rate = {} ", rate.getAsDouble());
+            //RemoteConsole.out.println(" TW PRESSED enter Rate = {} ", rate.getAsDouble());
         });
         mainLayer.bindReleased(timeWarpButton.getHwButton(), () -> {
-            RemoteConsole.out.println(" TW REleased ");
+            //RemoteConsole.out.println(" TW REleased ");
             final FocusDevice device = getFocussedDevice();
             if (!device.isArp()) {
                 return;
@@ -590,8 +589,6 @@ public class YaeltexArpControlExtension extends ControllerExtension {
     }
 
     public ArpInstance getArpInstance(final String trackName, final String presetName) {
-        RemoteConsole.out.println("GET Arp Instance tn={}  pn=<{}> tnofai={}", trackName, presetName,
-                arpInstances.size());
         final Optional<ArpInstance> arpOpt = arpInstances //
                 .stream() //
                 .filter(arp -> arp.matches(trackName, presetName)) //
