@@ -1,11 +1,6 @@
 package com.akai.fire.sequence;
 
 import java.util.List;
-
-import com.akai.fire.sequence.SequencEncoderHandler.NoteDoubleGetter;
-import com.akai.fire.sequence.SequencEncoderHandler.NoteDoubleSetter;
-import com.akai.fire.sequence.SequencEncoderHandler.NoteIntGetter;
-import com.akai.fire.sequence.SequencEncoderHandler.NoteIntSetter;
 import com.bitwig.extension.controller.api.NoteStep;
 
 public enum NoteStepAccess implements EncoderAccess {

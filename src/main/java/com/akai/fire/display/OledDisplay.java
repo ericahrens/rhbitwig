@@ -22,7 +22,10 @@ public class OledDisplay {
 	private final MidiOut midiOut;
 	private boolean inGraphicsMode = false;
 	private long clearTask = -1;
-	private long logoBlock;
+	private long logoBlock = -1;
+	
+	// 30 СЕКУНДИ ПРЕДИ ИЗЧИСТВАНЕ
+	private static final long CLEAR_DELAY_MS = 30000;
 
 	public enum Fill {
 		Empty, Solid, Fifty, Hatch;
@@ -270,7 +273,8 @@ public class OledDisplay {
 	}
 
 	public void notifyBlink(final int blinkTicks) {
-		if (clearTask > 0 && System.currentTimeMillis() - clearTask > 1500) {
+		// 30 СЕКУНДИ ПРЕДИ ИЗЧИСТВАНЕ
+		if (clearTask > 0 && System.currentTimeMillis() - clearTask > CLEAR_DELAY_MS) {
 			clearScreen();
 			clearTask = -1;
 		}
@@ -278,5 +282,4 @@ public class OledDisplay {
 			logoBlock = -1;
 		}
 	}
-
 }

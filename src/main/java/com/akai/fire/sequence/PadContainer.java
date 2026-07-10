@@ -61,12 +61,10 @@ class PadContainer {
         pad.name().markInterested();
         pad.addIsSelectedInEditorObserver(selected -> handlePadSelection(index, selected));
         pad.exists().addValueObserver(exists -> this.exists = exists);
-        //padColor = fixedPadColorTable[index];
         padColor = RgbLigthState.OFF;
         pad.color().addValueObserver((r, g, b) -> {
             padColor = ColorLookup.getColor(r, g, b);
             bitwigPadColor = ColorLookup.getColor(r, g, b);
-            // padColor = fixedPadColorTable[index];
             if (selected) {
                 this.padHandler.currentPadColor = bitwigPadColor;
             }
@@ -74,7 +72,6 @@ class PadContainer {
         volumeBinding = new ParameterDisplayBinding(0, index, pad.volume(), padHandler.getDiplayTarget(), false);
         panBinding = new ParameterDisplayBinding(1, index, pad.pan(), padHandler.getDiplayTarget(), true);
     }
-
 
     public void bindParameters(final Layer layer) {
         layer.addBinding(volumeBinding);
@@ -128,9 +125,6 @@ class PadContainer {
     }
 
     public RgbLigthState getColor() {
-//        if (!exists) {
-//            return RgbLigthState.OFF;
-//        }
         if (selected) {
             return playing.returnTrueFalse(padColor.getBrightest(), padColor.getBrightend());
         }

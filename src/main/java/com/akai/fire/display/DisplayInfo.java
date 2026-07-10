@@ -10,13 +10,26 @@ import com.akai.fire.display.OledDisplay.TextJustification;
 public class DisplayInfo {
 
 	private final List<Line> lines = new ArrayList<>();
+	private String controllerId; // Добавен ID на контролера
 
 	public DisplayInfo() {
 
 	}
+	
+	public DisplayInfo(String controllerId) {
+		this.controllerId = controllerId;
+	}
 
 	public List<Line> getLines() {
 		return lines;
+	}
+	
+	public String getControllerId() {
+		return controllerId;
+	}
+	
+	public void setControllerId(String controllerId) {
+		this.controllerId = controllerId;
 	}
 
 	public DisplayInfo addLine(final Supplier<String> text, final int size, final int offset,
