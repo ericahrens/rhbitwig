@@ -29,7 +29,7 @@ public class HardwareElements {
             trackSelectButtons.add(trackButton);
         }
         Arrays.stream(LabelCcAssignments.values())
-                .filter(LabelCcAssignments::isDedicated)
+            .filter(label -> label.isDedicated())
                 .forEach(labelCcAssignments -> labeledButtons.put(labelCcAssignments,
                         new LabeledButton(surface, midiIn, midiOut, labelCcAssignments)));
     }

@@ -124,17 +124,17 @@ public class AkaiFireDrumSeqExtension extends ControllerExtension {
         transport.playPosition().markInterested();
         transport.isClipLauncherOverdubEnabled().markInterested();
         final BiColorButton playButton = addButton(NoteAssign.PLAY);
-        playButton.bindPressed(mainLayer, this::togglePlay, this::getPlayState);
+        playButton.bindPressed(mainLayer, pressed -> togglePlay(Boolean.TRUE.equals(pressed)), this::getPlayState);
         final BiColorButton recButton = addButton(NoteAssign.REC);
-        recButton.bindPressed(mainLayer, this::toggleRec, this::getOverdubState);
+        recButton.bindPressed(mainLayer, pressed -> toggleRec(Boolean.TRUE.equals(pressed)), this::getOverdubState);
         final BiColorButton stopButton = addButton(NoteAssign.STOP);
-        stopButton.bindPressed(mainLayer, this::stopAction, BiColorLightState.RED_FULL);
+        stopButton.bindPressed(mainLayer, pressed -> stopAction(Boolean.TRUE.equals(pressed)), BiColorLightState.RED_FULL);
 
         final BiColorButton shiftButton = addButton(NoteAssign.SHIFT);
         shiftButton.bind(mainLayer, shiftActive, BiColorLightState.RED_HALF, BiColorLightState.OFF);
 
         final BiColorButton m1Button = addButton(NoteAssign.MUTE_1);
-        m1Button.bindPressed(mainLayer, this::dummyAction, BiColorLightState.RED_FULL);
+        m1Button.bindPressed(mainLayer, pressed -> dummyAction(Boolean.TRUE.equals(pressed)), BiColorLightState.RED_FULL);
         addButton(NoteAssign.MUTE_2);
         addButton(NoteAssign.MUTE_3);
         addButton(NoteAssign.MUTE_4);

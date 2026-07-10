@@ -61,7 +61,7 @@ public class Layer
       return mLayers;
    }
 
-   public List<Binding> getBindings()
+   public List<Binding<?, ?>> getBindings()
    {
       return Collections.unmodifiableList(mBindings);
    }
@@ -81,8 +81,7 @@ public class Layer
       return mDeactivateAction;
    }
 
-   @SuppressWarnings("rawtypes")
-   public void addBinding(final Binding binding)
+   public void addBinding(final Binding<?, ?> binding)
    {
       assert !mBindings.contains(binding);
       assert !isActive();
@@ -157,7 +156,7 @@ public class Layer
       return bind(source, target);
    }
 
-   public Binding bind(
+   public Binding<?, ?> bind(
       final Object actionOwner,
       final HardwareAction source,
       final HardwareActionBindable target)
@@ -169,44 +168,44 @@ public class Layer
       return binding;
    }
 
-   public Binding bind(final Object actionOwner, final HardwareAction source, final Runnable target)
+   public Binding<?, ?> bind(final Object actionOwner, final HardwareAction source, final Runnable target)
    {
       return bind(actionOwner, source,
          getLayers().getControllerExtension().getHost().createAction(target, null));
    }
 
-   public Binding bind(final Object actionOwner, final HardwareAction source, final DoubleConsumer target)
+   public Binding<?, ?> bind(final Object actionOwner, final HardwareAction source, final DoubleConsumer target)
    {
       return bind(actionOwner, source,
          getLayers().getControllerExtension().getHost().createAction(target, null));
    }
 
-   public Binding bindPressed(final HardwareButton button, final Runnable pressedRunnable)
+   public Binding<?, ?> bindPressed(final HardwareButton button, final Runnable pressedRunnable)
    {
       return bind(button, button.pressedAction(), pressedRunnable);
    }
 
-   public Binding bindPressed(final HardwareButton button, final DoubleConsumer pressedPressureConsumer)
+   public Binding<?, ?> bindPressed(final HardwareButton button, final DoubleConsumer pressedPressureConsumer)
    {
       return bind(button, button.pressedAction(), pressedPressureConsumer);
    }
 
-   public Binding bindPressed(final HardwareButton button, final HardwareActionBindable target)
+   public Binding<?, ?> bindPressed(final HardwareButton button, final HardwareActionBindable target)
    {
       return bind(button, button.pressedAction(), target);
    }
 
-   public Binding bindReleased(final HardwareButton button, final Runnable releasedRunnable)
+   public Binding<?, ?> bindReleased(final HardwareButton button, final Runnable releasedRunnable)
    {
       return bind(button, button.releasedAction(), releasedRunnable);
    }
 
-   public Binding bindReleased(final HardwareButton button, final DoubleConsumer releasedPressureConsumer)
+   public Binding<?, ?> bindReleased(final HardwareButton button, final DoubleConsumer releasedPressureConsumer)
    {
       return bind(button, button.releasedAction(), releasedPressureConsumer);
    }
 
-   public Binding bindReleased(final HardwareButton button, final HardwareActionBindable target)
+   public Binding<?, ?> bindReleased(final HardwareButton button, final HardwareActionBindable target)
    {
       return bind(button, button.releasedAction(), target);
    }
@@ -232,12 +231,12 @@ public class Layer
       bind(button.isPressed(), button);
    }
 
-   public void bindPressed(final ContinuousHardwareControl control, final HardwareActionBindable target)
+   public void bindPressed(final ContinuousHardwareControl<?> control, final HardwareActionBindable target)
    {
       bind(control, control.hardwareButton().pressedAction(), target);
    }
 
-   public void bindPressed(final ContinuousHardwareControl control, final Runnable target)
+   public void bindPressed(final ContinuousHardwareControl<?> control, final Runnable target)
    {
       bind(control, control.hardwareButton().pressedAction(), target);
    }
@@ -280,7 +279,7 @@ public class Layer
       bind(layerToToggle::isActive, button);
    }
 
-   public Binding bindInverted(final BooleanSupplier source, final BooleanHardwareProperty target)
+   public Binding<?, ?> bindInverted(final BooleanSupplier source, final BooleanHardwareProperty target)
    {
       if (source instanceof BooleanValue)
          ((BooleanValue)source).markInterested();
@@ -288,7 +287,7 @@ public class Layer
       return bind(() -> !source.getAsBoolean(), target);
    }
 
-   public Binding bind(final BooleanSupplier source, final BooleanHardwareProperty target)
+   public Binding<?, ?> bind(final BooleanSupplier source, final BooleanHardwareProperty target)
    {
       if (source instanceof BooleanValue)
          ((BooleanValue)source).markInterested();
@@ -300,29 +299,29 @@ public class Layer
       return binding;
    }
 
-   public Binding bind(final BooleanSupplier source, final OnOffHardwareLight target)
+   public Binding<?, ?> bind(final BooleanSupplier source, final OnOffHardwareLight target)
    {
       return bind(source, target.isOn());
    }
 
-   public Binding bindInverted(final BooleanSupplier source, final OnOffHardwareLight target)
+   public Binding<?, ?> bindInverted(final BooleanSupplier source, final OnOffHardwareLight target)
    {
       return bindInverted(source, target.isOn());
    }
 
-   public Binding bind(final BooleanSupplier source, final HardwareControl target)
+   public Binding<?, ?> bind(final BooleanSupplier source, final HardwareControl target)
    {
       return bind(source, (OnOffHardwareLight)target.backgroundLight());
    }
 
-   public Binding bind(final BooleanValue source, final BooleanHardwareProperty target)
+   public Binding<?, ?> bind(final BooleanValue source, final BooleanHardwareProperty target)
    {
       source.markInterested();
 
       return bind((BooleanSupplier)source, target);
    }
 
-   public Binding bind(final Supplier<Color> sourceColor, final MultiStateHardwareLight light)
+   public Binding<?, ?> bind(final Supplier<Color> sourceColor, final MultiStateHardwareLight light)
    {
       if (sourceColor instanceof ColorValue)
          ((ColorValue)sourceColor).markInterested();
@@ -334,19 +333,19 @@ public class Layer
       return binding;
    }
 
-   public Binding bindLightState(final Supplier<InternalHardwareLightState> supplier, final MultiStateHardwareLight light)
+   public Binding<?, ?> bindLightState(final Supplier<InternalHardwareLightState> supplier, final MultiStateHardwareLight light)
    {
       final InternalLightStateBinding binding = new InternalLightStateBinding(supplier, light);
       addBinding(binding);
       return binding;
    }
 
-   public Binding bind(final Supplier<Color> sourceColor, final HardwareControl target)
+   public Binding<?, ?> bind(final Supplier<Color> sourceColor, final HardwareControl target)
    {
       return bind(sourceColor, (MultiStateHardwareLight)target.backgroundLight());
    }
 
-   public Binding bind(final Supplier<String> source, final StringHardwareProperty target)
+   public Binding<?, ?> bind(final Supplier<String> source, final StringHardwareProperty target)
    {
       if (source instanceof StringValue)
          ((StringValue)source).markInterested();
@@ -463,7 +462,7 @@ public class Layer
 
    private final Layers mLayers;
 
-   final List<Binding> mBindings = new ArrayList<>();
+   final List<Binding<?, ?>> mBindings = new ArrayList<>();
 
    private final String mName;
 

@@ -10,8 +10,6 @@ public class T1DataPack {
     private static final String[] notes = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
     private static final String[] divisions = {"1/1", "1/2", "1/4", "1/8", "1/16", "1/32", "1/64", "1/3", "1/6", "1/12", "1/24", "1/48"};
     private int steps;
-    private int numNotes;
-    private int pulses;
     private int rootNote;
     private int channel;
     private int division;
@@ -24,17 +22,15 @@ public class T1DataPack {
         switch (command) {
             case "steps":
                 steps = message.getInt(0);
-                pulses = steps;
                 break;
             case "numNotes":
-                numNotes = message.getInt(0);
                 break;
             case "notes":
                 offsets = message.getArguments()
                         .stream()
                         .filter(Integer.class::isInstance)
                         .map(Integer.class::cast)
-                        .map(this::notValueToArpOffset) //
+                    .map(value -> notValueToArpOffset(value.intValue())) //
                         .collect(Collectors.toList());
                 break;
             case "pulses":

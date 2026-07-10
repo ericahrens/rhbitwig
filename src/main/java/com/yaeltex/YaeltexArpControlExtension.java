@@ -55,7 +55,6 @@ public class YaeltexArpControlExtension extends ControllerExtension {
     private final SettableValueObject<Integer> focusedDeviceSlot = new SettableValueObject<>();
     private YaeltexLayer mainLayer;
 
-    private final List<ArpInstance> arpInstances = new ArrayList<>();
     private int currentTrackIndex;
     private DeviceValueObject stepLengthValues;
     private DeviceValueObject globalVelocityValues;
@@ -589,11 +588,6 @@ public class YaeltexArpControlExtension extends ControllerExtension {
     }
 
     public ArpInstance getArpInstance(final String trackName, final String presetName) {
-        final Optional<ArpInstance> arpOpt = arpInstances //
-                .stream() //
-                .filter(arp -> arp.matches(trackName, presetName)) //
-                .findFirst();
-
 //		if (arpOpt.isEmpty()) {
 //			RemoteConsole.out.println(" CREATE NEW ARP INSTANCE tn={} pn={}", trackName, presetName);
 //			final ArpInstance arpInstance = new ArpInstance(trackName, presetName, QuantizeMode.NEAREST_VALUE);

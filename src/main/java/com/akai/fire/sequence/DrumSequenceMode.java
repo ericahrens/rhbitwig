@@ -167,7 +167,7 @@ public class DrumSequenceMode extends Layer {
         final TouchEncoder mainEncoder = driver.getMainEncoder();
         mainEncoder.setStepSize(0.4);
         mainEncoder.bindEncoder(mainLayer, this::handleMainEncoder);
-        mainEncoder.bindTouched(mainLayer, this::handeMainEncoderPress);
+        mainEncoder.bindTouched(mainLayer, pressed -> handeMainEncoderPress(Boolean.TRUE.equals(pressed)));
     }
 
     public List<NoteStep> getAddedNotes() {
@@ -214,7 +214,7 @@ public class DrumSequenceMode extends Layer {
     private void initButtonBehaviour(final AkaiFireDrumSeqExtension driver) {
 
         final BiColorButton accentButton = driver.getButton(NoteAssign.STEP_SEQ);
-        accentButton.bindPressed(mainLayer, accentHandler::handlePressed, accentHandler::getLightState);
+        accentButton.bindPressed(mainLayer, pressed -> accentHandler.handlePressed(Boolean.TRUE.equals(pressed)), accentHandler::getLightState);
 
         final BiColorButton shiftButton = driver.getButton(NoteAssign.SHIFT);
         shiftButton.bind(mainLayer, shiftActive, BiColorLightState.GREEN_HALF, BiColorLightState.OFF);
@@ -231,10 +231,10 @@ public class DrumSequenceMode extends Layer {
         retrigButton.bind(mainLayer, this::retrigger, BiColorLightState.AMBER_FULL, BiColorLightState.AMBER_HALF);
 
         final BiColorButton pinButton = driver.getButton(NoteAssign.ALT);
-        pinButton.bindPressed(mainLayer, this::handleClipPinning, this::getPinnedState);
+        pinButton.bindPressed(mainLayer, pressed -> handleClipPinning(Boolean.TRUE.equals(pressed)), this::getPinnedState);
 
         final BiColorButton resolutionButton = driver.getButton(NoteAssign.PERFORM);
-        resolutionButton.bindPressed(mainLayer, resolutionHandler::handlePressed, resolutionHandler::getLightState);
+        resolutionButton.bindPressed(mainLayer, pressed -> resolutionHandler.handlePressed(Boolean.TRUE.equals(pressed)), resolutionHandler::getLightState);
 
         final BiColorButton shiftLeftButton = driver.getButton(NoteAssign.BANK_L);
         shiftLeftButton.bindPressed(mainLayer, p -> movePattern(p, -1), BiColorLightState.HALF, BiColorLightState.OFF);

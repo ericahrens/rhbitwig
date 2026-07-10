@@ -53,7 +53,6 @@ public class ViewCursorControl {
     private void setUpDevices(final ControllerHost host, final List<DirectParameterControl> controls,
                               final int tracks) {
         for (int i = 0; i < tracks; i++) {
-            final int index = i;
             final Track track = trackBank.getItemAt(i);
             final CursorDevice cursorDevice = track.createCursorDevice();
             for (final DirectParameterControl directParameterControl : controls) {

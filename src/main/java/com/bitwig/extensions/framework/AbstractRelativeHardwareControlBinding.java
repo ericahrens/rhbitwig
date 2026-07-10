@@ -27,7 +27,7 @@ public abstract class AbstractRelativeHardwareControlBinding<TargetType extends 
 
    protected abstract HardwareBindingType addHardwareBinding(double sensitivity);
 
-   public AbstractRelativeHardwareControlBinding setSensitivity(final double sensitivity)
+   public AbstractRelativeHardwareControlBinding<TargetType, HardwareBindingType> setSensitivity(final double sensitivity)
    {
       if (sensitivity != mSensitivity)
       {

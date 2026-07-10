@@ -1,7 +1,6 @@
 package com.akai.fire.sequence;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class EncoderTouchTracker {
     private final LinkedHashMap<Integer, String> activeEncoders = new LinkedHashMap<>();

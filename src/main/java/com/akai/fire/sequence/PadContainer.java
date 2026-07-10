@@ -14,15 +14,6 @@ class PadContainer {
     private static final double SHIFT_INC = 0.01;
     private static final double REGULAR_INC = 0.025;
 
-    private static final RgbLigthState TR_RED = new RgbLigthState(70, 0, 0, true);
-    private static final RgbLigthState TR_ORANGE = new RgbLigthState(90, 15, 0, true);
-    private static final RgbLigthState TR_YELLOW = new RgbLigthState(110, 55, 0, true);
-    private static final RgbLigthState TR_WHITE = new RgbLigthState(80, 80, 80, true);
-
-    private static final RgbLigthState[] fixedPadColorTable = {TR_RED, TR_RED, TR_RED, TR_RED, //
-            TR_ORANGE, TR_ORANGE, TR_ORANGE, TR_ORANGE, TR_YELLOW, TR_YELLOW, TR_YELLOW, TR_YELLOW, //
-            TR_WHITE, TR_WHITE, TR_WHITE, TR_WHITE};
-
     private final PadHandler padHandler;
 
     private RgbLigthState padColor;

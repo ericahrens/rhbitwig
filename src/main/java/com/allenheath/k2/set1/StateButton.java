@@ -16,7 +16,6 @@ public class StateButton {
 	private final HardwareButton hwButton;
 	private final MultiStateHardwareLight light;
 	private final MidiOut midiOut;
-	private final int noteValue;
 	private final int ledNoteValue;
 	private final int channel;
 	private final boolean useColorOffset;
@@ -34,7 +33,6 @@ public class StateButton {
 	protected StateButton(final String id, final int noteValue, final int ledNoteValue, final int channel,
 			final HardwareSurface surface, final MidiIn midiIn, final MidiOut midiOut, final boolean useColorOffset) {
 		this.midiOut = midiOut;
-		this.noteValue = noteValue;
 		this.ledNoteValue = ledNoteValue;
 		this.channel = channel;
 		this.useColorOffset = useColorOffset;

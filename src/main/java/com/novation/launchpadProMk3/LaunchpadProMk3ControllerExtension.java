@@ -128,6 +128,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 		// implement a only pressed binding to avoid stupid if stuff..
 	}
 
+	@SuppressWarnings("deprecation")
 	private void initTransportSection() {
 		transport.isPlaying().markInterested();
 		transport.tempo().markInterested();
@@ -153,7 +154,7 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 		hwElements.getButton(LabelCcAssignments.SEQUENCER).bind(mainLayer, () -> {
 		}, () -> RgbState.of(LpColor.BLUE_HI));
 
-		hwElements.getButton(LabelCcAssignments.SHIFT).bindPressed(mainLayer, states::handleShiftPressed,
+		hwElements.getButton(LabelCcAssignments.SHIFT).bindPressed(mainLayer, pressed -> states.handleShiftPressed(Boolean.TRUE.equals(pressed)),
 				() -> states.getShiftModeActive().get() ? RgbState.of(LpColor.OCEAN_HI) : RgbState.of(LpColor.OCEAN_LO));
 
 		states.getShiftModeActive().addValueObserver(shiftMode -> {

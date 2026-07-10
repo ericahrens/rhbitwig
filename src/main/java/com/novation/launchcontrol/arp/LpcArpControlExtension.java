@@ -38,7 +38,6 @@ public class LpcArpControlExtension extends ControllerExtension implements ArpPa
 
     private final HashMap<String, ArpInstance> arpInstances = new HashMap<>();
 
-    private String currentTrackName = "";
     private int currentTrackIndex = -1;
     private boolean arpSelected = false;
     private Layers layers;
@@ -79,9 +78,6 @@ public class LpcArpControlExtension extends ControllerExtension implements ArpPa
         trackBank.followCursorTrack(cursorTrack);
 
         cursorDevice = cursorTrack.createCursorDevice();
-        cursorTrack.name().addValueObserver(s -> {
-            currentTrackName = s;
-        });
         cursorDevice.name().addValueObserver(s -> {
             //RemoteConsole.out.println("Device Selected = {} {}", s, cursorDevice.presetName().get());
             if (s.equals("Arpeggiator")) {

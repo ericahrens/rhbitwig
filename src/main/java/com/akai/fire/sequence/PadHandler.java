@@ -116,17 +116,17 @@ public class PadHandler {
 
     private void initButtons(final Layer mainLayer, final AkaiFireDrumSeqExtension driver) {
         final BiColorButton browerNrButton = driver.getButton(NoteAssign.BROWSER);
-        browerNrButton.bindPressed(mainLayer, noteRepeatHandler::handlePressed, noteRepeatHandler::getLightState);
+        browerNrButton.bindPressed(mainLayer, pressed -> noteRepeatHandler.handlePressed(Boolean.TRUE.equals(pressed)), noteRepeatHandler::getLightState);
         final BiColorButton upNavButon = driver.getButton(NoteAssign.PATTERN_UP);
         upNavButon.markPressedInteressed();
-        upNavButon.bindPressed(mainLayer, this::scrollForward, () -> canScrollUp(upNavButon));
+        upNavButon.bindPressed(mainLayer, pressed -> scrollForward(Boolean.TRUE.equals(pressed)), () -> canScrollUp(upNavButon));
 
         final BiColorButton downNavButon = driver.getButton(NoteAssign.PATTERN_DOWN);
         downNavButon.markPressedInteressed();
-        downNavButon.bindPressed(mainLayer, this::scrollBackward, () -> canScrollDown(downNavButon));
+        downNavButon.bindPressed(mainLayer, pressed -> scrollBackward(Boolean.TRUE.equals(pressed)), () -> canScrollDown(downNavButon));
         
         final BiColorButton copyButton = driver.getButton(NoteAssign.MUTE_3);
-        copyButton.bindPressed(mainLayer, this::handleCopyButton, this::getCopyModeState);
+        copyButton.bindPressed(mainLayer, pressed -> handleCopyButton(Boolean.TRUE.equals(pressed)), this::getCopyModeState);
     }
     
     private BiColorLightState getCopyModeState() {

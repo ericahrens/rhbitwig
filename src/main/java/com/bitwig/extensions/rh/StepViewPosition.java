@@ -14,13 +14,10 @@ public class StepViewPosition {
     private final Clip clip;
     private final BooleanValueObject canScrollLeft = new BooleanValueObject();
     private final BooleanValueObject canScrollRight = new BooleanValueObject();
-    private final String name;
-
     public StepViewPosition(final Clip clip, int stepsPerPage, String name) {
         super();
         this.clip = clip;
         gridResolution = 0.25;
-        this.name = name;
         this.stepsPerPage = stepsPerPage;
         this.clip.setStepSize(gridResolution);
         clip.getLoopLength().addValueObserver(this::handleLoopLengthChanged);

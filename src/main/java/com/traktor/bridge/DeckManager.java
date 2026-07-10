@@ -1,7 +1,6 @@
 package com.traktor.bridge;
 
 import com.bitwig.extension.controller.api.ControllerHost;
-import com.bitwig.extension.controller.api.Project;
 import com.bitwig.extension.controller.api.MidiOut;
 import org.json.JSONObject;
 
@@ -15,7 +14,6 @@ public class DeckManager
    private static final double BITWIG_CC_MAX = 127.0;
 
    private final ControllerHost host;
-   private final Project project;
    private final MidiOut midiOut;
    private final VirtualMidiInput virtualMidi;
    private boolean isRunning;
@@ -67,7 +65,6 @@ public class DeckManager
    public DeckManager(final ControllerHost host, final MidiOut midiOut)
    {
       this.host = host;
-      this.project = host.getProject();
       this.midiOut = midiOut;
       this.isRunning = true;
       this.scaleEngine = new ScaleEngine();

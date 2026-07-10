@@ -36,7 +36,6 @@ public class Layers
       return Collections.unmodifiableList(mLayers);
    }
 
-   @SuppressWarnings("rawtypes")
    private void updateActiveBindings()
    {
       mActiveBindings.clear();
@@ -45,15 +44,15 @@ public class Layers
       {
          if (layer.isActive())
          {
-            for (final Binding binding : layer.mBindings)
+            for (final Binding<?, ?> binding : layer.mBindings)
             {
                if (layer.shouldReplaceBindingsInLayersBelow())
                {
                   final Object exclusivityObject = binding.getExclusivityObject();
 
-                  for (final Iterator<Binding> i = mActiveBindings.iterator(); i.hasNext();)
+                  for (final Iterator<Binding<?, ?>> i = mActiveBindings.iterator(); i.hasNext();)
                   {
-                     final Binding activeBinding = i.next();
+                     final Binding<?, ?> activeBinding = i.next();
 
                      if (Objects.equals(activeBinding.getExclusivityObject(), exclusivityObject)
                         && activeBinding.getLayer() != layer)
@@ -69,14 +68,14 @@ public class Layers
          }
          else
          {
-            for (final Binding binding : layer.mBindings)
+            for (final Binding<?, ?> binding : layer.mBindings)
             {
                binding.setIsActive(false);
             }
          }
       }
 
-      for (final Binding binding : mActiveBindings)
+      for (final Binding<?, ?> binding : mActiveBindings)
       {
          binding.setIsActive(true);
       }
@@ -87,7 +86,7 @@ public class Layers
       updateActiveBindings();
    }
 
-   public List<Binding> getActiveBindings()
+   public List<Binding<?, ?>> getActiveBindings()
    {
       return Collections.unmodifiableList(mActiveBindings);
    }
@@ -105,7 +104,7 @@ public class Layers
 
          for (final Layer layer : mLayers)
          {
-            for (final Binding binding : layer.getBindings())
+            for (final Binding<?, ?> binding : layer.getBindings())
             {
                if (binding instanceof BindingWithSensitivity)
                   ((BindingWithSensitivity)binding).setGlobalSensitivity(value);
@@ -116,8 +115,7 @@ public class Layers
 
    private final List<Layer> mLayers = new ArrayList<>(4);
 
-   @SuppressWarnings("rawtypes")
-   private final List<Binding> mActiveBindings = new ArrayList<>();
+   private final List<Binding<?, ?>> mActiveBindings = new ArrayList<>();
 
    private final ControllerExtension mControllerExtension;
 

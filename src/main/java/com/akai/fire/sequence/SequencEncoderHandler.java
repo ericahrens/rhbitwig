@@ -68,7 +68,7 @@ public class SequencEncoderHandler extends Layer {
         assignParams(EncoderMode.USER_1, user1Layer, encoders);
         currentLayer = channelLayer;
         final BiColorButton modeButon = driver.getButton(NoteAssign.KNOB_MODE);
-        modeButon.bindPressed(this, this::handleModeAdvance, this::modeToLight);
+        modeButon.bindPressed(this, pressed -> handleModeAdvance(Boolean.TRUE.equals(pressed)), this::modeToLight);
         parent.getShiftActive().addValueObserver(this::handleShiftChange);
     }
 
