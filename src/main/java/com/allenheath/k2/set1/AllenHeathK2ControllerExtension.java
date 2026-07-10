@@ -67,7 +67,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 		buttonManager = new ButtonManager(surface, midiIn, midiOut);
 		
 		host.println("========================================");
-		host.println("XONE:K2 DJSet - K2 ONLY");
+		host.println("XONE:K2/K3 DJSet");
 		host.println("========================================");
 		
 		noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
@@ -88,14 +88,14 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
 		viewControl = new ViewCursorControl(host, controlList, 16);
 		mainLayer = new Layer(layers, "MainLayer");
-		host.showPopupNotification("Intialize Xone:K2 DJ Set");
+		host.showPopupNotification("Initialize Xone:K2/K3 DJ Set");
 		initSendsButtons();
 		initDocumentProperties();
 		selectK2Deck(0);
 		mainLayer.activate();
 		
 		host.println("========================================");
-		host.println("K2 DJSet READY!");
+		host.println("K2/K3 DJSet READY!");
 		host.println("========================================");
 	}
 
@@ -159,7 +159,7 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
 	@Override
 	public void exit() {
-		getHost().showPopupNotification("Xone:K2 DJ Set exited");
+		getHost().showPopupNotification("Xone:K2/K3 DJ Set exited");
 	}
 
 	private void handleDeckButtonPress(final int deckIndex) {
