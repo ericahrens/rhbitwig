@@ -26,15 +26,14 @@ Then, for the MIDI device, select the IAC Driver on Mac or another virtual MIDI 
 
 * Added support for both Allen & Heath XONE:K2 and XONE:K3 under the same controller script, with K3 auto-detection enabled. The extension label was updated to Allen & Heath K2/K3 DJSet, while keeping the existing MIDI mapping unchanged. The Traktor bridge was cleaned up, Camelot key handling was corrected, and Bitwig semitone CC output was scaled to match the -48..+48 parameter range.
 
-* Report Update (K2 Deck Selector + Tonality Flow)
+* Report Update (K2 Deck Selector)
 The 4 deck selector buttons now follow a clear interaction model:
 - Single click on a non-active deck: temporary preview (red LED), no active deck change.
 - Double click within 320 ms on the same deck: selects the deck.
 - Press on the already selected deck: keeps selection and clears temporary state.
 - Selected deck LED: yellow.
 - When a deck is selected, K2 notifies the bridge via `POST /activeDeck/{A|B|C|D}`.
-The bridge then activates that deck and sends the current key transpose to Bitwig as CC16 on channel 10 (0xB9), mapped to the -48..+48 semitone parameter range.
-If a new key arrives for a deck, CC16 is sent immediately only when that deck is active.
+Tonality and Note Transpose mapping details are documented in the section below.
 
 * Camelot -> Traktor Key -> Bitwig Note Transpose Mapping
 Mapping pipeline used by the bridge:
@@ -122,7 +121,7 @@ Added `com.traktor.bridge` package with `TraktorBitwigBridgeExtension`, `Traktor
 Extension renamed and aligned to K2/K3 DJSet; deck selection behavior stabilized (single-click preview, double-click select), active-deck notifications sent to bridge (`/activeDeck/{A|B|C|D}`), and LED state feedback refined.
 
 3. Tonality/transpose pipeline hardening:
-Camelot/Open-wheel mapping synchronized to project wheel definitions, canonical labels enforced for major/minor pairs, semitone -> CC16 conversion adjusted to avoid skipped Note Transpose steps, and practical range `-1..10` verified without gaps.
+Camelot/Open-wheel mapping synchronized to project wheel definitions, semitone -> CC16 conversion adjusted to avoid skipped Note Transpose steps, and practical range `-1..10` verified without gaps.
 
 4. API/toolchain alignment:
 Maven Bitwig dependency aligned to `com.bitwig:extension-api:25`, `getRequiredAPIVersion()` aligned to 25 across extension definitions, and IntelliJ module metadata aligned to API 25.
@@ -131,5 +130,5 @@ Maven Bitwig dependency aligned to `com.bitwig:extension-api:25`, `getRequiredAP
 Substantial updates in Akai Fire sequencing/display pipeline, Launchcontrol and Launchpad Pro Mk3 code paths, Yaeltex focus/layer logic refinements, and framework/debug cleanup and stabilization.
 
 6. Documentation expanded in this fork:
-Added K2 deck-selector behavior notes, full Camelot -> Note Transpose mapping documentation, and canonical wheel table used as source of truth.
+Added K2 deck-selector behavior notes, full Camelot -> Note Transpose mapping documentation, and a canonical wheel table as source of truth.
 
