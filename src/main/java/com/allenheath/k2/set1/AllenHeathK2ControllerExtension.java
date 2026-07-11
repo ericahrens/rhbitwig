@@ -23,7 +23,8 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 	private static final String[] DEFAULT_PAD_ASSIGNMENTS = { "1,2", "4,8", "3", "5,6,13", "7", "9", "10", "11,12" };
 	private static final long DECK_DOUBLE_CLICK_WINDOW_MS = 320;
 	private static final int[] DECK_NOTES = {48, 51, 48, 51};
-	private static final int[] DECK_LED_NOTES = {84, 87, 84, 87};
+	private static final int DECK_YELLOW_NOTE_OFFSET = 36;
+	private static final int DECK_GREEN_NOTE_OFFSET = 72;
 	private static final String[] DECK_NAMES = {"A", "B", "C", "D"};
 	// Bitwig matcher channels are 0-based: 13/14 == MIDI channels 14/15
 	private static final int[] DECK_CHANNELS = {13, 13, 14, 14};
@@ -48,6 +49,8 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
 	// selected deck for the 4 K2 deck buttons (0..3). -1 = none
 	private int selectedK2Deck = -1;
+	// temporary single-click indicator deck (red). -1 = none
+	private int singleClickDeck = -1;
 	private int pendingDeckClick = -1;
 	private long pendingDeckClickAtMs = -1;
 
@@ -124,10 +127,10 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 
 			if (i < 4) {
 				final int deckIndex = i;
-				final StateButton deckButton = buttonManager.createDirectLedStateButton("DECK_" + (i + 1) + "_BUTTON",
-						DECK_NOTES[i], DECK_LED_NOTES[i], DECK_CHANNELS[i]);
+				final StateButton deckButton = buttonManager.createStateButton("DECK_" + (i + 1) + "_BUTTON",
+						DECK_NOTES[i], DECK_CHANNELS[i]);
 				deckButton.bind(mainLayer, () -> handleDeckButtonPress(deckIndex),
-						() -> selectedK2Deck == deckIndex ? RedGreenButtonState.GREEN : RedGreenButtonState.OFF);
+						() -> RedGreenButtonState.OFF);
 			}
 			
 			final StateButton revButton = buttonManager.createStateButton("REV_" + i + "_BUTTON", 44 + noteOffset, channel);
@@ -163,6 +166,18 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 	}
 
 	private void handleDeckButtonPress(final int deckIndex) {
+		if (deckIndex < 0 || deckIndex > 3) {
+			return;
+		}
+
+		if (deckIndex == selectedK2Deck) {
+			// Pressing the selected (orange) deck keeps it selected and clears other temporary states.
+			singleClickDeck = -1;
+			pendingDeckClick = -1;
+			pendingDeckClickAtMs = -1;
+			return;
+		}
+
 		final long nowMs = System.nanoTime() / 1_000_000L;
 		final long deltaMs = nowMs - pendingDeckClickAtMs;
 		if (pendingDeckClick == deckIndex && pendingDeckClickAtMs >= 0 && deltaMs <= DECK_DOUBLE_CLICK_WINDOW_MS) {
@@ -172,13 +187,25 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 			return;
 		}
 
+		singleClickDeck = deckIndex;
 		pendingDeckClick = deckIndex;
 		pendingDeckClickAtMs = nowMs;
+	}
+
+	private RedGreenButtonState deckButtonState(final int deckIndex) {
+		if (selectedK2Deck == deckIndex) {
+			return RedGreenButtonState.YELLOW;
+		}
+		if (singleClickDeck == deckIndex) {
+			return RedGreenButtonState.RED;
+		}
+		return RedGreenButtonState.OFF;
 	}
 
 	private void selectK2Deck(final int deckIndex) {
 		if (deckIndex < 0 || deckIndex > 3 || selectedK2Deck == deckIndex) return;
 		selectedK2Deck = deckIndex;
+		singleClickDeck = -1;
 		pendingDeckClick = -1;
 		pendingDeckClickAtMs = -1;
 		if (midiOut != null) {
@@ -207,10 +234,36 @@ public class AllenHeathK2ControllerExtension extends ControllerExtension {
 			}
 		}
 	}
+
+	private void updateDeckButtonLedsManual() {
+		if (midiOut == null) {
+			return;
+		}
+		for (int i = 0; i < 4; i++) {
+			final RedGreenButtonState state = deckButtonState(i);
+			final int status = 0x90 | (DECK_CHANNELS[i] & 0x0F);
+			final int redNote = DECK_NOTES[i];
+			final int yellowNote = redNote + DECK_YELLOW_NOTE_OFFSET;
+			final int greenNote = redNote + DECK_GREEN_NOTE_OFFSET;
+
+			midiOut.sendMidi(status, redNote, 0);
+			midiOut.sendMidi(status, yellowNote, 0);
+			midiOut.sendMidi(status, greenNote, 0);
+
+			if (state == RedGreenButtonState.RED) {
+				midiOut.sendMidi(status, redNote, 127);
+			} else if (state == RedGreenButtonState.YELLOW) {
+				midiOut.sendMidi(status, yellowNote, 127);
+			} else if (state == RedGreenButtonState.GREEN) {
+				midiOut.sendMidi(status, greenNote, 127);
+			}
+		}
+	}
     
 
 	@Override
 	public void flush() {
 		surface.updateHardware();
+		updateDeckButtonLedsManual();
 	}
 }
