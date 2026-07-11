@@ -47,18 +47,18 @@ public class DeckManager
       CAMELOT_TO_KEY.put("11d", "A#");  CAMELOT_TO_NOTE.put("11d", 70);
       CAMELOT_TO_KEY.put("12d", "F");   CAMELOT_TO_NOTE.put("12d", 65);
 
-      CAMELOT_TO_KEY.put("1m", "A");    CAMELOT_TO_NOTE.put("1m", 69);
-      CAMELOT_TO_KEY.put("2m", "E");    CAMELOT_TO_NOTE.put("2m", 64);
-      CAMELOT_TO_KEY.put("3m", "B");    CAMELOT_TO_NOTE.put("3m", 59);
-      CAMELOT_TO_KEY.put("4m", "F#");   CAMELOT_TO_NOTE.put("4m", 66);
-      CAMELOT_TO_KEY.put("5m", "C#");   CAMELOT_TO_NOTE.put("5m", 61);
-      CAMELOT_TO_KEY.put("6m", "G#");   CAMELOT_TO_NOTE.put("6m", 68);
-      CAMELOT_TO_KEY.put("7m", "D#");   CAMELOT_TO_NOTE.put("7m", 63);
-      CAMELOT_TO_KEY.put("8m", "A#");   CAMELOT_TO_NOTE.put("8m", 70);
-      CAMELOT_TO_KEY.put("9m", "F");    CAMELOT_TO_NOTE.put("9m", 65);
-      CAMELOT_TO_KEY.put("10m", "C");   CAMELOT_TO_NOTE.put("10m", 60);
-      CAMELOT_TO_KEY.put("11m", "G");   CAMELOT_TO_NOTE.put("11m", 67);
-      CAMELOT_TO_KEY.put("12m", "D");   CAMELOT_TO_NOTE.put("12m", 62);
+      CAMELOT_TO_KEY.put("1m", "Am");         CAMELOT_TO_NOTE.put("1m", 69);
+      CAMELOT_TO_KEY.put("2m", "Em");         CAMELOT_TO_NOTE.put("2m", 64);
+      CAMELOT_TO_KEY.put("3m", "Bm");         CAMELOT_TO_NOTE.put("3m", 59);
+      CAMELOT_TO_KEY.put("4m", "F#m/Gbm");    CAMELOT_TO_NOTE.put("4m", 66);
+      CAMELOT_TO_KEY.put("5m", "C#m/Dbm");    CAMELOT_TO_NOTE.put("5m", 61);
+      CAMELOT_TO_KEY.put("6m", "G#m/Abm");    CAMELOT_TO_NOTE.put("6m", 68);
+      CAMELOT_TO_KEY.put("7m", "D#m/Ebm");    CAMELOT_TO_NOTE.put("7m", 63);
+      CAMELOT_TO_KEY.put("8m", "A#m/Bdm");    CAMELOT_TO_NOTE.put("8m", 70);
+      CAMELOT_TO_KEY.put("9m", "Fm");         CAMELOT_TO_NOTE.put("9m", 65);
+      CAMELOT_TO_KEY.put("10m", "Cm");        CAMELOT_TO_NOTE.put("10m", 60);
+      CAMELOT_TO_KEY.put("11m", "Gm");        CAMELOT_TO_NOTE.put("11m", 67);
+      CAMELOT_TO_KEY.put("12m", "Dm");        CAMELOT_TO_NOTE.put("12m", 62);
    }
    
    private static final String[] NOTES = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};

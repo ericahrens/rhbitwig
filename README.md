@@ -83,3 +83,32 @@ Camelot examples for the same semitone range:
 | 9 | `4d`, `1m` |
 | 10 | `11d`, `8m` |
 
+Canonical wheel labels used in this project (source of truth):
+
+| Camelot | Label |
+| --- | --- |
+| 12d | F |
+| 12m | Dm |
+| 1d | C |
+| 1m | Am |
+| 2d | G |
+| 2m | Em |
+| 3d | D |
+| 3m | Bm |
+| 4d | A |
+| 4m | F#m/Gbm |
+| 5d | E |
+| 5m | C#m/Dbm |
+| 6d | B |
+| 6m | G#m/Abm |
+| 7d | F# |
+| 7m | D#m/Ebm |
+| 8d | C# |
+| 8m | A#m/Bdm |
+| 9d | G# |
+| 9m | Fm |
+| 10d | D# |
+| 10m | Cm |
+| 11d | A# |
+| 11m | Gm |
+
