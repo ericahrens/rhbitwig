@@ -111,18 +111,18 @@ Canonical wheel labels used in this project (source of truth):
 | 11d | A# |
 | 11m | Gm |
 
- (C) -> 1d , 10m
- (C#) -> 8d , 5m
- (D) -> 3d , 12m
- (D#) -> 10d , 7m
- (E) -> 5d , 2m
- (F) -> 12d , 9m
- (F#) -> 7d , 4m
- (G) -> 2d , 11m
- (G#) -> 9d , 6m
- (A) -> 4d , 1m
- (A#) -> 11d , 8m
- (B) -> 6d , 3m
+ | (C) | -> | 1d , 10m |
+ | (C#) | -> | 8d , 5m |
+ | (D) | -> | 3d , 12m |
+ | (D#) | -> | 10d , 7m |
+ | (E) | -> | 5d , 2m |
+ | (F) | -> | 12d , 9m |
+ | (F#) | -> | 7d , 4m |
+ | (G) | -> | 2d , 11m |
+ | (G#) | -> | 9d , 6m |
+ | (A) | -> | 4d , 1m |
+ | (A#) | -> | 11d , 8m |
+ | (B) | -> | 6d , 3m |
 
 * Fork Update vs Original `ericahrens/rhbitwig` (`upstream/master`)
 Important differences in this forked branch:
