@@ -36,3 +36,50 @@ The 4 deck selector buttons now follow a clear interaction model:
 The bridge then activates that deck and sends the current key transpose to Bitwig as CC16 on channel 10 (0xB9), mapped to the -48..+48 semitone parameter range.
 If a new key arrives for a deck, CC16 is sent immediately only when that deck is active.
 
+* Camelot -> Traktor Key -> Bitwig Note Transpose Mapping
+Mapping pipeline used by the bridge:
+
+`Traktor JSON key` (`resultingKey` / `key_text` / `key` / `track_key`)
+-> normalize Camelot notation (`1A` -> `1m`, `8B` -> `8d`)
+-> Camelot-to-note lookup (MIDI note)
+-> `semitone = midiNote - 60` (C4 reference)
+-> `CC16` value for Bitwig Note Transpose
+
+Current CC conversion formula:
+
+`CC16 = ceil(((semitone + 48) / 96) * 127)`
+
+Verified mapping for Note Transpose range `-1 .. 10`:
+
+| Note Transpose (semitone) | CC16 |
+| --- | --- |
+| -1 | 63 |
+| 0 | 64 |
+| 1 | 65 |
+| 2 | 67 |
+| 3 | 68 |
+| 4 | 69 |
+| 5 | 71 |
+| 6 | 72 |
+| 7 | 73 |
+| 8 | 75 |
+| 9 | 76 |
+| 10 | 77 |
+
+Camelot examples for the same semitone range:
+
+| Semitone | Example Camelot keys |
+| --- | --- |
+| -1 | `1d`, `10m` |
+| 0 | `8d`, `5m` |
+| 1 | `3d`, `12m` |
+| 2 | `10d`, `7m` |
+| 3 | `5d`, `2m` |
+| 4 | `12d`, `9m` |
+| 5 | `7d`, `4m` |
+| 6 | `2d`, `11m` |
+| 7 | `9d`, `6m` |
+| 8 | `4d`, `1m` |
+| 9 | `11d`, `8m` |
+| 10 | `6d`, `3m` |
+
