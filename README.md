@@ -111,6 +111,19 @@ Canonical wheel labels used in this project (source of truth):
 | 11d | A# |
 | 11m | Gm |
 
+0 (C) -> 1d , 10m
+1 (C#) -> 8d , 5m
+2 (D) -> 3d , 12m
+3 (D#) -> 10d , 7m
+4 (E) -> 5d , 2m
+5 (F) -> 12d , 9m
+6 (F#) -> 7d , 4m
+7 (G) -> 2d , 11m
+8 (G#) -> 9d , 6m
+9 (A) -> 4d , 1m
+10 (A#) -> 11d , 8m
+11 (B) -> 6d , 3m
+
 * Fork Update vs Original `ericahrens/rhbitwig` (`upstream/master`)
 Important differences in this forked branch:
 
