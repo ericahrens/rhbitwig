@@ -45,7 +45,7 @@ public class TorsoT1OscExtensionDefinition extends ControllerExtensionDefinition
 
     @Override
     public int getRequiredAPIVersion() {
-        return 16;
+        return 25;
     }
 
     @Override

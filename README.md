@@ -32,8 +32,7 @@ The 4 deck selector buttons now follow a clear interaction model:
 - Double click within 320 ms on the same deck: selects the deck.
 - Press on the already selected deck: keeps selection and clears temporary state.
 - Selected deck LED: yellow.
-
-When a deck is selected, K2 notifies the bridge via `POST /activeDeck/{A|B|C|D}`.
+- When a deck is selected, K2 notifies the bridge via `POST /activeDeck/{A|B|C|D}`.
 The bridge then activates that deck and sends the current key transpose to Bitwig as CC16 on channel 10 (0xB9), mapped to the -48..+48 semitone parameter range.
 If a new key arrives for a deck, CC16 is sent immediately only when that deck is active.
 
