@@ -15,19 +15,19 @@ public class ScaleEngine {
     private static final Map<String, Integer> CAMELOT_TO_ROOT = new HashMap<>();
     
     static {
-        CAMELOT_TO_ROOT.put("1d", 59);  CAMELOT_TO_ROOT.put("2d", 66);
-        CAMELOT_TO_ROOT.put("3d", 61);  CAMELOT_TO_ROOT.put("4d", 68);
-        CAMELOT_TO_ROOT.put("5d", 63);  CAMELOT_TO_ROOT.put("6d", 70);
-        CAMELOT_TO_ROOT.put("7d", 65);  CAMELOT_TO_ROOT.put("8d", 60);
-        CAMELOT_TO_ROOT.put("9d", 67);  CAMELOT_TO_ROOT.put("10d", 62);
-        CAMELOT_TO_ROOT.put("11d", 69); CAMELOT_TO_ROOT.put("12d", 64);
-        
-        CAMELOT_TO_ROOT.put("1m", 68);  CAMELOT_TO_ROOT.put("2m", 63);
-        CAMELOT_TO_ROOT.put("3m", 70);  CAMELOT_TO_ROOT.put("4m", 65);
-        CAMELOT_TO_ROOT.put("5m", 60);  CAMELOT_TO_ROOT.put("6m", 67);
-        CAMELOT_TO_ROOT.put("7m", 62);  CAMELOT_TO_ROOT.put("8m", 69);
-        CAMELOT_TO_ROOT.put("9m", 64);  CAMELOT_TO_ROOT.put("10m", 59);
-        CAMELOT_TO_ROOT.put("11m", 66); CAMELOT_TO_ROOT.put("12m", 61);
+        CAMELOT_TO_ROOT.put("1d", 60);  CAMELOT_TO_ROOT.put("2d", 67);
+        CAMELOT_TO_ROOT.put("3d", 62);  CAMELOT_TO_ROOT.put("4d", 69);
+        CAMELOT_TO_ROOT.put("5d", 64);  CAMELOT_TO_ROOT.put("6d", 59);
+        CAMELOT_TO_ROOT.put("7d", 66);  CAMELOT_TO_ROOT.put("8d", 61);
+        CAMELOT_TO_ROOT.put("9d", 68);  CAMELOT_TO_ROOT.put("10d", 63);
+        CAMELOT_TO_ROOT.put("11d", 70); CAMELOT_TO_ROOT.put("12d", 65);
+
+        CAMELOT_TO_ROOT.put("1m", 69);  CAMELOT_TO_ROOT.put("2m", 64);
+        CAMELOT_TO_ROOT.put("3m", 59);  CAMELOT_TO_ROOT.put("4m", 66);
+        CAMELOT_TO_ROOT.put("5m", 61);  CAMELOT_TO_ROOT.put("6m", 68);
+        CAMELOT_TO_ROOT.put("7m", 63);  CAMELOT_TO_ROOT.put("8m", 70);
+        CAMELOT_TO_ROOT.put("9m", 65);  CAMELOT_TO_ROOT.put("10m", 60);
+        CAMELOT_TO_ROOT.put("11m", 67); CAMELOT_TO_ROOT.put("12m", 62);
     }
     
     public ScaleEngine() {

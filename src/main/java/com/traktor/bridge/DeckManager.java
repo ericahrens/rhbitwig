@@ -33,31 +33,32 @@ public class DeckManager
    private static final Map<String, Integer> CAMELOT_TO_NOTE = new HashMap<>();
    
    static {
-      CAMELOT_TO_KEY.put("1d", "B");    CAMELOT_TO_NOTE.put("1d", 59);
-      CAMELOT_TO_KEY.put("2d", "F#");   CAMELOT_TO_NOTE.put("2d", 66);
-      CAMELOT_TO_KEY.put("3d", "C#");   CAMELOT_TO_NOTE.put("3d", 61);
-      CAMELOT_TO_KEY.put("4d", "G#");   CAMELOT_TO_NOTE.put("4d", 68);
-      CAMELOT_TO_KEY.put("5d", "D#");   CAMELOT_TO_NOTE.put("5d", 63);
-      CAMELOT_TO_KEY.put("6d", "A#");   CAMELOT_TO_NOTE.put("6d", 70);
-      CAMELOT_TO_KEY.put("7d", "F");    CAMELOT_TO_NOTE.put("7d", 65);
-      CAMELOT_TO_KEY.put("8d", "C");    CAMELOT_TO_NOTE.put("8d", 60);
-      CAMELOT_TO_KEY.put("9d", "G");    CAMELOT_TO_NOTE.put("9d", 67);
-      CAMELOT_TO_KEY.put("10d", "D");   CAMELOT_TO_NOTE.put("10d", 62);
-      CAMELOT_TO_KEY.put("11d", "A");   CAMELOT_TO_NOTE.put("11d", 69);
-      CAMELOT_TO_KEY.put("12d", "E");   CAMELOT_TO_NOTE.put("12d", 64);
-      
-      CAMELOT_TO_KEY.put("1m", "G#");   CAMELOT_TO_NOTE.put("1m", 68);
-      CAMELOT_TO_KEY.put("2m", "D#");   CAMELOT_TO_NOTE.put("2m", 63);
-      CAMELOT_TO_KEY.put("3m", "A#");   CAMELOT_TO_NOTE.put("3m", 70);
-      CAMELOT_TO_KEY.put("4m", "F");    CAMELOT_TO_NOTE.put("4m", 65);
-      CAMELOT_TO_KEY.put("5m", "C");    CAMELOT_TO_NOTE.put("5m", 60);
-      CAMELOT_TO_KEY.put("6m", "G");    CAMELOT_TO_NOTE.put("6m", 67);
-      CAMELOT_TO_KEY.put("7m", "D");    CAMELOT_TO_NOTE.put("7m", 62);
-      CAMELOT_TO_KEY.put("8m", "A");    CAMELOT_TO_NOTE.put("8m", 69);
-      CAMELOT_TO_KEY.put("9m", "E");    CAMELOT_TO_NOTE.put("9m", 64);
-      CAMELOT_TO_KEY.put("10m", "B");   CAMELOT_TO_NOTE.put("10m", 59);
-      CAMELOT_TO_KEY.put("11m", "F#");  CAMELOT_TO_NOTE.put("11m", 66);
-      CAMELOT_TO_KEY.put("12m", "C#");  CAMELOT_TO_NOTE.put("12m", 61);
+      // Mapping aligned with the Traktor wheel used in this project (Quanta/Open style).
+      CAMELOT_TO_KEY.put("1d", "C");    CAMELOT_TO_NOTE.put("1d", 60);
+      CAMELOT_TO_KEY.put("2d", "G");    CAMELOT_TO_NOTE.put("2d", 67);
+      CAMELOT_TO_KEY.put("3d", "D");    CAMELOT_TO_NOTE.put("3d", 62);
+      CAMELOT_TO_KEY.put("4d", "A");    CAMELOT_TO_NOTE.put("4d", 69);
+      CAMELOT_TO_KEY.put("5d", "E");    CAMELOT_TO_NOTE.put("5d", 64);
+      CAMELOT_TO_KEY.put("6d", "B");    CAMELOT_TO_NOTE.put("6d", 59);
+      CAMELOT_TO_KEY.put("7d", "F#");   CAMELOT_TO_NOTE.put("7d", 66);
+      CAMELOT_TO_KEY.put("8d", "C#");   CAMELOT_TO_NOTE.put("8d", 61);
+      CAMELOT_TO_KEY.put("9d", "G#");   CAMELOT_TO_NOTE.put("9d", 68);
+      CAMELOT_TO_KEY.put("10d", "D#");  CAMELOT_TO_NOTE.put("10d", 63);
+      CAMELOT_TO_KEY.put("11d", "A#");  CAMELOT_TO_NOTE.put("11d", 70);
+      CAMELOT_TO_KEY.put("12d", "F");   CAMELOT_TO_NOTE.put("12d", 65);
+
+      CAMELOT_TO_KEY.put("1m", "A");    CAMELOT_TO_NOTE.put("1m", 69);
+      CAMELOT_TO_KEY.put("2m", "E");    CAMELOT_TO_NOTE.put("2m", 64);
+      CAMELOT_TO_KEY.put("3m", "B");    CAMELOT_TO_NOTE.put("3m", 59);
+      CAMELOT_TO_KEY.put("4m", "F#");   CAMELOT_TO_NOTE.put("4m", 66);
+      CAMELOT_TO_KEY.put("5m", "C#");   CAMELOT_TO_NOTE.put("5m", 61);
+      CAMELOT_TO_KEY.put("6m", "G#");   CAMELOT_TO_NOTE.put("6m", 68);
+      CAMELOT_TO_KEY.put("7m", "D#");   CAMELOT_TO_NOTE.put("7m", 63);
+      CAMELOT_TO_KEY.put("8m", "A#");   CAMELOT_TO_NOTE.put("8m", 70);
+      CAMELOT_TO_KEY.put("9m", "F");    CAMELOT_TO_NOTE.put("9m", 65);
+      CAMELOT_TO_KEY.put("10m", "C");   CAMELOT_TO_NOTE.put("10m", 60);
+      CAMELOT_TO_KEY.put("11m", "G");   CAMELOT_TO_NOTE.put("11m", 67);
+      CAMELOT_TO_KEY.put("12m", "D");   CAMELOT_TO_NOTE.put("12m", 62);
    }
    
    private static final String[] NOTES = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
