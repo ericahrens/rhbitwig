@@ -266,7 +266,10 @@ public class DeckManager
       final int clamped = Math.max(BITWIG_SEMITONE_MIN, Math.min(BITWIG_SEMITONE_MAX, semitone));
       final double normalized = (clamped - BITWIG_SEMITONE_MIN) /
          (double) (BITWIG_SEMITONE_MAX - BITWIG_SEMITONE_MIN);
-      return (int) Math.round(normalized * BITWIG_CC_MAX);
+      // Bitwig quantizes this destination parameter in buckets, so rounding can
+      // land below threshold for some semitones (-1, 3, 6, 9, ...).
+      // Using ceil ensures each target semitone reaches its intended bucket.
+      return (int) Math.ceil(normalized * BITWIG_CC_MAX);
    }
    
    public void shutdown() {
