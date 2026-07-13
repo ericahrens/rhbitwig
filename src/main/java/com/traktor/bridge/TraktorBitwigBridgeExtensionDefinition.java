@@ -24,7 +24,7 @@ public class TraktorBitwigBridgeExtensionDefinition extends ControllerExtensionD
    @Override
    public String getVersion() { return DRIVER_VERSION; }
    @Override
-   public int getRequiredAPIVersion() { return 25; }
+   public int getRequiredAPIVersion() { return 24; }
    @Override
    public int getNumMidiInPorts() { return 1; }
    @Override
