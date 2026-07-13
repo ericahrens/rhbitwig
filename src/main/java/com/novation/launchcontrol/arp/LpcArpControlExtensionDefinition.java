@@ -50,7 +50,7 @@ public class LpcArpControlExtensionDefinition extends ControllerExtensionDefinit
 
     @Override
     public int getRequiredAPIVersion() {
-        return 25;
+        return 24;
     }
 
     @Override
