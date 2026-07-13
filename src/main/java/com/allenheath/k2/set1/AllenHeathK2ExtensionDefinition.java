@@ -45,7 +45,7 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public int getRequiredAPIVersion() {
-        return 25;
+        return 24;
     }
 
     @Override
