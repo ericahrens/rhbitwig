@@ -30,11 +30,11 @@
 
     <dependencies>
 
-        <!-- Bitwig Extension API 25 -->
+        <!-- Bitwig Extension API 24 -->
         <dependency>
             <groupId>com.bitwig</groupId>
             <artifactId>extension-api</artifactId>
-            <version>25</version>
+            <version>24</version>
             <scope>provided</scope>
         </dependency>
 
