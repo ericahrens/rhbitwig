@@ -71,37 +71,20 @@ Current CC conversion formula:
 
 Verified mapping for Note Transpose range `-1 .. 10`:
 
-| Note Transpose (semitone) | CC16 |
-| --- | --- |
-| -1 | 63 |
-| 0 | 64 |
-| 1 | 65 |
-| 2 | 67 |
-| 3 | 68 |
-| 4 | 69 |
-| 5 | 71 |
-| 6 | 72 |
-| 7 | 73 |
-| 8 | 75 |
-| 9 | 76 |
-| 10 | 77 |
-
-Camelot examples for the same semitone range:
-
-| Semitone | Example Camelot keys |
-| --- | --- |
-| -1 | `6d`, `3m` |
-| 0 | `1d`, `10m` |
-| 1 | `8d`, `5m` |
-| 2 | `3d`, `12m` |
-| 3 | `10d`, `7m` |
-| 4 | `5d`, `2m` |
-| 5 | `12d`, `9m` |
-| 6 | `7d`, `4m` |
-| 7 | `2d`, `11m` |
-| 8 | `9d`, `6m` |
-| 9 | `4d`, `1m` |
-| 10 | `11d`, `8m` |
+| Note Transpose (semitone) | CC16 | Example Camelot keys |
+| --- | --- | --- |
+| -1 | 63 | `6d`, `3m` |
+| 0 | 64 | `1d`, `10m` |
+| 1 | 65 | `8d`, `5m` |
+| 2 | 67 | `3d`, `12m` |
+| 3 | 68 | `10d`, `7m` |
+| 4 | 69 | `5d`, `2m` |
+| 5 | 71 | `12d`, `9m` |
+| 6 | 72 | `7d`, `4m` |
+| 7 | 73 | `2d`, `11m` |
+| 8 | 75 | `9d`, `6m` |
+| 9 | 76 | `4d`, `1m` |
+| 10 | 77 | `11d`, `8m` |
 
 Canonical wheel labels used in this project (source of truth):
 
