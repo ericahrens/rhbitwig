@@ -13,7 +13,7 @@ Extension renamed and aligned to K2/K3 DJSet; deck selection behavior stabilized
 Camelot/Open-wheel mapping synchronized to project wheel definitions, semitone -> CC16 conversion adjusted to avoid skipped Note Transpose steps, and practical range `-1..10` verified without gaps.
 
 4. API/toolchain alignment:
-Maven Bitwig dependency aligned to `com.bitwig:extension-api:25`, `getRequiredAPIVersion()` aligned to 25 across extension definitions, and IntelliJ module metadata aligned to API 25.
+Maven Bitwig dependency aligned to `com.bitwig:extension-api:24`, `getRequiredAPIVersion()` aligned to 24 across extension definitions, and IntelliJ module metadata aligned to API 24.
 
 5. Controller/framework evolution beyond bridge work:
 Substantial updates in Akai Fire sequencing/display pipeline, Launchcontrol and Launchpad Pro Mk3 code paths, Yaeltex focus/layer logic refinements, and framework/debug cleanup and stabilization.
