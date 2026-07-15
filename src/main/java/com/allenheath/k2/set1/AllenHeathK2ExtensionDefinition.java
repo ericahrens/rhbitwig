@@ -20,7 +20,7 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public String getAuthor() {
-        return "E.Ahrens/R.Hawtin/DPetkov";
+        return "E.Ahrens/R.Hawtin/userdsp";
     }
 
     @Override
