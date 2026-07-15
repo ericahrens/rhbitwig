@@ -79,7 +79,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 		shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
 		setUpMidiSysExCommands();
 		host.showPopupNotification("Launchpad Drum Control");
-		// initGridButtons();
 		initModifierButtons();
 		initTransportSection();
 		initDrumSequenceLayer();
@@ -100,11 +99,9 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 					host.getOscModule().createAddressSpace());
 
 			Object testArg = "sending!";
-			// connection.startBundle();
 			try {
 				gridOSCconnection.sendMessage("/RHBitwig", testArg);
 			} catch (IOException e) {
-				// throw new RuntimeException(e);
 				host.println("No Connection!!");
 			}
 		} else {
@@ -117,7 +114,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 			try {
 				gridOSCconnection.sendMessage("Bitwig Test Message", o);
 			} catch (IOException e) {
-				// throw new RuntimeException(e);
 				host.println("No Connection!!");
 			}
 		});
@@ -125,10 +121,8 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 
 	private void initDrumSequenceLayer() {
 		drumseqenceMode = new DrumSequenceMode(layers, this);
-		// implement a only pressed binding to avoid stupid if stuff..
 	}
 
-	@SuppressWarnings("deprecation")
 	private void initTransportSection() {
 		transport.isPlaying().markInterested();
 		transport.tempo().markInterested();
@@ -142,12 +136,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 
 	private void togglePlay() {
 		transport.togglePlay();
-//		if (transport.isPlaying().get()) {
-//			transport.isPlaying().set(false);
-//		} else {
-//			drumseqenceMode.retrigger();
-//			transport.restart();
-//		}
 	}
 
 	private void initModifierButtons() {
@@ -186,8 +174,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 		hwElements.getButton(LabelCcAssignments.MUTE_REDO).bindPressed(mainLayer, states.getMuteButtonPressed(), LpColor.ORANGE);
 
 		hwElements.getButton(LabelCcAssignments.SOLO_CLICK).bindPressed(mainLayer, states.getSoloButtonPressed(), LpColor.YELLOW);
-		// soloButton.bindToggle(shiftLayer, transport.isMetronomeEnabled(),
-		// LpColor.SKY_HI, LpColor.SKY_LO);
 
 		hwElements.getButton(LabelCcAssignments.VOLUME).bindPressed(mainLayer, states.getVolumeButtonPressed(), LpColor.CYAN);
 	}
@@ -222,7 +208,6 @@ public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
 
 	private void setUpMidiSysExCommands() {
 		midiIn.setSysexCallback(data -> {
-			// RemoteConsole.out.println(" MIDI SYS EX {}", data);
 		});
 	}
 
