@@ -12,7 +12,7 @@ public class TraktorBitwigBridgeExtensionDefinition extends ControllerExtensionD
 {
    private static final UUID DRIVER_ID = UUID.fromString("12345678-1234-1234-1234-123456789abc");
    private static final String DRIVER_NAME = "Traktor Bitwig Bridge";
-   private static final String DRIVER_AUTHOR = "Traktor Bridge";
+   private static final String DRIVER_AUTHOR = "userdsp";
    private static final String DRIVER_VERSION = "0.2";
    
    @Override
