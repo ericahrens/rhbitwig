@@ -1,272 +1,96 @@
 package com.novation.launchpadProMk3;
 
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-
-import com.bitwig.extension.api.opensoundcontrol.OscConnection;
-import com.bitwig.extension.api.util.midi.ShortMidiMessage;
-import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
-import com.bitwig.extension.controller.ControllerExtension;
+import com.bitwig.extension.api.PlatformType;
+import com.bitwig.extension.controller.AutoDetectionMidiPortNamesList;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
-import com.bitwig.extension.controller.api.Application;
-import com.bitwig.extension.controller.api.Arpeggiator;
 import com.bitwig.extension.controller.api.ControllerHost;
-import com.bitwig.extension.controller.api.HardwareSurface;
-import com.bitwig.extension.controller.api.MidiIn;
-import com.bitwig.extension.controller.api.MidiOut;
-import com.bitwig.extension.controller.api.NoteInput;
-import com.bitwig.extension.controller.api.Preferences;
-import com.bitwig.extension.controller.api.SettableBooleanValue;
-import com.bitwig.extension.controller.api.SettableEnumValue;
-import com.bitwig.extension.controller.api.SettableRangedValue;
-import com.bitwig.extension.controller.api.SettableStringValue;
-import com.bitwig.extension.controller.api.Signal;
-import com.bitwig.extension.controller.api.Transport;
-import com.bitwig.extensions.debug.DebugConsole;
-import com.bitwig.extensions.framework.Layer;
-import com.bitwig.extensions.framework.Layers;
 
-public class LaunchpadProMk3ControllerExtension extends ControllerExtension {
+import java.util.UUID;
 
-	private static final String HEADER = "F0 00 20 29 02 0E ";
+public class LaunchPadProMk3ExtensionDefinition extends ControllerExtensionDefinition {
+    private static final UUID DRIVER_ID = UUID.fromString("3c6b9cd4-0ffd-11ec-82a8-0242ac130003");
 
-	private static final String DAW_MODE = "0E 01";
-	private static final String STAND_ALONE_MODE = "0E 00";
+    public LaunchPadProMk3ExtensionDefinition() {
+    }
 
-	private HardwareSurface surface;
-	private MidiIn midiIn;
-	private MidiOut midiOut;
-	private Layers layers;
-	private LpLayer mainLayer;
-	private LpLayer shiftLayer;
-	private OscConnection gridOSCconnection;
+    @Override
+    public String getName() {
+        return "Launchpad Drum Sequencer";
+    }
 
-	private ViewCursorControl viewControl;
-	private NoteInput noteInput;
-	private DrumSequenceMode drumseqenceMode;
-	private Transport transport;
-	private Application application;
+    @Override
+    public String getAuthor() {
+        return "R.Hawtin/E.Ahrens/userdsp";
+    }
 
-	private final LpStateValues states = new LpStateValues();
-	private HardwareElements hwElements;
+    @Override
+    public String getVersion() {
+        return "1.0.6.1";
+    }
 
-	protected LaunchpadProMk3ControllerExtension(final ControllerExtensionDefinition definition, final ControllerHost host) {
-		super(definition, host);
-	}
+    @Override
+    public UUID getId() {
+        return DRIVER_ID;
+    }
 
-	@Override
-	public void init() {
-		final ControllerHost host = getHost();
-		DebugConsole.registerHost(host);
-		layers = new Layers(this);
-		surface = host.createHardwareSurface();
-		transport = host.createTransport();
-		application = host.createApplication();
-		midiIn = host.getMidiInPort(0);
-		midiIn.setMidiCallback((ShortMidiMessageReceivedCallback) this::onMidi0);
-		midiOut = host.getMidiOutPort(0);
+    @Override
+    public String getHardwareVendor() {
+        return "Novation";
+    }
 
-		initOscConnection(host);
+    @Override
+    public String getHardwareModel() {
+        return "Launchpad Pro Mk3";
+    }
 
-		noteInput = midiIn.createNoteInput("MIDI", "80????", "90????", "A0????", "D0????");
-		noteInput.setShouldConsumeEvents(false);
+    @Override
+    public String getHelpFilePath() {
+        return "Controllers/Novation/Hawtin Novation LaunchPad Pro MKIII.pdf";
+    }
 
-		hwElements = new HardwareElements(surface, gridOSCconnection, midiIn, midiOut);
-		viewControl = new ViewCursorControl(host);
-		mainLayer = new LpLayer(layers, "MainLayer");
-		shiftLayer = new LpLayer(layers, "GlobalShiftLayer");
-		setUpMidiSysExCommands();
-		host.showPopupNotification("Launchpad Drum Control");
-		initModifierButtons();
-		initTransportSection();
-		initDrumSequenceLayer();
-		mainLayer.activate();
-		drumseqenceMode.activate();
-		sendSysExCommand(DAW_MODE);
-	}
+    @Override
+    public int getRequiredAPIVersion() {
+        return 24;
+    }
 
-	private void initOscConnection(ControllerHost host) {
-		Preferences prefs = host.getPreferences();
-		SettableRangedValue OscPortSetting = prefs.getNumberSetting("Port", "OSC", 8000, 100000, 1, "", 12345);
-		SettableStringValue OscAddressSetting = prefs.getStringSetting("Address", "OSC", 15, "10.0.0.255");
-		Signal SignalTest = prefs.getSignalSetting("Send Message", "OSC", "Test");
-		SettableBooleanValue SendOSC = prefs.getBooleanSetting("Send OSC", "OSC", false);
+    @Override
+    public int getNumMidiInPorts() {
+        return 1;
+    }
 
-		if (SendOSC.get() == true) {
-			gridOSCconnection = host.getOscModule().connectToUdpServer(OscAddressSetting.get(), (int) OscPortSetting.getRaw(),
-					host.getOscModule().createAddressSpace());
+    @Override
+    public int getNumMidiOutPorts() {
+        return 1;
+    }
 
-			Object testArg = "sending!";
-			try {
-				gridOSCconnection.sendMessage("/RHBitwig", testArg);
-			} catch (IOException e) {
-				host.println("No Connection!!");
-			}
-		} else {
-			gridOSCconnection = null;
-			return;
-		}
+    @Override
+    public void listAutoDetectionMidiPortNames(final AutoDetectionMidiPortNamesList list,
+                                               final PlatformType platformType) {
+        final String[] inputNames = new String[1];
+        final String[] outputNames = new String[1];
 
-		SignalTest.addSignalObserver(() -> {
-			Object o = "1";
-			try {
-				gridOSCconnection.sendMessage("Bitwig Test Message", o);
-			} catch (IOException e) {
-				host.println("No Connection!!");
-			}
-		});
-	}
+        switch (platformType) {
+            case LINUX:
+                inputNames[0] = "LPProMK3 MIDI";
+                outputNames[0] = "LPProMK3 MIDI";
+                break;
 
-	private void initDrumSequenceLayer() {
-		drumseqenceMode = new DrumSequenceMode(layers, this);
-	}
+            case WINDOWS:
+                inputNames[0] = "LPProMK3 MIDI";
+                outputNames[0] = "LPProMK3 MIDI";
+                break;
 
-	private void initTransportSection() {
-		transport.isPlaying().markInterested();
-		transport.tempo().markInterested();
-		transport.playPosition().markInterested();
-		hwElements.getButton(LabelCcAssignments.PLAY).bind(mainLayer, this::togglePlay,
-				() -> transport.isPlaying().get() ? RgbState.of(LpColor.GREEN_HI) : RgbState.of(LpColor.GREEN_LO));
+            case MAC:
+                inputNames[0] = "Launchpad Pro MK3 LPProMK3 MIDI";
+                outputNames[0] = "Launchpad Pro MK3 LPProMK3 MIDI";
+                break;
+        }
 
-		hwElements.getButton(LabelCcAssignments.SESSION).bindToggle(mainLayer, transport.isClipLauncherAutomationWriteEnabled(),
-				LpColor.RED_HI, LpColor.RED_LO);
-	}
+        list.add(inputNames, outputNames);
+    }
 
-	private void togglePlay() {
-		transport.togglePlay();
-	}
-
-	private void initModifierButtons() {
-		hwElements.getButton(LabelCcAssignments.SEQUENCER).bind(mainLayer, () -> {
-		}, () -> RgbState.of(LpColor.BLUE_HI));
-
-		hwElements.getButton(LabelCcAssignments.SHIFT).bindPressed(mainLayer, pressed -> states.handleShiftPressed(Boolean.TRUE.equals(pressed)),
-				() -> states.getShiftModeActive().get() ? RgbState.of(LpColor.OCEAN_HI) : RgbState.of(LpColor.OCEAN_LO));
-
-		states.getShiftModeActive().addValueObserver(shiftMode -> {
-			if (shiftMode) {
-				shiftLayer.activate();
-			} else {
-				shiftLayer.deactivate();
-			}
-		});
-
-		final Arpeggiator arp = noteInput.arpeggiator();
-		arp.isEnabled().markInterested();
-		arp.usePressureToVelocity().markInterested();
-		arp.octaves().markInterested();
-		arp.rate().markInterested();
-		hwElements.getButton(LabelCcAssignments.REC).bindToggle(mainLayer, transport.isClipLauncherOverdubEnabled(), LpColor.RED,
-				LpColor.BLACK);
-
-		hwElements.getButton(LabelCcAssignments.RECORD_ARM_UNDO).bindToggle(mainLayer, states.getNoteRepeatActive(),
-				RgbState.of(LpColor.RED_HI.getIndex(), LightState.PULSING), RgbState.of(LpColor.BLACK));
-
-		hwElements.getButton(LabelCcAssignments.LEFT).bind(mainLayer, () -> application.undo(), LpColor.BLUE);
-		hwElements.getButton(LabelCcAssignments.RIGHT).bind(mainLayer, () -> application.redo(), LpColor.BLUE);
-
-		hwElements.getButton(LabelCcAssignments.CLEAR).bindPressed(mainLayer, states.getClearButtonPressed(), LpColor.WHITE);
-
-		hwElements.getButton(LabelCcAssignments.DUPLICATE).bindPressed(mainLayer, states.getDuplicateButtonPressed(), LpColor.WHITE);
-
-		hwElements.getButton(LabelCcAssignments.MUTE_REDO).bindPressed(mainLayer, states.getMuteButtonPressed(), LpColor.ORANGE);
-
-		hwElements.getButton(LabelCcAssignments.SOLO_CLICK).bindPressed(mainLayer, states.getSoloButtonPressed(), LpColor.YELLOW);
-
-		hwElements.getButton(LabelCcAssignments.VOLUME).bindPressed(mainLayer, states.getVolumeButtonPressed(), LpColor.CYAN);
-	}
-
-	void bindRecQuantize(final Layer layer, final LabeledButton button) {
-		final SettableEnumValue recGrid = application.recordQuantizationGrid();
-		recGrid.markInterested();
-		button.bind(layer, () -> {
-			if (recGrid.get().equals("OFF")) {
-				recGrid.set("1/16");
-			} else {
-				recGrid.set("OFF");
-			}
-			states.notifyShiftFunctionInvoked();
-		}, () -> {
-			if (recGrid.get().equals("OFF")) {
-				return RgbState.of(LpColor.BLUE_LO);
-			}
-			return RgbState.of(LpColor.BLUE_HI);
-		});
-	}
-
-	public int beatToMs(final double beats) {
-		final double tempo = transport.tempo().getRaw();
-		final double hz = tempo / 60.0;
-		return (int) (beats / hz * 1000);
-	}
-
-	public double transportPos() {
-		return transport.playPosition().get();
-	}
-
-	private void setUpMidiSysExCommands() {
-		midiIn.setSysexCallback(data -> {
-		});
-	}
-
-	private void onMidi0(final ShortMidiMessage msg) {
-		if (msg.getChannel() == 0 && msg.getStatusByte() == 144) {
-			drumseqenceMode.notifyMidiEvent(msg.getData1(), msg.getData2());
-		}
-	}
-
-	public ViewCursorControl getViewControl() {
-		return viewControl;
-	}
-
-	public NoteInput getNoteInput() {
-		return noteInput;
-	}
-
-	private void sendSysExCommand(final String command) {
-		midiOut.sendSysex(HEADER + command + " F7");
-	}
-
-	private void shutDownController(final CompletableFuture<Boolean> shutdown) {
-		sendSysExCommand(STAND_ALONE_MODE);
-		try {
-			Thread.sleep(300);
-		} catch (final InterruptedException e) {
-			e.printStackTrace();
-		}
-		shutdown.complete(true);
-	}
-
-	@Override
-	public void exit() {
-		drumseqenceMode.deactivate();
-		final CompletableFuture<Boolean> shutdown = new CompletableFuture<>();
-		Executors.newSingleThreadExecutor().execute(() -> shutDownController(shutdown));
-		try {
-			shutdown.get();
-		} catch (final InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
-		getHost().showPopupNotification("Novation Launchpad Exited");
-	}
-
-	@Override
-	public void flush() {
-		surface.updateHardware();
-	}
-
-	public HardwareElements getHwElements() {
-		return hwElements;
-	}
-
-	public LpStateValues getStates() {
-		return states;
-	}
-
-	public Application getApplication() {
-		return application;
-	}
-
+    @Override
+    public LaunchpadProMk3ControllerExtension createInstance(final ControllerHost host) {
+        return new LaunchpadProMk3ControllerExtension(this, host);
+    }
 }
