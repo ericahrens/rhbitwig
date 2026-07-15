@@ -20,7 +20,7 @@ public class AkaiFireDrumSeqDefinition extends ControllerExtensionDefinition {
 
     @Override
     public String getAuthor() {
-        return "R.Hawtin/E.Ahrens";
+        return "R.Hawtin/E.Ahrens/userdsp";
     }
 
     @Override
