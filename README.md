@@ -129,3 +129,24 @@ Canonical wheel labels used in this project (source of truth):
 | (A) | `4d` , `1m` |
 | (A#) | `11d` , `8m` |
 | (B) | `6d` , `3m` |
+
+* Fork Update vs Original `ericahrens/rhbitwig` (`upstream/master`)
+Important differences in this forked branch:
+
+1. New Traktor Bridge subsystem (not present in upstream master):
+Added `com.traktor.bridge` package with `TraktorBitwigBridgeExtension`, `TraktorBitwigBridgeExtensionDefinition`, `HttpBridgeServer`, `DeckManager`, `ScaleEngine`, and `VirtualMidiInput`; this provides HTTP deck/key intake and MIDI/CC forwarding to Bitwig.
+
+2. Allen & Heath K2/K3 workflow updates:
+Extension renamed and aligned to K2/K3 DJSet; deck selection behavior stabilized (single-click preview, double-click select), active-deck notifications sent to bridge (`/activeDeck/{A|B|C|D}`), and LED state feedback refined.
+
+3. Tonality/transpose pipeline hardening:
+Camelot/Open-wheel mapping synchronized to project wheel definitions, semitone -> CC16 conversion adjusted to avoid skipped Note Transpose steps, and practical range `-1..10` verified without gaps.
+
+4. API/toolchain alignment:
+Maven Bitwig dependency aligned to `com.bitwig:extension-api:20`, `getRequiredAPIVersion()` aligned to 24 across extension definitions, and IntelliJ module metadata aligned to API 24.
+
+5. Controller/framework evolution beyond bridge work:
+Substantial updates in Akai Fire sequencing/display pipeline, Launchcontrol and Launchpad Pro Mk3 code paths, Yaeltex focus/layer logic refinements, and framework/debug cleanup and stabilization.
+
+6. Documentation expanded in this fork:
+Added K2 deck-selector behavior notes, full Camelot -> Note Transpose mapping documentation, and a canonical wheel table as source of truth.
