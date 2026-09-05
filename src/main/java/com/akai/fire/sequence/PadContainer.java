@@ -14,15 +14,6 @@ class PadContainer {
     private static final double SHIFT_INC = 0.01;
     private static final double REGULAR_INC = 0.025;
 
-    private static final RgbLigthState TR_RED = new RgbLigthState(70, 0, 0, true);
-    private static final RgbLigthState TR_ORANGE = new RgbLigthState(90, 15, 0, true);
-    private static final RgbLigthState TR_YELLOW = new RgbLigthState(110, 55, 0, true);
-    private static final RgbLigthState TR_WHITE = new RgbLigthState(80, 80, 80, true);
-
-    private static final RgbLigthState[] fixedPadColorTable = {TR_RED, TR_RED, TR_RED, TR_RED, //
-            TR_ORANGE, TR_ORANGE, TR_ORANGE, TR_ORANGE, TR_YELLOW, TR_YELLOW, TR_YELLOW, TR_YELLOW, //
-            TR_WHITE, TR_WHITE, TR_WHITE, TR_WHITE};
-
     private final PadHandler padHandler;
 
     private RgbLigthState padColor;
@@ -61,12 +52,10 @@ class PadContainer {
         pad.name().markInterested();
         pad.addIsSelectedInEditorObserver(selected -> handlePadSelection(index, selected));
         pad.exists().addValueObserver(exists -> this.exists = exists);
-        //padColor = fixedPadColorTable[index];
         padColor = RgbLigthState.OFF;
         pad.color().addValueObserver((r, g, b) -> {
             padColor = ColorLookup.getColor(r, g, b);
             bitwigPadColor = ColorLookup.getColor(r, g, b);
-            // padColor = fixedPadColorTable[index];
             if (selected) {
                 this.padHandler.currentPadColor = bitwigPadColor;
             }
@@ -74,7 +63,6 @@ class PadContainer {
         volumeBinding = new ParameterDisplayBinding(0, index, pad.volume(), padHandler.getDiplayTarget(), false);
         panBinding = new ParameterDisplayBinding(1, index, pad.pan(), padHandler.getDiplayTarget(), true);
     }
-
 
     public void bindParameters(final Layer layer) {
         layer.addBinding(volumeBinding);
@@ -128,9 +116,6 @@ class PadContainer {
     }
 
     public RgbLigthState getColor() {
-//        if (!exists) {
-//            return RgbLigthState.OFF;
-//        }
         if (selected) {
             return playing.returnTrueFalse(padColor.getBrightest(), padColor.getBrightend());
         }

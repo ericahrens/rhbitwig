@@ -20,12 +20,12 @@ public class AkaiFireDrumSeqDefinition extends ControllerExtensionDefinition {
 
     @Override
     public String getAuthor() {
-        return "R.Hawtin/E.Ahrens";
+        return "R.Hawtin/E.Ahrens/userdsp";
     }
 
     @Override
     public String getVersion() {
-        return "0.8";
+        return "0.81";
     }
 
     @Override
@@ -55,7 +55,7 @@ public class AkaiFireDrumSeqDefinition extends ControllerExtensionDefinition {
 
     @Override
     public int getRequiredAPIVersion() {
-        return 17;
+        return 24;
     }
 
     @Override

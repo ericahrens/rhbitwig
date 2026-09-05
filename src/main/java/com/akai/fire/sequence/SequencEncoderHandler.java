@@ -8,343 +8,394 @@ import com.akai.fire.AkaiFireDrumSeqExtension;
 import com.akai.fire.NoteAssign;
 import com.akai.fire.control.BiColorButton;
 import com.akai.fire.control.TouchEncoder;
+import com.akai.fire.display.DisplayTarget;
 import com.akai.fire.display.OledDisplay;
 import com.akai.fire.lights.BiColorLightState;
 import com.bitwig.extension.controller.api.NoteOccurrence;
 import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extensions.framework.Layer;
 
+interface NoteDoubleGetter {
+    double get(NoteStep step);
+}
+
+interface NoteDoubleSetter {
+    void set(NoteStep step, double value);
+}
+
+interface NoteIntGetter {
+    int get(NoteStep step);
+}
+
+interface NoteIntSetter {
+    void set(NoteStep step, int value);
+}
+
 public class SequencEncoderHandler extends Layer {
 
-	private final static String[] paramNames = { "Volume", "Panning", "Send 1", "Send 2" };
+    private final static String[] paramNames = { "Volume", "Panning", "Send 1", "Send 2" };
 
-	private final DrumSequenceMode parent;
+    private final DrumSequenceMode parent;
+    private final PadHandler padHandler;
 
-	private EncoderMode encoderMode = EncoderMode.CHANNEL;
-	private final Layer channelLayer;
-	private final Layer mixerLayer;
-	private final Layer mixerShiftLayer;
-	private final Layer user1Layer;
+    private EncoderMode encoderMode = EncoderMode.CHANNEL;
+    private final Layer channelLayer;
+    private final Layer mixerLayer;
+    private final Layer mixerShiftLayer;
+    private final Layer user1Layer;
 
-	private Layer currentLayer;
-	private final OledDisplay oled;
-	private final Map<EncoderMode, Layer> modeMapping = new HashMap<>();
-	private final TouchEncoder[] encoders;
+    private Layer currentLayer;
+    private final OledDisplay oled;
+    private final Map<EncoderMode, Layer> modeMapping = new HashMap<>();
+    private final TouchEncoder[] encoders;
+    private final DisplayTarget displayTarget;
 
-	private final PadHandler padHandler;
+    public SequencEncoderHandler(final DrumSequenceMode drumMode, final AkaiFireDrumSeqExtension driver,
+                                 final PadHandler padHandler) {
+        super(driver.getLayers(), "Encoder_layer");
+        this.parent = drumMode;
+        this.oled = driver.getOled();
+        this.padHandler = padHandler;
+        this.displayTarget = padHandler.getDiplayTarget();
+        channelLayer = new Layer(driver.getLayers(), "ENC_CHANNEL_LAYER");
+        mixerLayer = new Layer(driver.getLayers(), "ENC_MIXER_LAYER");
+        mixerShiftLayer = new Layer(driver.getLayers(), "ENC_SHIFT_MIXER_LAYER");
+        user1Layer = new Layer(driver.getLayers(), "ENC_USER1_LAYER");
+        encoders = driver.getEncoders();
+        assign(EncoderMode.CHANNEL, channelLayer, encoders);
+        assign(EncoderMode.MIXER, mixerLayer, encoders);
+        assign(EncoderMode.MIXER_SHIFT, mixerShiftLayer, encoders);
+        assignParams(EncoderMode.USER_1, user1Layer, encoders);
+        currentLayer = channelLayer;
+        final BiColorButton modeButon = driver.getButton(NoteAssign.KNOB_MODE);
+        modeButon.bindPressed(this, pressed -> handleModeAdvance(Boolean.TRUE.equals(pressed)), this::modeToLight);
+        parent.getShiftActive().addValueObserver(this::handleShiftChange);
+    }
 
-	@FunctionalInterface
-	interface NoteDoubleGetter {
-		double get(NoteStep step);
-	}
+    private void handleShiftChange(final boolean shiftActive) {
+        if (!parent.isActive()) {
+            return;
+        }
+        if (encoderMode == EncoderMode.MIXER_SHIFT || encoderMode == EncoderMode.MIXER) {
+            if (shiftActive) {
+                switchMode(EncoderMode.MIXER_SHIFT);
+            } else {
+                switchMode(EncoderMode.MIXER);
+            }
+        }
+    }
 
-	@FunctionalInterface
-	interface NoteDoubleSetter {
-		void set(NoteStep step, double value);
-	}
+    private void assign(final EncoderMode mode, final Layer layer, final TouchEncoder[] encoders) {
+        modeMapping.put(mode, layer);
+        final EncoderAccess[] assignments = mode.getAssignments();
+        for (int i = 0; i < assignments.length; i++) {
+            if (assignments[i] instanceof NoteStepAccess) {
+                bindEncoder(layer, encoders[i], (NoteStepAccess) assignments[i]);
+            }
+        }
+    }
 
-	@FunctionalInterface
-	interface NoteIntGetter {
-		int get(NoteStep step);
-	}
+    private void assignParams(final EncoderMode mode, final Layer layer, final TouchEncoder[] encoders) {
+        modeMapping.put(mode, layer);
+        for (int i = 0; i < encoders.length; i++) {
+            bindPadEncoder(i, layer, encoders[i], paramNames[i]);
+        }
+    }
 
-	@FunctionalInterface
-	interface NoteIntSetter {
-		void set(NoteStep step, int value);
-	}
+    public EncoderMode nextMode() {
+        if (encoderMode == EncoderMode.CHANNEL) {
+            if (parent.isSelectHeld()) {
+                return EncoderMode.MIXER_SHIFT;
+            }
+            return EncoderMode.MIXER;
+        } else if (encoderMode == EncoderMode.MIXER || encoderMode == EncoderMode.MIXER_SHIFT) {
+            return EncoderMode.USER_1;
+        }
+        return EncoderMode.CHANNEL;
+    }
 
-	public SequencEncoderHandler(final DrumSequenceMode drumMode, final AkaiFireDrumSeqExtension driver,
-			final PadHandler padHandler) {
-		super(driver.getLayers(), "Encoder_layer");
-		this.parent = drumMode;
-		this.oled = driver.getOled();
-		this.padHandler = padHandler;
-		channelLayer = new Layer(driver.getLayers(), "ENC_CHANNEL_LAYER");
-		mixerLayer = new Layer(driver.getLayers(), "ENC_MIXER_LAYER");
-		mixerShiftLayer = new Layer(driver.getLayers(), "ENC_SHIFT_MIXER_LAYER");
-		user1Layer = new Layer(driver.getLayers(), "ENC_USER1_LAYER");
-		encoders = driver.getEncoders();
-		assign(EncoderMode.CHANNEL, channelLayer, encoders);
-		assign(EncoderMode.MIXER, mixerLayer, encoders);
-		assign(EncoderMode.MIXER_SHIFT, mixerShiftLayer, encoders);
-		assignParams(EncoderMode.USER_1, user1Layer, encoders);
-		currentLayer = channelLayer;
-		final BiColorButton modeButon = driver.getButton(NoteAssign.KNOB_MODE);
-		modeButon.bindPressed(this, this::handleModeAdvance, this::modeToLight);
-		parent.getShiftActive().addValueObserver(this::handleShiftChange);
-	}
+    private void bindEncoder(final Layer layer, final TouchEncoder encoder, final NoteStepAccess access) {
+        encoder.bindEncoder(layer, inc -> handleMod(inc, access));
+        encoder.bindTouched(layer, touched -> handleTouch(touched, access));
+    }
 
-	private void handleShiftChange(final boolean shiftActive) {
-		if (!parent.isActive()) {
-			return;
-		}
-		if (encoderMode == EncoderMode.MIXER_SHIFT || encoderMode == EncoderMode.MIXER) {
-			if (shiftActive) {
-				switchMode(EncoderMode.MIXER_SHIFT);
-			} else {
-				switchMode(EncoderMode.MIXER);
-			}
-		}
-	}
+    private void bindPadEncoder(final int index, final Layer layer, final TouchEncoder encoder,
+                                final String parameterName) {
+        encoder.bindEncoder(layer, inc -> handleParam(index, inc));
+        encoder.bindTouched(layer, touched -> handleTouchParam(index, touched, parameterName));
+        padHandler.bindPadParameters(layer);
+    }
 
-	private void assign(final EncoderMode mode, final Layer layer, final TouchEncoder[] encoders) {
-		modeMapping.put(mode, layer);
-		final EncoderAccess[] assignments = mode.getAssignments();
-		for (int i = 0; i < assignments.length; i++) {
-			if (assignments[i] instanceof NoteStepAccess) {
-				bindEncoder(layer, encoders[i], (NoteStepAccess) assignments[i]);
-			}
-		}
-	}
+    private void handleTouchParam(final int index, final Boolean touched, final String parameterName) {
+        if (touched) {
+            // ВИНАГИ ЗАДАВАМЕ АКТИВЕН ЕНКОДЕР
+            displayTarget.setActiveEncoder(index);
+            padHandler.activateView(index, parameterName);
+            padHandler.updateDisplay(index);
+        } else {
+            // ПРИ ПУСКАНЕ - НУЛИРАМЕ СЪСТОЯНИЕТО
+            displayTarget.resetTouchState();
+            oled.clearScreenDelayed();
+        }
+    }
 
-	private void assignParams(final EncoderMode mode, final Layer layer, final TouchEncoder[] encoders) {
-		modeMapping.put(mode, layer);
-		for (int i = 0; i < encoders.length; i++) {
-			bindPadEncoder(i, layer, encoders[i], paramNames[i]);
-		}
-	}
+    private void handleParam(final int index, final int inc) {
+        if (encoderMode == EncoderMode.USER_1) {
+            final List<NoteStep> addedNotes = parent.getAddedNotes();
+            if (!addedNotes.isEmpty()) {
+                modifyAddedNoteParameter(index, inc, addedNotes);
+                return;
+            }
+        }
+        padHandler.modifyValue(index, inc);
+    }
 
-	public EncoderMode nextMode() {
-		if (encoderMode == EncoderMode.CHANNEL) {
-			if (parent.isSelectHeld()) {
-				return EncoderMode.MIXER_SHIFT;
-			}
-			return EncoderMode.MIXER;
-		} else if (encoderMode == EncoderMode.MIXER || encoderMode == EncoderMode.MIXER_SHIFT) {
-			return EncoderMode.USER_1;
-		}
-		return EncoderMode.CHANNEL;
-	}
+    private void modifyAddedNoteParameter(final int index, final int inc, final List<NoteStep> addedNotes) {
+        final double amount = inc * 0.01;
+        
+        for (final NoteStep note : addedNotes) {
+            switch (index) {
+                case 0:
+                    double velocity = note.velocity() + amount;
+                    velocity = Math.max(0, Math.min(1, velocity));
+                    note.setVelocity(velocity);
+                    break;
+                case 1:
+                    double pan = note.pan() + amount;
+                    pan = Math.max(-1, Math.min(1, pan));
+                    note.setPan(pan);
+                    break;
+                case 2:
+                    double timbre = note.timbre() + amount;
+                    timbre = Math.max(0, Math.min(1, timbre));
+                    note.setTimbre(timbre);
+                    break;
+                case 3:
+                    double pressure = note.pressure() + amount;
+                    pressure = Math.max(0, Math.min(1, pressure));
+                    note.setPressure(pressure);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        if (!addedNotes.isEmpty()) {
+            final NoteStep firstNote = addedNotes.get(0);
+            final String details = "Creating note";
+            switch (index) {
+                case 0:
+                    oled.paramInfoPercent("LEVEL", firstNote.velocity(), details, 0, 1);
+                    break;
+                case 1:
+                    oled.paramInfoPercent("PAN", firstNote.pan(), details, -1, 1);
+                    break;
+                case 2:
+                    oled.paramInfoPercent("FX1", firstNote.timbre(), details, 0, 1);
+                    break;
+                case 3:
+                    oled.paramInfoPercent("FX2", firstNote.pressure(), details, 0, 1);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 
-	private void bindEncoder(final Layer layer, final TouchEncoder encoder, final NoteStepAccess access) {
-		encoder.bindEncoder(layer, inc -> handleMod(inc, access));
-		encoder.bindTouched(layer, touched -> handleTouch(touched, access));
-	}
+    private void handleModeAdvance(final boolean pressed) {
+        if (!pressed) {
+            oled.clearScreenDelayed();
+            return;
+        }
+        if (parent.getShiftActive().get()) {
+            oled.detailInfo("Encoder Mode", encoderMode.getInfo());
+        } else {
+            switchMode(nextMode());
+        }
+    }
 
-	private void bindPadEncoder(final int index, final Layer layer, final TouchEncoder encoder,
-			final String parameterName) {
-		encoder.bindEncoder(layer, inc -> handleParam(index, inc));
-		encoder.bindTouched(layer, touched -> handleTouchParam(index, touched, parameterName));
-		padHandler.bindPadParameters(layer);
-	}
+    private void switchMode(final EncoderMode newMode) {
+        encoderMode = newMode;
+        currentLayer.deactivate();
+        currentLayer = modeMapping.get(encoderMode);
+        currentLayer.activate();
+        applyResolution(encoderMode);
 
-	private void handleTouchParam(final int index, final Boolean touched, final String parameterName) {
-		if (touched) {
-			padHandler.activateView(index, parameterName);
-			padHandler.updateDisplay(index);
-		} else {
-			padHandler.deactivateView();
-		}
-	}
+        oled.detailInfo("Encoder Mode", encoderMode.getInfo());
+        oled.clearScreenDelayed();
+    }
 
-	private void handleParam(final int index, final int inc) {
-		padHandler.modifyValue(index, inc);
-	}
+    private void applyResolution(final EncoderMode mode) {
+        final EncoderAccess[] assignments = mode.getAssignments();
+        for (int i = 0; i < assignments.length; i++) {
+            encoders[i].setStepSize(assignments[i].getResolution());
+        }
+        if (assignments.length == 0) {
+            for (int i = 0; i < encoders.length; i++) {
+                encoders[i].setStepSize(0.25);
+            }
+        }
+    }
 
-	private void handleModeAdvance(final boolean pressed) {
-		if (!pressed) {
-			oled.clearScreenDelayed();
-			return;
-		}
-		if (parent.getShiftActive().get()) {
-			oled.detailInfo("Encoder Mode", encoderMode.getInfo());
-		} else {
-			switchMode(nextMode());
-		}
-	}
+    private BiColorLightState modeToLight() {
+        return encoderMode.getState();
+    }
 
-	private void switchMode(final EncoderMode newMode) {
-		encoderMode = newMode;
-		currentLayer.deactivate();
-		currentLayer = modeMapping.get(encoderMode);
-		currentLayer.activate();
-		applyResolution(encoderMode);
+    private void handleMod(final int inc, final NoteStepAccess accessor) {
+        final List<NoteStep> notes = parent.getHeldNotes();
+        if (notes.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < notes.size(); i++) {
+            final NoteStep note = notes.get(i);
 
-		oled.detailInfo("Encoder Mode", encoderMode.getInfo());
-		oled.clearScreenDelayed();
-	}
+            final String function = accessor.getName();
+            final String details = parent.getDetails(notes);
+            final boolean first = i == 0;
 
-	private void applyResolution(final EncoderMode mode) {
-		final EncoderAccess[] assignments = mode.getAssignments();
-		for (int i = 0; i < assignments.length; i++) {
-			encoders[i].setStepSize(assignments[i].getResolution());
-		}
-		if (assignments.length == 0) {
-			for (int i = 0; i < encoders.length; i++) {
-				encoders[i].setStepSize(0.25);
-			}
-		}
-	}
+            if (accessor.getUnit() == NoteValueUnit.MIDI || accessor.getUnit() == NoteValueUnit.NONE) {
+                final Integer newValue = accessor.applyIntIncrement(inc, note);
+                if (first && newValue != null) {
+                    oled.paramInfo(function, newValue, details, accessor.getMinInt(), accessor.getMaxInt());
+                }
+            } else if (accessor.getUnit() == NoteValueUnit.OCCURENCE) {
+                final NoteOccurrence newValue = incrementOccurence(inc, note);
+                if (newValue != null) {
+                    oled.paramInfo(function, newValue.toString().replace("_", " "), details);
+                }
+            } else if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
+                final Integer newValue = accessor.applyIntIncrement(inc, note);
+                if (first && newValue != null) {
+                    parent.updateRecurrencLength(newValue);
+                    oled.paramInfo(function, newValue, details, accessor.getMinInt(), accessor.getMaxInt(), 1);
+                }
+            } else {
+                handleIncDouble(inc, accessor, notes, note, first);
+            }
+        }
+    }
 
-	private BiColorLightState modeToLight() {
-		return encoderMode.getState();
-	}
+    private NoteOccurrence incrementOccurence(final int inc, final NoteStep note) {
+        final NoteOccurrence occurrence = note.occurrence();
+        final NoteOccurrence[] vs = NoteOccurrence.values();
+        int index = -1;
+        for (int en = 0; en < vs.length; en++) {
+            if (occurrence == vs[en]) {
+                index = en;
+                break;
+            }
+        }
+        final int next = index + inc;
+        if (next >= 0 && next < vs.length) {
+            final NoteOccurrence newValue = vs[next];
+            note.setOccurrence(newValue);
+            return newValue;
+        }
+        return null;
+    }
 
-	private void handleMod(final int inc, final NoteStepAccess accessor) {
-		final List<NoteStep> notes = parent.isPadBeingHeld() ? parent.getOnNotes() : parent.getHeldNotes();
-		if (notes.isEmpty()) {
-			return;
-		}
-		for (int i = 0; i < notes.size(); i++) {
-			final NoteStep note = notes.get(i);
+    private void handleIncDouble(final int inc, final NoteStepAccess accessor, final List<NoteStep> notes,
+                                 final NoteStep note, final boolean print) {
+        Double newValue = null;
+        if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+            final double stepLen = note.duration() / parent.getGridResolution();
 
-			final String function = parent.isPadBeingHeld() ? "ALL " + accessor.getName() : accessor.getName();
-			final String details = parent.getDetails(notes);
-			final boolean first = i == 0;
+            final double newStepLen = incrementStepLength(inc, stepLen, 0.1, 16.0);
+            if (newStepLen != stepLen) {
+                newValue = newStepLen * parent.getGridResolution();
+                note.setDuration(newValue);
+            }
+        } else {
+            newValue = accessor.applyDoubleIncrement(inc, note);
+        }
 
-			if (accessor.getUnit() == NoteValueUnit.MIDI || accessor.getUnit() == NoteValueUnit.NONE) {
-				final Integer newValue = accessor.applyIntIncrement(inc, note);
-				if (first && newValue != null) {
-					oled.paramInfo(function, newValue, details, accessor.getMinInt(), accessor.getMaxInt());
-				}
-			} else if (accessor.getUnit() == NoteValueUnit.OCCURENCE) {
-				final NoteOccurrence newValue = incrementOccurence(inc, note);
-				if (newValue != null) {
-					oled.paramInfo(function, newValue.toString().replace("_", " "), details);
-				}
-			} else if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
-				final Integer newValue = accessor.applyIntIncrement(inc, note);
-				if (first && newValue != null) {
-					parent.updateRecurrencLength(newValue);
-					oled.paramInfo(function, newValue, details, accessor.getMinInt(), accessor.getMaxInt(), 1);
-				}
-			} else {
-				handleIncDouble(inc, accessor, notes, note, first);
-			}
-		}
-	}
+        if (print && newValue != null) {
+            final String details = parent.getDetails(notes);
+            showDoubleValue(accessor, newValue, details);
+        }
+    }
 
-	private NoteOccurrence incrementOccurence(final int inc, final NoteStep note) {
-		final NoteOccurrence occurrence = note.occurrence();
-		final NoteOccurrence[] vs = NoteOccurrence.values();
-		int index = -1;
-		for (int en = 0; en < vs.length; en++) {
-			if (occurrence == vs[en]) {
-				index = en;
-				break;
-			}
-		}
-		final int next = index + inc;
-		if (next >= 0 && next < vs.length) {
-			final NoteOccurrence newValue = vs[next];
-			note.setOccurrence(newValue);
-			return newValue;
-		}
-		return null;
-	}
+    private double incrementStepLength(final int inc, final double stepLen, final double min, final double max) {
+        double newStepLength = 0;
+        if (stepLen <= 1.0) {
+            newStepLength = incStep(inc, stepLen, 0.01);
+        } else if (stepLen <= 2.0) {
+            newStepLength = incStep(inc, stepLen, 0.02);
+        } else if (stepLen <= 4.0) {
+            newStepLength = incStep(inc, stepLen, 0.05);
+        } else {
+            newStepLength = incStep(inc, stepLen, 0.1);
+        }
+        if (newStepLength < min) {
+            return min;
+        } else if (newStepLength > max) {
+            return max;
+        }
+        return newStepLength;
+    }
 
-	private void handleIncDouble(final int inc, final NoteStepAccess accessor, final List<NoteStep> notes,
-			final NoteStep note, final boolean print) {
-		Double newValue = null;
-		if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
-			final double stepLen = note.duration() / parent.getGridResolution();
+    private double incStep(final int inc, final double stepLen, final double amount) {
+        return stepLen + amount * inc;
+    }
 
-			final double newStepLen = incrementStepLength(inc, stepLen, 0.1, 16.0);
-			if (newStepLen != stepLen) {
-				newValue = newStepLen * parent.getGridResolution();
-				note.setDuration(newValue);
-			}
-		} else {
-			newValue = accessor.applyDoubleIncrement(inc, note);
-		}
+    private void showDoubleValue(final NoteStepAccess accessor, final Double value, final String details) {
+        if (accessor.getUnit() == NoteValueUnit.SEMI) {
+            oled.paramInfoDouble(accessor.getName(), value, details, accessor.getMin(), accessor.getMax());
+        } else if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+            oled.paramInfoDuration(accessor.getName(), value, details, parent.getGridResolution());
+        } else {
+            oled.paramInfoPercent(accessor.getName(), value, details, accessor.getMin(), accessor.getMax());
+        }
+    }
 
-		if (print && newValue != null) {
-			final String details = parent.getDetails(notes);
-			showDoubleValue(accessor, newValue, details);
-		}
-	}
+    private void handleTouch(final boolean touched, final NoteStepAccess accessor) {
+        if (!touched) {
+            oled.clearScreenDelayed();
+            if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
+                parent.exitRecurrenceEdit();
+            } else if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+                parent.getLengthDisplay().set(false);
+            }
+            return;
+        }
+        final List<NoteStep> heldNotes = parent.getHeldNotes();
+        if (parent.getDeleteHeld().get() && accessor.canReset()) {
+            accessor.applyReset(parent.getOnNotes());
+            oled.paramInfo("Reset:" + accessor.getName(), parent.getPadInfo());
+        } else if (heldNotes.isEmpty()) {
+            oled.paramInfo(accessor.getName(), parent.getPadInfo());
+        } else {
+            final NoteStep note = heldNotes.get(0);
+            final String details = parent.getDetails(heldNotes);
+            if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
+                parent.getLengthDisplay().set(true);
+            }
 
-	private double incrementStepLength(final int inc, final double stepLen, final double min, final double max) {
-		double newStepLength = 0;
-		if (stepLen <= 1.0) {
-			newStepLength = incStep(inc, stepLen, 0.01);
-		} else if (stepLen <= 2.0) {
-			newStepLength = incStep(inc, stepLen, 0.02);
-		} else if (stepLen <= 4.0) {
-			newStepLength = incStep(inc, stepLen, 0.05);
-		} else {
-			newStepLength = incStep(inc, stepLen, 0.1);
-		}
-		if (newStepLength < min) {
-			return min;
-		} else if (newStepLength > max) {
-			return max;
-		}
+            if (accessor.getUnit() == NoteValueUnit.MIDI || accessor.getUnit() == NoteValueUnit.NONE) {
+                final int value = accessor.getInt(note);
+                oled.paramInfo(accessor.getName(), value, details, accessor.getMinInt(), accessor.getMaxInt());
+            } else if (accessor.getUnit() == NoteValueUnit.OCCURENCE) {
+                oled.paramInfo(accessor.getName(), note.occurrence().toString().replace("_", " "), details);
+            } else if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
+                final int value = accessor.getInt(note);
+                oled.paramInfo(accessor.getName(), value, details, accessor.getMinInt(), accessor.getMaxInt());
+                parent.enterRecurrenceEdit(heldNotes);
+            } else {
+                final double value = accessor.getDouble(note);
+                showDoubleValue(accessor, value, details);
+            }
+            parent.registerModifiedSteps(heldNotes);
+        }
+    }
 
-		return newStepLength;
-	}
+    @Override
+    protected void onActivate() {
+        currentLayer.activate();
+        applyResolution(encoderMode);
+    }
 
-	private double incStep(final int inc, final double stepLen, final double amount) {
-		double newStepLength;
-		newStepLength = stepLen + amount * inc;
-		// TODO figure out snapping
-//		final double roundValue = Math.round(newStepLength);
-//		final double diff = Math.abs(newStepLength - roundValue);
-//		if (diff < amount) {
-//			return roundValue;
-//		}
-		return newStepLength;
-	}
-
-	private void showDoubleValue(final NoteStepAccess accessor, final Double value, final String details) {
-		if (accessor.getUnit() == NoteValueUnit.SEMI) {
-			oled.paramInfoDouble(accessor.getName(), value, details, accessor.getMin(), accessor.getMax());
-		} else if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
-			oled.paramInfoDuration(accessor.getName(), value, details, parent.getGridResolution());
-		} else {
-			oled.paramInfoPercent(accessor.getName(), value, details, accessor.getMin(), accessor.getMax());
-		}
-	}
-
-	private void handleTouch(final boolean touched, final NoteStepAccess accessor) {
-		if (!touched) {
-			oled.clearScreenDelayed();
-			if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
-				parent.exitRecurrenceEdit();
-			} else if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
-				parent.getLengthDisplay().set(false);
-			}
-			return;
-		}
-		final List<NoteStep> heldNotes = parent.getHeldNotes();
-		if (parent.getDeleteHeld().get() && accessor.canReset()) {
-			accessor.applyReset(parent.getOnNotes());
-			oled.paramInfo("Reset:" + accessor.getName(), parent.getPadInfo());
-		} else if (heldNotes.isEmpty()) {
-			oled.paramInfo(accessor.getName(), parent.getPadInfo());
-		} else {
-			final NoteStep note = heldNotes.get(0);
-			final String details = parent.getDetails(heldNotes);
-			if (accessor.getUnit() == NoteValueUnit.NOTE_LEN) {
-				parent.getLengthDisplay().set(true);
-			}
-
-			if (accessor.getUnit() == NoteValueUnit.MIDI || accessor.getUnit() == NoteValueUnit.NONE) {
-				final int value = accessor.getInt(note);
-				oled.paramInfo(accessor.getName(), value, details, accessor.getMinInt(), accessor.getMaxInt());
-			} else if (accessor.getUnit() == NoteValueUnit.OCCURENCE) {
-				oled.paramInfo(accessor.getName(), note.occurrence().toString().replace("_", " "), details);
-			} else if (accessor.getUnit() == NoteValueUnit.RECURRENCE) {
-				final int value = accessor.getInt(note);
-				oled.paramInfo(accessor.getName(), value, details, accessor.getMinInt(), accessor.getMaxInt());
-				parent.enterRecurrenceEdit(heldNotes);
-			} else {
-				final double value = accessor.getDouble(note);
-				showDoubleValue(accessor, value, details);
-			}
-			parent.registerModifiedSteps(heldNotes);
-		}
-	}
-
-	@Override
-	protected void onActivate() {
-		currentLayer.activate();
-		applyResolution(encoderMode);
-	}
-
-	@Override
-	protected void onDeactivate() {
-		currentLayer.deactivate();
-	}
-
+    @Override
+    protected void onDeactivate() {
+        currentLayer.deactivate();
+    }
 }

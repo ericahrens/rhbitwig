@@ -15,12 +15,12 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public String getName() {
-        return "K2 DJSet 2022";
+        return "Allen & Heath K2/K3 DJSet";
     }
 
     @Override
     public String getAuthor() {
-        return "E.Ahrens/R.Hawtin";
+        return "E.Ahrens/R.Hawtin/userdsp";
     }
 
     @Override
@@ -40,12 +40,12 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
 
     @Override
     public String getHardwareModel() {
-        return "Xone:K2";
+        return "Xone:K2/K3";
     }
 
     @Override
     public int getRequiredAPIVersion() {
-        return 16;
+        return 24;
     }
 
     @Override
@@ -82,6 +82,28 @@ public class AllenHeathK2ExtensionDefinition extends ControllerExtensionDefiniti
         }
 
         list.add(inputNames, outputNames);
+
+        final String[] k3InputNames = new String[1];
+        final String[] k3OutputNames = new String[1];
+
+        switch (platformType) {
+            case LINUX:
+                k3InputNames[0] = "XONE:K3";
+                k3OutputNames[0] = "XONE:K3";
+                break;
+
+            case WINDOWS:
+                k3InputNames[0] = "XONE:K3";
+                k3OutputNames[0] = "XONE:K3";
+                break;
+
+            case MAC:
+                k3InputNames[0] = "XONE:K3";
+                k3OutputNames[0] = "XONE:K3";
+                break;
+        }
+
+        list.add(k3InputNames, k3OutputNames);
     }
 
     @Override

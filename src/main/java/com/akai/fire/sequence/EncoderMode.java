@@ -7,14 +7,11 @@ public enum EncoderMode {
             new EncoderAccess[]{NoteStepAccess.VELOCITY, NoteStepAccess.CHANCE, NoteStepAccess.REPEATS, NoteStepAccess.RECURRENCE}),
     MIXER(BiColorLightState.MODE_MIXER, "1: Velocity Spread\n2: Pressure\n3: Length\n4: Timbre",
             new EncoderAccess[]{NoteStepAccess.VELOCITY_SPREAD, NoteStepAccess.PRESSURE, //
-                    NoteStepAccess.DURATION, NoteStepAccess.TIMBRE}), //
+                    NoteStepAccess.DURATION, NoteStepAccess.TIMBRE}),
     MIXER_SHIFT(BiColorLightState.MODE_MIXER, "1: Velocity Spread\n2: Pressure\n3: Length\n4: Occurrence",
             new EncoderAccess[]{NoteStepAccess.REPEATCURVE, NoteStepAccess.REPEAT_VEL_CRV, //
                     NoteStepAccess.REPEAT_VEL_END, NoteStepAccess.OCCURENCE}),
-    USER_1(BiColorLightState.MODE_USER1, "1: Level\n2: Pan\n3: Fx1\n4: Fx2", new EncoderAccess[]{});
-    //
-//	USER1(BiColorLightState.MODE_USER1, "unassigned"), //
-//	USER2(BiColorLightState.MODE_USER2, "unassigned");
+    USER_1(BiColorLightState.MODE_USER1, "1: Level\n2: Pan\n3: Send1\n4: Send2", new EncoderAccess[]{});
 
     private final BiColorLightState state;
     private final String info;

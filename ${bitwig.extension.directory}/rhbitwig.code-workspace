@@ -1,0 +1,31 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"git rebase": true,
+			"true": true,
+			"git checkout": true,
+			"git add": true,
+			"git -c commit.gpgSign=false": true,
+			"git rev-parse": true,
+			"git push": true,
+			"mvn -DskipTests=true clean": true,
+			"mvn clean": true,
+			"mvn -q -DskipTests package": true,
+			"/^mvn -q test -Dtest='\\*Fire\\*'$/": {
+				"approve": true,
+				"matchCommandLine": true
+			},
+			"/^git remote -v$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		},
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
+}

@@ -12,6 +12,7 @@ import com.akai.fire.lights.BiColorLightState;
 import com.akai.fire.lights.RgbLigthState;
 import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.MultiStateHardwareLight;
+import com.bitwig.extension.controller.api.NoteOccurrence;
 import com.bitwig.extension.controller.api.NoteStep;
 import com.bitwig.extension.controller.api.NoteStep.State;
 import com.bitwig.extension.controller.api.PinnableCursorClip;
@@ -24,10 +25,47 @@ import java.util.stream.Collectors;
 
 public class DrumSequenceMode extends Layer {
 
+    public static class NoteData {
+        public int velocity;
+        public int transpose;
+        public double duration;
+        public double chance;
+        public double timbre;
+        public double pressure;
+        public double velocitySpread;
+        public int repeatCount;
+        public double repeatCurve;
+        public double repeatVelocityCurve;
+        public double repeatVelocityEnd;
+        public int recurrenceLength;
+        public int recurrenceMask;
+        public NoteOccurrence occurrence;
+        public double pan;
+        
+        public NoteData() {
+            this.velocity = 100;
+            this.transpose = 0;
+            this.duration = 0.25;
+            this.chance = 1.0;
+            this.timbre = 0.0;
+            this.pressure = 0.0;
+            this.velocitySpread = 0.0;
+            this.repeatCount = 0;
+            this.repeatCurve = 0.0;
+            this.repeatVelocityCurve = 0.0;
+            this.repeatVelocityEnd = 0.0;
+            this.recurrenceLength = 0;
+            this.recurrenceMask = 0;
+            this.occurrence = null;
+            this.pan = 0.0;
+        }
+    }
+
     private final IntSetValue heldSteps = new IntSetValue();
     private final Set<Integer> addedSteps = new HashSet<>();
     private final Set<Integer> modifiedSteps = new HashSet<>();
     private final HashMap<Integer, NoteStep> expectedNoteChanges = new HashMap<>();
+    private final HashMap<Integer, DrumSequenceMode.NoteData> expectedNoteDataChanges = new HashMap<>();
 
     private final NoteStep[] assignments = new NoteStep[32];
 
@@ -94,7 +132,7 @@ public class DrumSequenceMode extends Layer {
             }
         });
         cursorClip.isPinned().markInterested();
-        positionHandler = new StepViewPosition(cursorClip);
+        positionHandler = new StepViewPosition(cursorClip, 32, "AKAI");
 
         padHandler = new PadHandler(driver, this, mainLayer, muteLayer, soloLayer);
         clipHandler = new SeqClipHandler(driver, this, mainLayer);
@@ -129,7 +167,36 @@ public class DrumSequenceMode extends Layer {
         final TouchEncoder mainEncoder = driver.getMainEncoder();
         mainEncoder.setStepSize(0.4);
         mainEncoder.bindEncoder(mainLayer, this::handleMainEncoder);
-        mainEncoder.bindTouched(mainLayer, this::handeMainEncoderPress);
+        mainEncoder.bindTouched(mainLayer, pressed -> handeMainEncoderPress(Boolean.TRUE.equals(pressed)));
+    }
+
+    public List<NoteStep> getAddedNotes() {
+        return addedSteps.stream()
+                .map(idx -> assignments[idx])
+                .filter(ns -> ns != null && ns.state() == State.NoteOn)
+                .collect(Collectors.toList());
+    }
+
+    public boolean hasAddedNotes() {
+        return !addedSteps.isEmpty();
+    }
+
+    public int findFreePosition() {
+        for (int i = 0; i < assignments.length; i++) {
+            if (assignments[i] == null || assignments[i].state() == State.Empty) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int findFreePositionFrom(int start) {
+        for (int i = start; i < assignments.length; i++) {
+            if (assignments[i] == null || assignments[i].state() == State.Empty) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void initModeButtons(final AkaiFireDrumSeqExtension driver) {
@@ -146,8 +213,8 @@ public class DrumSequenceMode extends Layer {
 
     private void initButtonBehaviour(final AkaiFireDrumSeqExtension driver) {
 
-        final BiColorButton accentButton = driver.getButton(NoteAssign.STEP_SEQ); // TODO combine with encoder
-        accentButton.bindPressed(mainLayer, accentHandler::handlePressed, accentHandler::getLightState);
+        final BiColorButton accentButton = driver.getButton(NoteAssign.STEP_SEQ);
+        accentButton.bindPressed(mainLayer, pressed -> accentHandler.handlePressed(Boolean.TRUE.equals(pressed)), accentHandler::getLightState);
 
         final BiColorButton shiftButton = driver.getButton(NoteAssign.SHIFT);
         shiftButton.bind(mainLayer, shiftActive, BiColorLightState.GREEN_HALF, BiColorLightState.OFF);
@@ -164,10 +231,10 @@ public class DrumSequenceMode extends Layer {
         retrigButton.bind(mainLayer, this::retrigger, BiColorLightState.AMBER_FULL, BiColorLightState.AMBER_HALF);
 
         final BiColorButton pinButton = driver.getButton(NoteAssign.ALT);
-        pinButton.bindPressed(mainLayer, this::handleClipPinning, this::getPinnedState);
+        pinButton.bindPressed(mainLayer, pressed -> handleClipPinning(Boolean.TRUE.equals(pressed)), this::getPinnedState);
 
         final BiColorButton resolutionButton = driver.getButton(NoteAssign.PERFORM);
-        resolutionButton.bindPressed(mainLayer, resolutionHandler::handlePressed, resolutionHandler::getLightState);
+        resolutionButton.bindPressed(mainLayer, pressed -> resolutionHandler.handlePressed(Boolean.TRUE.equals(pressed)), resolutionHandler::getLightState);
 
         final BiColorButton shiftLeftButton = driver.getButton(NoteAssign.BANK_L);
         shiftLeftButton.bindPressed(mainLayer, p -> movePattern(p, -1), BiColorLightState.HALF, BiColorLightState.OFF);
@@ -471,11 +538,11 @@ public class DrumSequenceMode extends Layer {
 
     private void adjustMode(final int notes) {
         if (notes % 8 == 0) {
-            cursorClip.launchMode().set("play_with_quantization");
+            cursorClip.launchMode().set("default");
         } else if (clipLaunchModeQuant.get()) {
-            cursorClip.launchMode().set("continue_with_quantization");
+            cursorClip.launchMode().set("synced");
         } else {
-            cursorClip.launchMode().set("continue_immediately");
+            cursorClip.launchMode().set("from_start");
         }
     }
 
@@ -483,10 +550,15 @@ public class DrumSequenceMode extends Layer {
         final int newStep = noteStep.x();
 
         assignments[newStep] = noteStep;
-        if (expectedNoteChanges.containsKey(newStep)) {
-            final NoteStep previousStep = expectedNoteChanges.get(newStep);
-            expectedNoteChanges.remove(newStep);
-            applyValues(noteStep, previousStep);
+
+        final NoteStep expected = expectedNoteChanges.remove(newStep);
+        if (expected != null) {
+            applyValues(noteStep, expected);
+        }
+        if (expectedNoteDataChanges.containsKey(newStep)) {
+            final DrumSequenceMode.NoteData data = expectedNoteDataChanges.get(newStep);
+            expectedNoteDataChanges.remove(newStep);
+            applyValuesFromData(noteStep, data);
         }
     }
 
@@ -500,6 +572,29 @@ public class DrumSequenceMode extends Layer {
         dest.setRepeatVelocityEnd(src.repeatVelocityEnd());
         dest.setRecurrence(src.recurrenceLength(), src.recurrenceMask());
         dest.setOccurrence(src.occurrence());
+    }
+
+    private void applyValuesFromData(final NoteStep dest, final DrumSequenceMode.NoteData src) {
+        try {
+            dest.setVelocity(src.velocity / 127.0);
+            dest.setTranspose(src.transpose);
+            dest.setDuration(src.duration);
+            dest.setChance(src.chance);
+            dest.setTimbre(src.timbre);
+            dest.setPressure(src.pressure);
+            dest.setVelocitySpread(src.velocitySpread);
+            dest.setRepeatCount(src.repeatCount);
+            dest.setRepeatCurve(src.repeatCurve);
+            dest.setRepeatVelocityCurve(src.repeatVelocityCurve);
+            dest.setRepeatVelocityEnd(src.repeatVelocityEnd);
+            dest.setRecurrence(src.recurrenceLength, src.recurrenceMask);
+            if (src.occurrence != null) {
+                dest.setOccurrence(src.occurrence);
+            }
+            dest.setPan(src.pan);
+        } catch (final Exception e) {
+            // ignore any failures applying data
+        }
     }
 
     private void handlePlayingStep(final int playingStep) {
@@ -574,7 +669,11 @@ public class DrumSequenceMode extends Layer {
     }
 
     public void registerExpectedNoteChange(final int x, final NoteStep noteStep) {
-        expectedNoteChanges.put(noteStep.x(), noteStep);
+        expectedNoteChanges.put(x, noteStep);
+    }
+
+    public void registerExpectedNoteData(final int x, final DrumSequenceMode.NoteData data) {
+        expectedNoteDataChanges.put(x, data);
     }
 
     public BooleanValueObject getLengthDisplay() {
@@ -588,6 +687,5 @@ public class DrumSequenceMode extends Layer {
     public void notifySoloAction() {
         soloActionsTaken.set(true);
     }
-
 
 }

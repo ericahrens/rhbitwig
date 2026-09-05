@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.akai.fire.NoteAssign;
+import com.akai.fire.display.DisplayInfo;
+import com.akai.fire.display.OledDisplay.TextJustification;
 
-public class FunctionInfo { // TODO this has to be a Display info
+public class FunctionInfo {
 	public static final Map<NoteAssign, FunctionInfo> INFO1 = new HashMap<>();
 	public static final Map<NoteAssign, FunctionInfo> INFO2 = new HashMap<>();
 
@@ -44,6 +46,15 @@ public class FunctionInfo { // TODO this has to be a Display info
 
 	public String getDetail() {
 		return detail;
+	}
+
+	public DisplayInfo toDisplayInfo(final String context, final boolean shift) {
+		return new DisplayInfo()
+			.addLine(context, 0, 0, TextJustification.CENTER)
+			.addLine(getName(shift), 2, 1, TextJustification.CENTER)
+			.addLine("", 0, 3, TextJustification.LEFT)
+			.addLine(detail, 0, 4, TextJustification.LEFT)
+			.create();
 	}
 
 }

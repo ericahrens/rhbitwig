@@ -20,12 +20,12 @@ public class LaunchPadProMk3ExtensionDefinition extends ControllerExtensionDefin
 
     @Override
     public String getAuthor() {
-        return "R.Hawtin/E.Ahrens";
+        return "R.Hawtin/E.Ahrens/userdsp";
     }
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.0.6.1";
     }
 
     @Override
@@ -50,7 +50,7 @@ public class LaunchPadProMk3ExtensionDefinition extends ControllerExtensionDefin
 
     @Override
     public int getRequiredAPIVersion() {
-        return 17;
+        return 24;
     }
 
     @Override

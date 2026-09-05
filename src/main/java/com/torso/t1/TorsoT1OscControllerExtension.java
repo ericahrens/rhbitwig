@@ -85,7 +85,6 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
 
     private int extractTrackNumber(final String value) {
         if (value.matches("^[T,t]\\d{1,2}-.*")) {
-            final StringBuilder sb = new StringBuilder();
             if (value.length() < 4) {
                 return -1;
             }
@@ -125,50 +124,6 @@ public class TorsoT1OscControllerExtension extends ControllerExtension {
                 }
             }
         }
-    }
-
-    private void handleMessage_(final OscConnection connection, final OscMessage message) {
-        host.println("MSG : " + message.getAddressPattern());
-        final String[] split = message.getAddressPattern().split("/");
-        if (split.length == 3) {
-            final int track = oscTrack(split[1]);
-            final String command = split[2];
-            if (track != -1) {
-                final DeviceTrack devTrack = deviceTrackMap.get(track);
-                if (devTrack != null) {
-                    getHost().println(String.format("[%d] command=%s %s", track, command, message.getArguments()));
-                    switch (command) {
-                        case "root":
-                            devTrack.getMapTransposeDevice().setRootNote(message.getInt(0));
-                            break;
-                        case "steps":
-                            devTrack.getArpDevice().setStepLength(message.getInt(0));
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
-    private int oscTrack(final String trackPart) {
-        if (trackPart.length() > 1) {
-            final char c1 = trackPart.charAt(0);
-            if (c1 != 't') {
-                return -1;
-            }
-            final char c2 = trackPart.charAt(1);
-            if (trackPart.length() > 2) {
-                final char c3 = trackPart.charAt(2);
-                if (Character.isDigit(c2) && Character.isDigit(c3)) {
-                    return (c2 - '0') * 10 + (c3 - '0');
-                }
-            } else {
-                if (Character.isDigit(c2)) {
-                    return c2 - '0';
-                }
-            }
-        }
-        return -1;
     }
 
     @Override

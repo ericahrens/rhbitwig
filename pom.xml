@@ -1,69 +1,161 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.yaeltex</groupId>
     <artifactId>yaeltexarpcontrol</artifactId>
+    <version>0.2</version>
     <packaging>jar</packaging>
+
     <name>YaeltexArpControl</name>
-    <version>0.1</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+
+        <!-- macOS Bitwig Extensions -->
+        <bitwig.extension.directory>${user.home}/Documents/Bitwig Studio/Extensions</bitwig.extension.directory>
+    </properties>
 
     <repositories>
         <repository>
             <id>bitwig</id>
-            <name>Bitwig Maven Repository</name>
             <url>https://maven.bitwig.com</url>
         </repository>
     </repositories>
 
     <dependencies>
+
+        <!-- Bitwig Extension API 24 -->
         <dependency>
             <groupId>com.bitwig</groupId>
             <artifactId>extension-api</artifactId>
-            <version>17</version>
+            <version>24</version>
+            <scope>provided</scope>
         </dependency>
+
+        <!-- JSON library -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
+
+        <!-- JUnit for testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Java MIDI е част от JDK - НЕ ТРЯБВА ДА СЕ ДОБАВЯ КАТО ЗАВИСИМОСТ! -->
+
     </dependencies>
 
     <build>
+
         <plugins>
+
+            <!-- Compiler plugin with Java 17 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.12.1</version>
                 <configuration>
-                    <optimize>true</optimize>
-                    <fork>true</fork>
-                    <source>11</source>
-                    <target>11</target>
+                    <release>17</release>
                     <encoding>UTF-8</encoding>
-                    <maxmem>1024m</maxmem>
                 </configuration>
             </plugin>
+
+            <!-- Surefire plugin for running tests -->
             <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
+            <!-- Shade plugin - създава uber-jar с всички зависимости -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
-                        <id>rename-file</id>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>${project.build.directory}/${project.build.finalName}.jar
-                            </sourceFile>
-                            <destinationFile>
-                                ${bitwig.extension.directory}/HawtinExtensionsBw4.bwextension
-                            </destinationFile>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
+            <!-- Rename JAR to bwextension -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>create-bwextension</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <copy file="${project.build.directory}/${project.build.finalName}-shaded.jar"
+                                      tofile="${project.build.directory}/${project.name}.bwextension"
+                                      overwrite="true"/>
+                                <echo message="Created: ${project.build.directory}/${project.name}.bwextension"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>copy-to-bitwig</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <target>
+                                <copy file="${project.build.directory}/${project.name}.bwextension"
+                                      tofile="${bitwig.extension.directory}/${project.name}.bwextension"
+                                      overwrite="true"
+                                      failonerror="false"/>
+                                <echo message="========================================"/>
+                                <echo message="BITWIG EXTENSION BUILD SUCCESSFUL!"/>
+                                <echo message="========================================"/>
+                                <echo message="File: ${project.build.directory}/${project.name}.bwextension"/>
+                                <echo message="Copied to: ${bitwig.extension.directory}/${project.name}.bwextension"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
+
     </build>
 
 </project>
-

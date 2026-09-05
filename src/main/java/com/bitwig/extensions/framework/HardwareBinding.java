@@ -3,7 +3,7 @@ package com.bitwig.extensions.framework;
 import com.bitwig.extension.controller.api.HardwareBindable;
 import com.bitwig.extension.controller.api.HardwareBindingSource;
 
-public abstract class HardwareBinding<SourceType extends HardwareBindingSource, TargetType extends HardwareBindable, HardwareBindingType extends com.bitwig.extension.controller.api.HardwareBinding>
+public abstract class HardwareBinding<SourceType extends HardwareBindingSource<?>, TargetType extends HardwareBindable, HardwareBindingType extends com.bitwig.extension.controller.api.HardwareBinding>
    extends Binding<SourceType, TargetType>
 {
    protected HardwareBinding(final Object exclusiveSource, final SourceType source, final TargetType target)
